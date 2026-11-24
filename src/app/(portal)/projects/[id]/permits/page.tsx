@@ -1,4 +1,9 @@
 "use client";
+import { ProjectMutation } from "@/components/project-mutation";
+import { cx } from "@/components/utilities";
+import { Dialog, readResponse } from "@/components/ui";
+import layout from "./page.module.css";
+import { useFeedback } from "@/components/ui";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -46,6 +51,7 @@ interface PermitMilestone {
 }
 
 export default function PermitsPage() {
+  const feedback = useFeedback();
   const params = useParams();
   const projectId = params?.id as string;
 
@@ -55,13 +61,19 @@ export default function PermitsPage() {
 
   // Modal states
   const [showAddObsModal, setShowAddObsModal] = useState(false);
-  const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>(null);
+  const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>(
+    null,
+  );
 
   // Form states
   const [statusText, setStatusText] = useState("");
-  const [checkedDate, setCheckedDate] = useState(new Date().toISOString().slice(0, 10));
+  const [checkedDate, setCheckedDate] = useState(
+    new Date().toISOString().slice(0, 10),
+  );
   const [decisionDate, setDecisionDate] = useState("");
-  const [sourceDesc, setSourceDesc] = useState("Staff manual check on K-SMART portal");
+  const [sourceDesc, setSourceDesc] = useState(
+    "Staff manual check on K-SMART portal",
+  );
   const [refUrl, setRefUrl] = useState("https://ksmart.kerala.gov.in");
   const [staffNotes, setStaffNotes] = useState("");
 
@@ -70,10 +82,10 @@ export default function PermitsPage() {
     try {
       const res = await fetch(`/api/projects/${projectId}/permits`);
       if (!res.ok) {
-        const data = await res.json() as any;
+        const data = (await readResponse(res)) as any;
         throw new Error(data.error || "Failed to load permit records");
       }
-      const data = await res.json() as any;
+      const data = (await readResponse(res)) as any;
       setMilestones(data.permits || []);
     } catch (err: any) {
       setError(err.message);
@@ -109,7 +121,7 @@ export default function PermitsPage() {
       });
 
       if (!res.ok) {
-        const data = await res.json() as any;
+        const data = (await readResponse(res)) as any;
         throw new Error(data.error || "Failed to record observation");
       }
 
@@ -119,7 +131,7 @@ export default function PermitsPage() {
       setStaffNotes("");
       fetchPermits();
     } catch (err: any) {
-      alert(err.message);
+      feedback.notify(err.message);
     }
   };
 
@@ -131,110 +143,113 @@ export default function PermitsPage() {
         body: JSON.stringify({ action: "SUBMIT_SHARING", observationId }),
       });
       if (!res.ok) {
-        const data = await res.json() as any;
+        const data = (await readResponse(res)) as any;
         throw new Error(data.error || "Failed to submit for sharing");
       }
       fetchPermits();
     } catch (err: any) {
-      alert(err.message);
+      feedback.notify(err.message);
     }
   };
 
-  const handleReviewSharing = async (observationId: string, decision: "APPROVE" | "RETURN") => {
+  const handleReviewSharing = async (
+    observationId: string,
+    decision: "APPROVE" | "RETURN",
+  ) => {
     try {
       const res = await fetch(`/api/projects/${projectId}/permits`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "REVIEW_SHARING", observationId, decision }),
+        body: JSON.stringify({
+          action: "REVIEW_SHARING",
+          observationId,
+          decision,
+        }),
       });
       if (!res.ok) {
-        const data = await res.json() as any;
+        const data = (await readResponse(res)) as any;
         throw new Error(data.error || "Failed to process sharing decision");
       }
       fetchPermits();
     } catch (err: any) {
-      alert(err.message);
+      feedback.notify(err.message);
     }
   };
 
   if (loading) {
     return (
-      <div className="portal-container" style={{ padding: "2rem" }}>
-        <p className="text-muted">Loading K-SMART permit records...</p>
+      <div className={cx(["portal-container", layout.block1].join(" "))}>
+        <p className={cx("text-muted")}>Loading K-SMART permit records...</p>
       </div>
     );
   }
 
   return (
-    <div className="portal-container" style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
+    <div className={cx(["portal-container", layout.block2].join(" "))}>
       {/* Header */}
-      <div style={{ marginBottom: "2rem" }}>
-        <a href={`/projects/${projectId}/overview`} style={{ color: "var(--color-primary)", textDecoration: "none", fontSize: "0.875rem", marginBottom: "0.5rem", display: "inline-block" }}>
+      <div className={cx(layout.block3)}>
+        <a
+          href={`/projects/${projectId}/overview`}
+          className={cx(layout.block4)}
+        >
           ← Back to Project Overview
         </a>
-        <h1 className="text-display" style={{ fontSize: "1.75rem", fontWeight: 600 }}>K-SMART Permit Records</h1>
-        <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-          Sanction and completion permit observations recorded manually by the architectural team.
+        <h1 className={cx(["text-display", layout.block5].join(" "))}>
+          K-SMART Permit Records
+        </h1>
+        <p className={cx(["text-muted", layout.block6].join(" "))}>
+          Sanction and completion permit observations recorded manually by the
+          architectural team.
         </p>
       </div>
 
       {/* Disclaimers & Truthful Boundary Statement */}
-      <div style={{ padding: "1rem 1.25rem", backgroundColor: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: "8px", marginBottom: "2rem" }}>
-        <p style={{ margin: 0, fontSize: "0.875rem", color: "#1E40AF", lineHeight: 1.5 }}>
-          ℹ️ <strong>Practice Tracking Boundary:</strong> Merveille Designs tracks observations manually from K-SMART submissions and documents. The portal does not query, scrape, or integrate with government servers, nor does it certify the legal validity of permits.
+      <div className={cx(layout.block7)}>
+        <p className={cx(layout.block8)}>
+          ℹ️ <strong>Practice Tracking Boundary:</strong> Merveille Designs
+          tracks observations manually from K-SMART submissions and documents.
+          The portal does not query, scrape, or integrate with government
+          servers, nor does it certify the legal validity of permits.
         </p>
       </div>
 
-      {error && (
-        <div style={{ padding: "1rem", backgroundColor: "#FEE2E2", color: "#991B1B", borderRadius: "6px", marginBottom: "1.5rem" }}>
-          {error}
-        </div>
-      )}
+      {error && <div className={cx(layout.block9)}>{error}</div>}
 
       {/* Milestones Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(450px, 1fr))", gap: "2rem" }}>
+      <div className={cx(layout.block10)}>
         {milestones.map((milestone) => {
           const isSanction = milestone.milestoneType === "SANCTION";
-          const title = isSanction ? "Sanction Permit (Building Permit)" : "Completion Certificate & Occupancy";
+          const title = isSanction
+            ? "Sanction Permit (Building Permit)"
+            : "Completion Certificate & Occupancy";
           const isInternal = Boolean(milestone.observations);
 
           return (
-            <div
-              key={milestone.milestoneId}
-              style={{
-                backgroundColor: "var(--color-surface)",
-                borderRadius: "8px",
-                border: "1px solid var(--color-border)",
-                padding: "1.5rem",
-                display: "flex",
-                flexDirection: "column",
-                gap: "1.25rem",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div key={milestone.milestoneId} className={cx(layout.block11)}>
+              <div className={cx(layout.block12)}>
                 <div>
-                  <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-primary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    Milestone Group
-                  </span>
-                  <h2 style={{ fontSize: "1.25rem", fontWeight: 600, margin: "0.25rem 0 0 0" }}>{title}</h2>
+                  <span className={cx(layout.block13)}>Milestone Group</span>
+                  <h2 className={cx(layout.block14)}>{title}</h2>
                   {milestone.applicationReference && (
-                    <p className="text-muted" style={{ fontSize: "0.8125rem", marginTop: "0.25rem" }}>
-                      Application Ref: <strong>{milestone.applicationReference}</strong>
+                    <p className={cx(["text-muted", layout.block15].join(" "))}>
+                      Application Ref:{" "}
+                      <strong>{milestone.applicationReference}</strong>
                     </p>
                   )}
                 </div>
 
                 {isInternal && (
-                  <button
-                    onClick={() => {
-                      setSelectedMilestoneId(milestone.milestoneId);
-                      setShowAddObsModal(true);
-                    }}
-                    className="btn-primary"
-                    style={{ padding: "0.4rem 0.8rem", fontSize: "0.8125rem", cursor: "pointer" }}
-                  >
-                    + Record Status
-                  </button>
+                  <ProjectMutation>
+                    <button
+                      onClick={() => {
+                        setSelectedMilestoneId(milestone.milestoneId);
+                        setShowAddObsModal(true);
+                      }}
+                      className={cx(["btn-primary", layout.block16].join(" "))}
+                    >
+                      + Record Status
+                    </button>
+                  </ProjectMutation>
                 )}
               </div>
 
@@ -242,29 +257,35 @@ export default function PermitsPage() {
               {!isInternal && (
                 <div>
                   {milestone.hasPublishedRecord ? (
-                    <div style={{ padding: "1.25rem", backgroundColor: "#F9FAFB", borderRadius: "6px", border: "1px solid #E5E7EB" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "0.75rem" }}>
-                        <span style={{ fontSize: "1.125rem", fontWeight: 600, color: "#111827" }}>
+                    <div className={cx(layout.block17)}>
+                      <div className={cx(layout.block18)}>
+                        <span className={cx(layout.block19)}>
                           {milestone.statusText}
                         </span>
-                        <span style={{ fontSize: "0.75rem", color: "#059669", fontWeight: 600, backgroundColor: "#D1FAE5", padding: "0.2rem 0.5rem", borderRadius: "4px" }}>
+                        <span className={cx(layout.block20)}>
                           VERIFIED RECORD
                         </span>
                       </div>
 
-                      <p style={{ fontSize: "0.8125rem", color: "#4B5563", margin: "0.25rem 0" }}>
+                      <p className={cx(layout.block21)}>
                         {milestone.recordStatement}
                       </p>
 
                       {milestone.decisionDate && (
-                        <p style={{ fontSize: "0.8125rem", color: "#4B5563", margin: "0.25rem 0" }}>
-                          Order / Decision Date: <strong>{milestone.decisionDate}</strong>
+                        <p className={cx(layout.block22)}>
+                          Order / Decision Date:{" "}
+                          <strong>{milestone.decisionDate}</strong>
                         </p>
                       )}
 
                       {milestone.referenceUrl && (
-                        <p style={{ fontSize: "0.8125rem", marginTop: "0.5rem" }}>
-                          <a href={milestone.referenceUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--color-primary)" }}>
+                        <p className={cx(layout.block23)}>
+                          <a
+                            href={milestone.referenceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cx(layout.block24)}
+                          >
                             Open K-SMART Portal Reference ↗
                           </a>
                         </p>
@@ -272,22 +293,13 @@ export default function PermitsPage() {
 
                       {/* Client shared files */}
                       {milestone.files && milestone.files.length > 0 && (
-                        <div style={{ marginTop: "1rem", paddingTop: "0.75rem", borderTop: "1px solid #E5E7EB" }}>
-                          <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "#6B7280", textTransform: "uppercase", marginBottom: "0.5rem" }}>
+                        <div className={cx(layout.block25)}>
+                          <p className={cx(layout.block26)}>
                             Approved Supporting Documents
                           </p>
-                          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                          <div className={cx(layout.block27)}>
                             {milestone.files.map((file) => (
-                              <div
-                                key={file.id}
-                                style={{
-                                  padding: "0.4rem 0.6rem",
-                                  backgroundColor: "#FFF",
-                                  border: "1px solid #D1D5DB",
-                                  borderRadius: "4px",
-                                  fontSize: "0.8125rem",
-                                }}
-                              >
+                              <div key={file.id} className={cx(layout.block28)}>
                                 📄 {file.file_name}
                               </div>
                             ))}
@@ -295,13 +307,15 @@ export default function PermitsPage() {
                         </div>
                       )}
 
-                      <p style={{ fontSize: "0.6875rem", color: "#9CA3AF", marginTop: "1rem", fontStyle: "italic" }}>
+                      <p className={cx(layout.block29)}>
                         {milestone.disclaimer}
                       </p>
                     </div>
                   ) : (
-                    <div style={{ padding: "2rem", textAlign: "center", backgroundColor: "#F9FAFB", borderRadius: "6px" }}>
-                      <p className="text-muted" style={{ fontSize: "0.875rem", margin: 0 }}>
+                    <div className={cx(layout.block30)}>
+                      <p
+                        className={cx(["text-muted", layout.block31].join(" "))}
+                      >
                         No published permit observations recorded yet.
                       </p>
                     </div>
@@ -311,108 +325,115 @@ export default function PermitsPage() {
 
               {/* Internal Timeline View */}
               {isInternal && milestone.observations && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                  <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-muted)", textTransform: "uppercase" }}>
+                <div className={cx(layout.block32)}>
+                  <div className={cx(layout.block33)}>
                     Observation Timeline ({milestone.observations.length})
                   </div>
 
                   {milestone.observations.length === 0 ? (
-                    <p className="text-muted" style={{ fontSize: "0.875rem", margin: 0 }}>
-                      No observations recorded yet. Click &quot;Record Status&quot; to log a check.
+                    <p className={cx(["text-muted", layout.block34].join(" "))}>
+                      No observations recorded yet. Click &quot;Record
+                      Status&quot; to log a check.
                     </p>
                   ) : (
                     milestone.observations.map((obs) => (
-                      <div
-                        key={obs.id}
-                        style={{
-                          padding: "1rem",
-                          backgroundColor: "#F9FAFB",
-                          borderRadius: "6px",
-                          border: "1px solid #E5E7EB",
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "0.5rem",
-                        }}
-                      >
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                          <span style={{ fontWeight: 600, fontSize: "0.9375rem" }}>{obs.observed_status_text}</span>
+                      <div key={obs.id} className={cx(layout.block35)}>
+                        <div className={cx(layout.block36)}>
+                          <span className={cx(layout.block37)}>
+                            {obs.observed_status_text}
+                          </span>
                           <span
                             style={{
-                              fontSize: "0.6875rem",
-                              fontWeight: 600,
-                              padding: "0.15rem 0.4rem",
-                              borderRadius: "4px",
                               backgroundColor:
                                 obs.sharing_status === "SHARED"
-                                  ? "#D1FAE5"
-                                  : obs.sharing_status === "SUBMITTED_FOR_SHARING"
-                                  ? "#FEF3C7"
-                                  : "#F3F4F6",
+                                  ? "var(--ui-success-bg)"
+                                  : obs.sharing_status ===
+                                      "SUBMITTED_FOR_SHARING"
+                                    ? "#FEF3C7"
+                                    : "#F3F4F6",
                               color:
                                 obs.sharing_status === "SHARED"
                                   ? "#065F46"
-                                  : obs.sharing_status === "SUBMITTED_FOR_SHARING"
-                                  ? "#92400E"
-                                  : "#374151",
+                                  : obs.sharing_status ===
+                                      "SUBMITTED_FOR_SHARING"
+                                    ? "#92400E"
+                                    : "#374151",
                             }}
+                            className={cx(layout.block38)}
                           >
                             {obs.sharing_status}
                           </span>
                         </div>
 
-                        <p style={{ fontSize: "0.8125rem", color: "#6B7280", margin: 0 }}>
-                          Checked: <strong>{obs.last_checked_date}</strong> · Recorded by {obs.recorded_by_name}
+                        <p className={cx(layout.block39)}>
+                          Checked: <strong>{obs.last_checked_date}</strong> ·
+                          Recorded by {obs.recorded_by_name}
                         </p>
 
                         {obs.staff_notes && (
-                          <div style={{ padding: "0.5rem", backgroundColor: "#FFF", borderRadius: "4px", fontSize: "0.8125rem", border: "1px solid #E5E7EB" }}>
+                          <div className={cx(layout.block40)}>
                             🔒 <em>Internal Note:</em> {obs.staff_notes}
                           </div>
                         )}
 
                         {obs.files && obs.files.length > 0 && (
-                          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.25rem" }}>
+                          <div className={cx(layout.block41)}>
                             {obs.files.map((f) => (
                               <span
                                 key={f.id}
                                 style={{
-                                  fontSize: "0.75rem",
-                                  padding: "0.2rem 0.5rem",
-                                  borderRadius: "4px",
-                                  backgroundColor: f.is_client_shared ? "#DBEAFE" : "#FEE2E2",
-                                  color: f.is_client_shared ? "#1E40AF" : "#991B1B",
+                                  backgroundColor: f.is_client_shared
+                                    ? "#DBEAFE"
+                                    : "#FEE2E2",
+                                  color: f.is_client_shared
+                                    ? "#1E40AF"
+                                    : "#991B1B",
                                 }}
+                                className={cx(layout.block42)}
                               >
-                                {f.is_client_shared ? "🌐 Client Shared" : "🔒 Internal Only"}: {f.file_name}
+                                {f.is_client_shared
+                                  ? "🌐 Client Shared"
+                                  : "🔒 Internal Only"}
+                                : {f.file_name}
                               </span>
                             ))}
                           </div>
                         )}
 
                         {/* Manager sharing controls */}
-                        <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem", justifyContent: "flex-end" }}>
+                        <div className={cx(layout.block43)}>
                           {obs.sharing_status === "INTERNAL" && (
-                            <button
-                              onClick={() => handleSubmitForSharing(obs.id)}
-                              style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem", cursor: "pointer" }}
-                            >
-                              Submit for Client Sharing
-                            </button>
+                            <ProjectMutation>
+                              <button
+                                onClick={() => handleSubmitForSharing(obs.id)}
+                                className={cx(layout.block44)}
+                              >
+                                Submit for Client Sharing
+                              </button>
+                            </ProjectMutation>
                           )}
                           {obs.sharing_status === "SUBMITTED_FOR_SHARING" && (
                             <>
-                              <button
-                                onClick={() => handleReviewSharing(obs.id, "APPROVE")}
-                                style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem", backgroundColor: "#059669", color: "#FFF", border: "none", borderRadius: "4px", cursor: "pointer" }}
-                              >
-                                Approve & Publish
-                              </button>
-                              <button
-                                onClick={() => handleReviewSharing(obs.id, "RETURN")}
-                                style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem", backgroundColor: "#DC2626", color: "#FFF", border: "none", borderRadius: "4px", cursor: "pointer" }}
-                              >
-                                Keep Internal
-                              </button>
+                              <ProjectMutation>
+                                <button
+                                  onClick={() =>
+                                    handleReviewSharing(obs.id, "APPROVE")
+                                  }
+                                  className={cx(layout.block45)}
+                                >
+                                  Approve & Publish
+                                </button>
+                              </ProjectMutation>
+                              <ProjectMutation>
+                                <button
+                                  onClick={() =>
+                                    handleReviewSharing(obs.id, "RETURN")
+                                  }
+                                  className={cx(layout.block46)}
+                                >
+                                  Keep Internal
+                                </button>
+                              </ProjectMutation>
                             </>
                           )}
                         </div>
@@ -428,94 +449,113 @@ export default function PermitsPage() {
 
       {/* Record Observation Modal */}
       {showAddObsModal && (
-        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-          <div style={{ backgroundColor: "#FFF", padding: "2rem", borderRadius: "8px", width: "100%", maxWidth: "550px" }}>
-            <h2 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "1rem" }}>Record K-SMART Status Observation</h2>
+        <Dialog
+          title="Record K-SMART Status Observation"
+          onClose={() => setShowAddObsModal(false)}
+        >
+          <div className={cx(layout.block48)}>
+            <h2 className={cx(layout.block49)}>
+              Record K-SMART Status Observation
+            </h2>
             <form onSubmit={handleRecordObservation}>
-              <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.25rem" }}>Observed Status</label>
+              <div className={cx(layout.block50)}>
+                <label className={cx(layout.block51)} htmlFor="statusText">
+                  Observed Status
+                </label>
                 <input
                   type="text"
                   required
                   value={statusText}
                   onChange={(e) => setStatusText(e.target.value)}
-                  style={{ width: "100%", padding: "0.5rem", border: "1px solid #D1D5DB", borderRadius: "4px" }}
                   placeholder="e.g. Scrutiny in progress / Sanction Order Issued"
+                  className={cx(layout.block52)}
+                  id="statusText"
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+              <div className={cx(layout.block53)}>
                 <div>
-                  <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.25rem" }}>Last Checked Date</label>
+                  <label className={cx(layout.block54)} htmlFor="checkedDate">
+                    Last Checked Date
+                  </label>
                   <input
                     type="date"
                     required
                     value={checkedDate}
                     onChange={(e) => setCheckedDate(e.target.value)}
-                    style={{ width: "100%", padding: "0.5rem", border: "1px solid #D1D5DB", borderRadius: "4px" }}
+                    className={cx(layout.block55)}
+                    id="checkedDate"
                   />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.25rem" }}>Order / Decision Date (Optional)</label>
+                  <label className={cx(layout.block56)} htmlFor="decisionDate">
+                    Order / Decision Date (Optional)
+                  </label>
                   <input
                     type="date"
                     value={decisionDate}
                     onChange={(e) => setDecisionDate(e.target.value)}
-                    style={{ width: "100%", padding: "0.5rem", border: "1px solid #D1D5DB", borderRadius: "4px" }}
+                    className={cx(layout.block57)}
+                    id="decisionDate"
                   />
                 </div>
               </div>
 
-              <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.25rem" }}>Source Description</label>
+              <div className={cx(layout.block58)}>
+                <label className={cx(layout.block59)} htmlFor="sourceDesc">
+                  Source Description
+                </label>
                 <input
                   type="text"
                   required
                   value={sourceDesc}
                   onChange={(e) => setSourceDesc(e.target.value)}
-                  style={{ width: "100%", padding: "0.5rem", border: "1px solid #D1D5DB", borderRadius: "4px" }}
+                  className={cx(layout.block60)}
+                  id="sourceDesc"
                 />
               </div>
 
-              <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.25rem" }}>Reference URL (Optional)</label>
+              <div className={cx(layout.block61)}>
+                <label className={cx(layout.block62)} htmlFor="refUrl">
+                  Reference URL (Optional)
+                </label>
                 <input
                   type="url"
                   value={refUrl}
                   onChange={(e) => setRefUrl(e.target.value)}
-                  style={{ width: "100%", padding: "0.5rem", border: "1px solid #D1D5DB", borderRadius: "4px" }}
+                  className={cx(layout.block63)}
+                  id="refUrl"
                 />
               </div>
 
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.25rem" }}>Internal Staff Notes (Private)</label>
+              <div className={cx(layout.block64)}>
+                <label className={cx(layout.block65)}>
+                  Internal Staff Notes (Private)
+                </label>
                 <textarea
                   rows={3}
                   value={staffNotes}
                   onChange={(e) => setStaffNotes(e.target.value)}
-                  style={{ width: "100%", padding: "0.5rem", border: "1px solid #D1D5DB", borderRadius: "4px" }}
                   placeholder="Private commentary for team members only..."
+                  className={cx(layout.block66)}
                 />
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
+              <div className={cx(layout.block67)}>
                 <button
                   type="button"
                   onClick={() => setShowAddObsModal(false)}
-                  style={{ padding: "0.5rem 1rem", border: "1px solid #D1D5DB", background: "#FFF", borderRadius: "4px", cursor: "pointer" }}
+                  className={cx(layout.block68)}
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  style={{ padding: "0.5rem 1rem", backgroundColor: "var(--color-primary)", color: "#FFF", border: "none", borderRadius: "4px", cursor: "pointer" }}
-                >
+                <button type="submit" className={cx(layout.block69)}>
                   Record Observation
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </Dialog>
       )}
     </div>
   );

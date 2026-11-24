@@ -1,0 +1,127 @@
+.block1 {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+.block2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.block3 {
+  margin-top: 0.25rem;
+}
+.block4 {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--ui-divider);
+  padding-bottom: 0.5rem;
+}
+.block5 {
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.block6 {
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  background-color: rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  color: var(--ui-danger);
+  font-size: 0.875rem;
+}
+.block7 {
+  text-align: center;
+  padding: 3rem;
+}
+.block8 {
+  text-align: center;
+  padding: 3rem;
+}
+.block9 {
+  padding: 0;
+  overflow: hidden;
+}
+.block10 {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.875rem;
+}
+.block11 {
+  border-bottom: 1px solid var(--ui-divider);
+  background-color: var(--ui-divider);
+}
+.block12 {
+  padding: 0.875rem 1rem;
+  color: var(--ui-text-muted);
+  font-weight: 500;
+}
+.block13 {
+  padding: 0.875rem 1rem;
+  color: var(--ui-text-muted);
+  font-weight: 500;
+}
+.block14 {
+  padding: 0.875rem 1rem;
+  color: var(--ui-text-muted);
+  font-weight: 500;
+}
+.block15 {
+  padding: 0.875rem 1rem;
+  color: var(--ui-text-muted);
+  font-weight: 500;
+}
+.block16 {
+  padding: 0.875rem 1rem;
+  color: var(--ui-text-muted);
+  font-weight: 500;
+}
+.block17 {
+  border-bottom: 1px solid var(--ui-divider);
+}
+.block18 {
+  padding: 0.875rem 1rem;
+}
+.block19 {
+  font-weight: 600;
+  color: var(--ui-text);
+}
+.block20 {
+  font-size: 0.8125rem;
+  color: var(--ui-text-muted);
+}
+.block21 {
+  padding: 0.875rem 1rem;
+  color: var(--ui-text);
+}
+.block22 {
+  padding: 0.875rem 1rem;
+}
+.block23 {
+  padding: 0.875rem 1rem;
+  color: var(--ui-text-muted);
+  font-size: 0.8125rem;
+}
+.block24 {
+  padding: 0.875rem 1rem;
+}
+.block25 {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.block26 {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8125rem;
+}
+.block27 {
+  font-size: 0.8125rem;
+  color: var(--ui-action);
+  text-decoration: none;
+}

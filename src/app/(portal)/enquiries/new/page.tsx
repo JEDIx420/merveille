@@ -1,4 +1,7 @@
 "use client";
+import { cx } from "@/components/utilities";
+import { readResponse } from "@/components/ui";
+import layout from "./page.module.css";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -31,7 +34,7 @@ export default function NewEnquiryPage() {
         }),
       });
 
-      const data: any = await res.json();
+      const data: any = await readResponse(res);
       if (!res.ok) throw new Error(data.error || "Failed to record enquiry");
 
       router.push(`/enquiries/${data.id}`);
@@ -43,41 +46,32 @@ export default function NewEnquiryPage() {
   }
 
   return (
-    <div style={{ maxWidth: "680px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+    <div className={cx(layout.block1)}>
       {/* Breadcrumb */}
-      <nav style={{ fontSize: "0.875rem", color: "var(--merveille-muted)", display: "flex", gap: "0.5rem" }}>
-        <a href="/enquiries" style={{ color: "var(--merveille-gold)", textDecoration: "none" }}>
+      <nav className={cx(layout.block2)}>
+        <a href="/enquiries" className={cx(layout.block3)}>
           Enquiries
         </a>
         <span>/</span>
-        <span style={{ color: "#fff" }}>Record Intake</span>
+        <span className={cx(layout.block4)}>Record Intake</span>
       </nav>
 
       <div>
-        <h1 className="text-display">Record Client Enquiry</h1>
-        <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-          Capture prospective client brief, project location, and preliminary spatial requirements.
+        <h1 className={cx("text-display")}>Record Client Enquiry</h1>
+        <p className={cx(["text-muted", layout.block5].join(" "))}>
+          Capture prospective client brief, project location, and preliminary
+          spatial requirements.
         </p>
       </div>
 
-      {error && (
-        <div
-          style={{
-            padding: "0.75rem 1rem",
-            borderRadius: "4px",
-            backgroundColor: "rgba(220, 38, 38, 0.15)",
-            border: "1px solid rgba(220, 38, 38, 0.3)",
-            color: "#fca5a5",
-            fontSize: "0.875rem",
-          }}
-        >
-          {error}
-        </div>
-      )}
+      {error && <div className={cx(layout.block6)}>{error}</div>}
 
-      <form onSubmit={handleSubmit} className="card" style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+      <form
+        onSubmit={handleSubmit}
+        className={cx(["card", layout.block7].join(" "))}
+      >
         <div>
-          <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.35rem" }}>
+          <label className={cx(layout.block8)} htmlFor="contactName">
             Prospect / Client Name *
           </label>
           <input
@@ -86,21 +80,14 @@ export default function NewEnquiryPage() {
             value={contactName}
             onChange={(e) => setContactName(e.target.value)}
             placeholder="e.g. Rahul Menon"
-            style={{
-              width: "100%",
-              padding: "0.625rem",
-              borderRadius: "4px",
-              backgroundColor: "var(--merveille-charcoal)",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
-              color: "#fff",
-              fontSize: "0.875rem",
-            }}
+            className={cx(layout.block9)}
+            id="contactName"
           />
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+        <div className={cx(layout.block10)}>
           <div>
-            <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.35rem" }}>
+            <label className={cx(layout.block11)} htmlFor="contactEmail">
               Email Address *
             </label>
             <input
@@ -109,20 +96,13 @@ export default function NewEnquiryPage() {
               value={contactEmail}
               onChange={(e) => setContactEmail(e.target.value)}
               placeholder="rahul@example.com"
-              style={{
-                width: "100%",
-                padding: "0.625rem",
-                borderRadius: "4px",
-                backgroundColor: "var(--merveille-charcoal)",
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-                color: "#fff",
-                fontSize: "0.875rem",
-              }}
+              className={cx(layout.block12)}
+              id="contactEmail"
             />
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.35rem" }}>
+            <label className={cx(layout.block13)} htmlFor="contactPhone">
               Phone Number
             </label>
             <input
@@ -130,21 +110,14 @@ export default function NewEnquiryPage() {
               value={contactPhone}
               onChange={(e) => setContactPhone(e.target.value)}
               placeholder="+91 98470 12345"
-              style={{
-                width: "100%",
-                padding: "0.625rem",
-                borderRadius: "4px",
-                backgroundColor: "var(--merveille-charcoal)",
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-                color: "#fff",
-                fontSize: "0.875rem",
-              }}
+              className={cx(layout.block14)}
+              id="contactPhone"
             />
           </div>
         </div>
 
         <div>
-          <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.35rem" }}>
+          <label className={cx(layout.block15)} htmlFor="siteLocation">
             Site Location *
           </label>
           <input
@@ -153,20 +126,13 @@ export default function NewEnquiryPage() {
             value={siteLocation}
             onChange={(e) => setSiteLocation(e.target.value)}
             placeholder="e.g. Aluva, Ernakulam, Kerala"
-            style={{
-              width: "100%",
-              padding: "0.625rem",
-              borderRadius: "4px",
-              backgroundColor: "var(--merveille-charcoal)",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
-              color: "#fff",
-              fontSize: "0.875rem",
-            }}
+            className={cx(layout.block16)}
+            id="siteLocation"
           />
         </div>
 
         <div>
-          <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.35rem" }}>
+          <label className={cx(layout.block17)}>
             Initial Project Brief & Spatial Requirements
           </label>
           <textarea
@@ -174,23 +140,19 @@ export default function NewEnquiryPage() {
             value={requirementsText}
             onChange={(e) => setRequirementsText(e.target.value)}
             placeholder="e.g. 4-bedroom contemporary tropical residence with central courtyard, approximately 4,200 sq.ft..."
-            style={{
-              width: "100%",
-              padding: "0.625rem",
-              borderRadius: "4px",
-              backgroundColor: "var(--merveille-charcoal)",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
-              color: "#fff",
-              fontSize: "0.875rem",
-            }}
+            className={cx(layout.block18)}
           />
         </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem", marginTop: "0.5rem" }}>
-          <a href="/enquiries" className="btn-secondary">
+        <div className={cx(layout.block19)}>
+          <a href="/enquiries" className={cx("btn-secondary")}>
             Cancel
           </a>
-          <button type="submit" className="btn-primary" disabled={submitting}>
+          <button
+            type="submit"
+            className={cx("btn-primary")}
+            disabled={submitting}
+          >
             {submitting ? "Recording..." : "Record Enquiry"}
           </button>
         </div>

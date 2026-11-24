@@ -1,0 +1,132 @@
+.block1 {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+.block2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.block3 {
+  margin-top: 0.25rem;
+}
+.block4 {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+}
+.block5 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.block6 {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.block7 {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8125rem;
+}
+.block8 {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  border-radius: var(--ui-radius-control);
+  border: 1px solid var(--ui-divider);
+  background-color: var(--ui-surface);
+  color: var(--ui-text);
+  min-width: min(260px, 100%);
+}
+.block9 {
+  padding: 2rem;
+  color: var(--ui-text-muted);
+}
+.block10 {
+  border-color: var(--ui-danger);
+}
+.block11 {
+  color: var(--ui-danger);
+}
+.block12 {
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+.block13 {
+  font-size: 1.2rem;
+  color: var(--ui-text);
+  margin-bottom: 0.5rem;
+}
+.block14 {
+  color: var(--ui-text-muted);
+  max-width: 500px;
+  margin: 0 auto;
+}
+.block15 {
+  margin-top: 1.5rem;
+}
+.block16 {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.block17 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.block18 {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: 75%;
+}
+.block19 {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.block20 {
+  font-size: 0.8125rem;
+  padding: 0.15rem 0.45rem;
+}
+.block21 {
+  font-size: 0.8125rem;
+  background-color: var(--ui-surface);
+  color: var(--ui-text);
+  border: 1px solid var(--ui-divider);
+}
+.block22 {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ui-text);
+}
+.block23 {
+  font-size: 0.8125rem;
+  color: var(--ui-text-muted);
+}
+.block24 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ui-text);
+}
+.block25 {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ui-text-muted);
+}
+.block26 {
+  font-size: 0.8125rem;
+}
+.block27 {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}

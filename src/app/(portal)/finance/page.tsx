@@ -1,4 +1,10 @@
 "use client";
+import { AccountingForms } from "@/features/accounting-forms";
+import { PermissionGate } from "@/components/permission-gate";
+import { cx } from "@/components/utilities";
+import { ErrorState, readResponse } from "@/components/ui";
+import layout from "./page.module.css";
+import { useFeedback } from "@/components/ui";
 
 import React, { useState, useEffect } from "react";
 
@@ -49,14 +55,19 @@ interface PayrollRecord {
 }
 
 export default function FirmFinancePage() {
+  const feedback = useFeedback();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [report, setReport] = useState<FinancialReport | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [consultantBills, setConsultantBills] = useState<ConsultantBill[]>([]);
-  const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[] | null>(null); // null if unauthorized
-  const [activeTab, setActiveTab] = useState<"OVERVIEW" | "EXPENSES" | "CONSULTANTS" | "PAYROLL">("OVERVIEW");
+  const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[] | null>(
+    null,
+  ); // null if unauthorized
+  const [activeTab, setActiveTab] = useState<
+    "OVERVIEW" | "EXPENSES" | "CONSULTANTS" | "PAYROLL"
+  >("OVERVIEW");
 
   // Modals
   const [showExpenseModal, setShowExpenseModal] = useState(false);
@@ -91,19 +102,19 @@ export default function FirmFinancePage() {
       ]);
 
       if (repRes.ok) {
-        const data = (await repRes.json()) as any;
+        const data = (await readResponse(repRes)) as any;
         setReport(data.report || null);
       }
       if (expRes.ok) {
-        const data = (await expRes.json()) as any;
+        const data = (await readResponse(expRes)) as any;
         setExpenses(data.expenses || []);
       }
       if (cblRes.ok) {
-        const data = (await cblRes.json()) as any;
+        const data = (await readResponse(cblRes)) as any;
         setConsultantBills(data.bills || []);
       }
       if (payRes.ok) {
-        const data = (await payRes.json()) as any;
+        const data = (await readResponse(payRes)) as any;
         setPayrollRecords(data.payroll || []);
       } else {
         setPayrollRecords(null); // non-admin: strictly unavailable
@@ -129,7 +140,7 @@ export default function FirmFinancePage() {
       if (!res.ok) throw new Error("Failed to approve expense");
       fetchFinancials();
     } catch (err: any) {
-      alert(err.message);
+      feedback.notify(err.message);
     }
   };
 
@@ -143,7 +154,7 @@ export default function FirmFinancePage() {
       if (!res.ok) throw new Error("Failed to post expense to ledger");
       fetchFinancials();
     } catch (err: any) {
-      alert(err.message);
+      feedback.notify(err.message);
     }
   };
 
@@ -157,7 +168,7 @@ export default function FirmFinancePage() {
       if (!res.ok) throw new Error("Failed to approve consultant bill");
       fetchFinancials();
     } catch (err: any) {
-      alert(err.message);
+      feedback.notify(err.message);
     }
   };
 
@@ -171,87 +182,98 @@ export default function FirmFinancePage() {
       if (!res.ok) throw new Error("Failed to post consultant bill to ledger");
       fetchFinancials();
     } catch (err: any) {
-      alert(err.message);
+      feedback.notify(err.message);
     }
   };
 
   if (loading) {
     return (
-      <div className="portal-container" style={{ padding: "2rem" }}>
-        <p className="text-muted">Loading practice financial accounts...</p>
+      <div className={cx(["portal-container", layout.block1].join(" "))}>
+        <p className={cx("text-muted")}>
+          Loading practice financial accounts...
+        </p>
       </div>
     );
   }
 
+  if (error) return <ErrorState message={error} retry={fetchFinancials} />;
   return (
-    <div className="portal-container" style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
+    <div className={cx(["portal-container", layout.block2].join(" "))}>
+      <AccountingForms onSaved={fetchFinancials} />
       {/* Header */}
-      <div style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
+      <div className={cx(layout.block3)}>
         <div>
-          <h1 className="text-display" style={{ fontSize: "1.75rem", fontWeight: 600 }}>Firm Operational Accounts</h1>
-          <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-            Ledger-balanced receivables, operational expenses, consultant obligations, and protected executive reporting.
+          <h1 className={cx(["text-display", layout.block4].join(" "))}>
+            Firm Operational Accounts
+          </h1>
+          <p className={cx(["text-muted", layout.block5].join(" "))}>
+            Ledger-balanced receivables, operational expenses, consultant
+            obligations, and protected executive reporting.
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: "0.75rem" }}>
+        <div className={cx(layout.block6)}>
           <button
             onClick={() => setShowExpenseModal(true)}
-            className="btn-secondary"
-            style={{ padding: "0.5rem 1rem", fontSize: "0.875rem", cursor: "pointer" }}
+            className={cx(["btn-secondary", layout.block7].join(" "))}
           >
             + Record Expense
           </button>
         </div>
       </div>
 
-      {error && (
-        <div style={{ padding: "1rem", backgroundColor: "#FEE2E2", color: "#991B1B", borderRadius: "6px", marginBottom: "1.5rem" }}>
-          {error}
-        </div>
-      )}
+      {error && <div className={cx(layout.block8)}>{error}</div>}
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "1rem", borderBottom: "1px solid var(--color-border)", marginBottom: "1.5rem" }}>
+      <div className={cx(layout.block9)}>
         <button
           onClick={() => setActiveTab("OVERVIEW")}
           style={{
-            padding: "0.75rem 1rem",
-            background: "none",
-            border: "none",
-            borderBottom: activeTab === "OVERVIEW" ? "2px solid var(--color-primary)" : "2px solid transparent",
+            borderBottom:
+              activeTab === "OVERVIEW"
+                ? "2px solid var(--color-primary)"
+                : "2px solid transparent",
             fontWeight: activeTab === "OVERVIEW" ? 600 : 400,
-            color: activeTab === "OVERVIEW" ? "var(--color-primary)" : "var(--color-muted)",
-            cursor: "pointer",
+            color:
+              activeTab === "OVERVIEW"
+                ? "var(--color-primary)"
+                : "var(--color-muted)",
           }}
+          className={cx(layout.block10)}
         >
           Statement Overview
         </button>
         <button
           onClick={() => setActiveTab("EXPENSES")}
           style={{
-            padding: "0.75rem 1rem",
-            background: "none",
-            border: "none",
-            borderBottom: activeTab === "EXPENSES" ? "2px solid var(--color-primary)" : "2px solid transparent",
+            borderBottom:
+              activeTab === "EXPENSES"
+                ? "2px solid var(--color-primary)"
+                : "2px solid transparent",
             fontWeight: activeTab === "EXPENSES" ? 600 : 400,
-            color: activeTab === "EXPENSES" ? "var(--color-primary)" : "var(--color-muted)",
-            cursor: "pointer",
+            color:
+              activeTab === "EXPENSES"
+                ? "var(--color-primary)"
+                : "var(--color-muted)",
           }}
+          className={cx(layout.block11)}
         >
           Expenses ({expenses.length})
         </button>
         <button
           onClick={() => setActiveTab("CONSULTANTS")}
           style={{
-            padding: "0.75rem 1rem",
-            background: "none",
-            border: "none",
-            borderBottom: activeTab === "CONSULTANTS" ? "2px solid var(--color-primary)" : "2px solid transparent",
+            borderBottom:
+              activeTab === "CONSULTANTS"
+                ? "2px solid var(--color-primary)"
+                : "2px solid transparent",
             fontWeight: activeTab === "CONSULTANTS" ? 600 : 400,
-            color: activeTab === "CONSULTANTS" ? "var(--color-primary)" : "var(--color-muted)",
-            cursor: "pointer",
+            color:
+              activeTab === "CONSULTANTS"
+                ? "var(--color-primary)"
+                : "var(--color-muted)",
           }}
+          className={cx(layout.block12)}
         >
           Consultant Obligations ({consultantBills.length})
         </button>
@@ -259,14 +281,17 @@ export default function FirmFinancePage() {
           <button
             onClick={() => setActiveTab("PAYROLL")}
             style={{
-              padding: "0.75rem 1rem",
-              background: "none",
-              border: "none",
-              borderBottom: activeTab === "PAYROLL" ? "2px solid var(--color-primary)" : "2px solid transparent",
+              borderBottom:
+                activeTab === "PAYROLL"
+                  ? "2px solid var(--color-primary)"
+                  : "2px solid transparent",
               fontWeight: activeTab === "PAYROLL" ? 600 : 400,
-              color: activeTab === "PAYROLL" ? "var(--color-primary)" : "var(--color-muted)",
-              cursor: "pointer",
+              color:
+                activeTab === "PAYROLL"
+                  ? "var(--color-primary)"
+                  : "var(--color-muted)",
             }}
+            className={cx(layout.block13)}
           >
             🔒 Payroll & Salaries ({payrollRecords.length})
           </button>
@@ -276,53 +301,62 @@ export default function FirmFinancePage() {
       {/* Overview Tab */}
       {activeTab === "OVERVIEW" && report && (
         <div>
-          <div style={{ padding: "0.75rem 1.25rem", backgroundColor: "#F3F4F6", borderRadius: "6px", marginBottom: "1.5rem", fontSize: "0.8125rem", color: "#4B5563" }}>
-            <strong>Reporting Basis:</strong> {report.reportingBasis} · <strong>Base Currency:</strong> {report.currency} · <strong>Period:</strong> {report.period.startDate} to {report.period.endDate}
+          <div className={cx(layout.block14)}>
+            <strong>Reporting Basis:</strong> {report.reportingBasis} ·{" "}
+            <strong>Base Currency:</strong> {report.currency} ·{" "}
+            <strong>Period:</strong> {report.period.startDate} to{" "}
+            {report.period.endDate}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem", marginBottom: "2rem" }}>
-            <div style={{ padding: "1.25rem", backgroundColor: "var(--color-surface)", borderRadius: "8px", border: "1px solid var(--color-border)" }}>
-              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#6B7280", textTransform: "uppercase" }}>Invoiced Value (Revenue)</span>
-              <div style={{ fontSize: "1.5rem", fontWeight: 700, marginTop: "0.25rem" }}>
+          <div className={cx(layout.block15)}>
+            <div className={cx(layout.block16)}>
+              <span className={cx(layout.block17)}>
+                Invoiced Value (Revenue)
+              </span>
+              <div className={cx(layout.block18)}>
                 {formatCurrency(report.invoicedAmountMinor)}
               </div>
             </div>
 
-            <div style={{ padding: "1.25rem", backgroundColor: "var(--color-surface)", borderRadius: "8px", border: "1px solid var(--color-border)" }}>
-              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#6B7280", textTransform: "uppercase" }}>Money Received (Cash)</span>
-              <div style={{ fontSize: "1.5rem", fontWeight: 700, marginTop: "0.25rem", color: "#059669" }}>
+            <div className={cx(layout.block19)}>
+              <span className={cx(layout.block20)}>Money Received (Cash)</span>
+              <div className={cx(layout.block21)}>
                 {formatCurrency(report.moneyReceivedMinor)}
               </div>
             </div>
 
-            <div style={{ padding: "1.25rem", backgroundColor: "var(--color-surface)", borderRadius: "8px", border: "1px solid var(--color-border)" }}>
-              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#6B7280", textTransform: "uppercase" }}>Direct Expenses</span>
-              <div style={{ fontSize: "1.5rem", fontWeight: 700, marginTop: "0.25rem" }}>
+            <div className={cx(layout.block22)}>
+              <span className={cx(layout.block23)}>Direct Expenses</span>
+              <div className={cx(layout.block24)}>
                 {formatCurrency(report.directExpensesMinor)}
               </div>
             </div>
 
-            <div style={{ padding: "1.25rem", backgroundColor: "var(--color-surface)", borderRadius: "8px", border: "1px solid var(--color-border)" }}>
-              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#6B7280", textTransform: "uppercase" }}>Consultant Fees</span>
-              <div style={{ fontSize: "1.5rem", fontWeight: 700, marginTop: "0.25rem" }}>
+            <div className={cx(layout.block25)}>
+              <span className={cx(layout.block26)}>Consultant Fees</span>
+              <div className={cx(layout.block27)}>
                 {formatCurrency(report.consultantFeesMinor)}
               </div>
             </div>
 
             {/* Protected Salary & Profit Cards (ADMIN ONLY) */}
             {report.salariesMinor !== undefined && (
-              <div style={{ padding: "1.25rem", backgroundColor: "#FAF5FF", borderRadius: "8px", border: "1px solid #E9D5FF" }}>
-                <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#7E22CE", textTransform: "uppercase" }}>🔒 Salaries & Payroll (Admin)</span>
-                <div style={{ fontSize: "1.5rem", fontWeight: 700, marginTop: "0.25rem", color: "#6B21A8" }}>
+              <div className={cx(layout.block28)}>
+                <span className={cx(layout.block29)}>
+                  🔒 Salaries & Payroll (Admin)
+                </span>
+                <div className={cx(layout.block30)}>
                   {formatCurrency(report.salariesMinor)}
                 </div>
               </div>
             )}
 
             {report.operatingProfitMinor !== undefined && (
-              <div style={{ padding: "1.25rem", backgroundColor: "#F0FDF4", borderRadius: "8px", border: "1px solid #BBF7D0" }}>
-                <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#15803D", textTransform: "uppercase" }}>🔒 Operating Profit (Admin)</span>
-                <div style={{ fontSize: "1.5rem", fontWeight: 700, marginTop: "0.25rem", color: "#166534" }}>
+              <div className={cx(layout.block31)}>
+                <span className={cx(layout.block32)}>
+                  🔒 Operating Profit (Admin)
+                </span>
+                <div className={cx(layout.block33)}>
                   {formatCurrency(report.operatingProfitMinor)}
                 </div>
               </div>
@@ -333,45 +367,61 @@ export default function FirmFinancePage() {
 
       {/* Expenses Tab */}
       {activeTab === "EXPENSES" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div className={cx(layout.block34)}>
           {expenses.map((exp) => (
-            <div key={exp.id} style={{ padding: "1.25rem", backgroundColor: "var(--color-surface)", borderRadius: "8px", border: "1px solid var(--color-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div key={exp.id} className={cx(layout.block35)}>
               <div>
-                <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#6B7280" }}>{exp.category} · {exp.incurred_date}</span>
-                <h4 style={{ margin: "0.25rem 0", fontWeight: 600 }}>{exp.description}</h4>
-                <p className="text-muted" style={{ fontSize: "0.8125rem", margin: 0 }}>
-                  Supplier: {exp.supplier_name || "Direct"} · Submitted by {exp.submitter_name}
+                <span className={cx(layout.block36)}>
+                  {exp.category} · {exp.incurred_date}
+                </span>
+                <h4 className={cx(layout.block37)}>{exp.description}</h4>
+                <p className={cx(["text-muted", layout.block38].join(" "))}>
+                  Supplier: {exp.supplier_name || "Direct"} · Submitted by{" "}
+                  {exp.submitter_name}
                 </p>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                <span style={{ fontWeight: 700, fontSize: "1.125rem" }}>{formatCurrency(exp.amount_minor)}</span>
-                <span style={{
-                  padding: "0.25rem 0.5rem",
-                  borderRadius: "4px",
-                  fontSize: "0.75rem",
-                  fontWeight: 600,
-                  backgroundColor: exp.status === "POSTED" ? "#D1FAE5" : exp.status === "APPROVED" ? "#DBEAFE" : "#FEF3C7",
-                  color: exp.status === "POSTED" ? "#065F46" : exp.status === "APPROVED" ? "#1E40AF" : "#92400E",
-                }}>
+              <div className={cx(layout.block39)}>
+                <span className={cx(layout.block40)}>
+                  {formatCurrency(exp.amount_minor)}
+                </span>
+                <span
+                  style={{
+                    backgroundColor:
+                      exp.status === "POSTED"
+                        ? "var(--ui-success-bg)"
+                        : exp.status === "APPROVED"
+                          ? "#DBEAFE"
+                          : "#FEF3C7",
+                    color:
+                      exp.status === "POSTED"
+                        ? "#065F46"
+                        : exp.status === "APPROVED"
+                          ? "#1E40AF"
+                          : "#92400E",
+                  }}
+                  className={cx(layout.block41)}
+                >
                   {exp.status}
                 </span>
 
                 {exp.status === "SUBMITTED" && (
                   <button
                     onClick={() => handleApproveExpense(exp.id)}
-                    style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", cursor: "pointer" }}
+                    className={cx(layout.block42)}
                   >
                     Approve (Manager)
                   </button>
                 )}
                 {exp.status === "APPROVED" && (
-                  <button
-                    onClick={() => handlePostExpense(exp.id)}
-                    style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", backgroundColor: "#059669", color: "#FFF", border: "none", borderRadius: "4px", cursor: "pointer" }}
-                  >
-                    Post (Admin)
-                  </button>
+                  <PermissionGate roles={["ADMIN"]}>
+                    <button
+                      onClick={() => handlePostExpense(exp.id)}
+                      className={cx(layout.block43)}
+                    >
+                      Post (Admin)
+                    </button>
+                  </PermissionGate>
                 )}
               </div>
             </div>
@@ -381,45 +431,60 @@ export default function FirmFinancePage() {
 
       {/* Consultant Obligations Tab */}
       {activeTab === "CONSULTANTS" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div className={cx(layout.block44)}>
           {consultantBills.map((cb) => (
-            <div key={cb.id} style={{ padding: "1.25rem", backgroundColor: "var(--color-surface)", borderRadius: "8px", border: "1px solid var(--color-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div key={cb.id} className={cx(layout.block45)}>
               <div>
-                <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#6B7280" }}>{cb.discipline} · Ref: {cb.bill_reference}</span>
-                <h4 style={{ margin: "0.25rem 0", fontWeight: 600 }}>{cb.consultant_name}</h4>
-                <p className="text-muted" style={{ fontSize: "0.8125rem", margin: 0 }}>
+                <span className={cx(layout.block46)}>
+                  {cb.discipline} · Ref: {cb.bill_reference}
+                </span>
+                <h4 className={cx(layout.block47)}>{cb.consultant_name}</h4>
+                <p className={cx(["text-muted", layout.block48].join(" "))}>
                   Project: {cb.project_name} · Bill Date: {cb.bill_date}
                 </p>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                <span style={{ fontWeight: 700, fontSize: "1.125rem" }}>{formatCurrency(cb.amount_minor)}</span>
-                <span style={{
-                  padding: "0.25rem 0.5rem",
-                  borderRadius: "4px",
-                  fontSize: "0.75rem",
-                  fontWeight: 600,
-                  backgroundColor: cb.status === "POSTED" ? "#D1FAE5" : cb.status === "APPROVED" ? "#DBEAFE" : "#FEF3C7",
-                  color: cb.status === "POSTED" ? "#065F46" : cb.status === "APPROVED" ? "#1E40AF" : "#92400E",
-                }}>
+              <div className={cx(layout.block49)}>
+                <span className={cx(layout.block50)}>
+                  {formatCurrency(cb.amount_minor)}
+                </span>
+                <span
+                  style={{
+                    backgroundColor:
+                      cb.status === "POSTED"
+                        ? "var(--ui-success-bg)"
+                        : cb.status === "APPROVED"
+                          ? "#DBEAFE"
+                          : "#FEF3C7",
+                    color:
+                      cb.status === "POSTED"
+                        ? "#065F46"
+                        : cb.status === "APPROVED"
+                          ? "#1E40AF"
+                          : "#92400E",
+                  }}
+                  className={cx(layout.block51)}
+                >
                   {cb.status}
                 </span>
 
                 {cb.status === "SUBMITTED" && (
                   <button
                     onClick={() => handleApproveConsultantBill(cb.id)}
-                    style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", cursor: "pointer" }}
+                    className={cx(layout.block52)}
                   >
                     Approve (Manager)
                   </button>
                 )}
                 {cb.status === "APPROVED" && (
-                  <button
-                    onClick={() => handlePostConsultantBill(cb.id)}
-                    style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", backgroundColor: "#059669", color: "#FFF", border: "none", borderRadius: "4px", cursor: "pointer" }}
-                  >
-                    Post (Admin)
-                  </button>
+                  <PermissionGate roles={["ADMIN"]}>
+                    <button
+                      onClick={() => handlePostConsultantBill(cb.id)}
+                      className={cx(layout.block53)}
+                    >
+                      Post (Admin)
+                    </button>
+                  </PermissionGate>
                 )}
               </div>
             </div>
@@ -429,23 +494,28 @@ export default function FirmFinancePage() {
 
       {/* Payroll Tab (ADMIN ONLY) */}
       {activeTab === "PAYROLL" && payrollRecords && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <div style={{ padding: "0.75rem 1.25rem", backgroundColor: "#FEF3C7", borderRadius: "6px", color: "#92400E", fontSize: "0.8125rem" }}>
-            🔒 <strong>Strictly Confidential (Admin Only):</strong> Payroll allocations and individual salaries are protected by operational permissions and isolated from staff, consultants, and non-admin owners.
+        <div className={cx(layout.block54)}>
+          <div className={cx(layout.block55)}>
+            🔒 <strong>Strictly Confidential (Admin Only):</strong> Payroll
+            allocations and individual salaries are protected by operational
+            permissions and isolated from staff, consultants, and non-admin
+            owners.
           </div>
 
           {payrollRecords.map((pr) => (
-            <div key={pr.id} style={{ padding: "1.25rem", backgroundColor: "var(--color-surface)", borderRadius: "8px", border: "1px solid var(--color-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div key={pr.id} className={cx(layout.block56)}>
               <div>
-                <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#6B7280" }}>Period: {pr.period_month}</span>
-                <h4 style={{ margin: "0.25rem 0", fontWeight: 600 }}>{pr.employee_name}</h4>
-                <p className="text-muted" style={{ fontSize: "0.8125rem", margin: 0 }}>
+                <span className={cx(layout.block57)}>
+                  Period: {pr.period_month}
+                </span>
+                <h4 className={cx(layout.block58)}>{pr.employee_name}</h4>
+                <p className={cx(["text-muted", layout.block59].join(" "))}>
                   Project Allocation: {pr.project_name || "Firm Overhead"}
                 </p>
               </div>
 
               <div>
-                <span style={{ fontWeight: 700, fontSize: "1.125rem", color: "#6B21A8" }}>
+                <span className={cx(layout.block60)}>
                   {formatCurrency(pr.gross_salary_minor)}
                 </span>
               </div>

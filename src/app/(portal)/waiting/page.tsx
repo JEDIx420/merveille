@@ -1,4 +1,7 @@
 "use client";
+import { cx } from "@/components/utilities";
+import { readResponse } from "@/components/ui";
+import layout from "./page.module.css";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -26,10 +29,18 @@ export default function WaitingOnYouPage() {
   const [items, setItems] = useState<WaitingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [filterType, setFilterType] = useState<"ALL" | "OVERDUE" | "APPROVALS" | "DECISIONS" | "TASKS">("ALL");
+  const [filterType, setFilterType] = useState<
+    "ALL" | "OVERDUE" | "APPROVALS" | "DECISIONS" | "TASKS"
+  >("ALL");
   const [search, setSearch] = useState("");
 
   useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("type");
+    if (
+      requested &&
+      ["ALL", "OVERDUE", "APPROVALS", "DECISIONS", "TASKS"].includes(requested)
+    )
+      setFilterType(requested as any);
     loadWaitingItems();
   }, []);
 
@@ -38,8 +49,9 @@ export default function WaitingOnYouPage() {
     setError("");
     try {
       const res = await fetch("/api/dashboard/waiting");
-      const json: any = await res.json();
-      if (!res.ok) throw new Error(json.error || "Failed to load waiting items");
+      const json: any = await readResponse(res);
+      if (!res.ok)
+        throw new Error(json.error || "Failed to load waiting items");
       setItems(json.items || []);
     } catch (err: any) {
       setError(err.message);
@@ -90,37 +102,48 @@ export default function WaitingOnYouPage() {
   });
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+    <div className={cx(layout.block1)}>
       {/* Header */}
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
+      <header className={cx(layout.block2)}>
         <div>
-          <h1 className="text-display">Waiting on you</h1>
-          <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-            Direct actionable responsibilities requiring your decision or completion.
+          <h1 className={cx("text-display")}>Waiting on you</h1>
+          <p className={cx(["text-muted", layout.block3].join(" "))}>
+            Direct actionable responsibilities requiring your decision or
+            completion.
           </p>
         </div>
-        <button onClick={loadWaitingItems} className="btn-secondary" style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem" }}>
+        <button
+          onClick={loadWaitingItems}
+          className={cx(["btn-secondary", layout.block4].join(" "))}
+        >
           Refresh Queue
         </button>
       </header>
 
       {/* Filter and Search Bar */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          {(["ALL", "OVERDUE", "APPROVALS", "DECISIONS", "TASKS"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setFilterType(tab)}
-              className={filterType === tab ? "btn-primary" : "btn-secondary"}
-              style={{ padding: "0.35rem 0.75rem", fontSize: "0.8rem" }}
-            >
-              {tab === "ALL" && `All (${items.length})`}
-              {tab === "OVERDUE" && `Overdue (${items.filter((i) => i.isOverdue).length})`}
-              {tab === "APPROVALS" && `Approvals & Releases`}
-              {tab === "DECISIONS" && `Client Decisions`}
-              {tab === "TASKS" && `Tasks & Remediations`}
-            </button>
-          ))}
+      <div className={cx(layout.block5)}>
+        <div className={cx(layout.block6)}>
+          {(["ALL", "OVERDUE", "APPROVALS", "DECISIONS", "TASKS"] as const).map(
+            (tab) => (
+              <button
+                key={tab}
+                onClick={() => setFilterType(tab)}
+                className={cx(
+                  [
+                    filterType === tab ? "btn-primary" : "btn-secondary",
+                    layout.block7,
+                  ].join(" "),
+                )}
+              >
+                {tab === "ALL" && `All (${items.length})`}
+                {tab === "OVERDUE" &&
+                  `Overdue (${items.filter((i) => i.isOverdue).length})`}
+                {tab === "APPROVALS" && `Approvals & Releases`}
+                {tab === "DECISIONS" && `Client Decisions`}
+                {tab === "TASKS" && `Tasks & Remediations`}
+              </button>
+            ),
+          )}
         </div>
 
         <input
@@ -128,105 +151,92 @@ export default function WaitingOnYouPage() {
           placeholder="Filter by project, title or action..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{
-            padding: "0.4rem 0.8rem",
-            fontSize: "0.85rem",
-            borderRadius: "var(--merveille-radius-sm)",
-            border: "1px solid var(--merveille-border)",
-            backgroundColor: "var(--merveille-surface)",
-            color: "var(--merveille-ink)",
-            minWidth: "260px",
-          }}
+          className={cx(layout.block8)}
         />
       </div>
 
       {loading ? (
-        <div style={{ padding: "2rem", color: "var(--merveille-muted)" }}>Loading queue...</div>
+        <div className={cx(layout.block9)}>Loading queue...</div>
       ) : error ? (
-        <div className="card" style={{ borderColor: "var(--merveille-error)" }}>
-          <p style={{ color: "var(--merveille-error)" }}>{error}</p>
+        <div className={cx(["card", layout.block10].join(" "))}>
+          <p className={cx(layout.block11)}>{error}</p>
         </div>
       ) : filteredItems.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", padding: "3rem 1.5rem" }}>
-          <h2 style={{ fontSize: "1.2rem", color: "var(--merveille-ink)", marginBottom: "0.5rem" }}>
-            Nothing waiting on you
-          </h2>
-          <p style={{ color: "var(--merveille-muted)", maxWidth: "500px", margin: "0 auto" }}>
-            You are fully up to date. No actions are currently pending your approval, decision, or completion.
+        <div className={cx(["card", layout.block12].join(" "))}>
+          <h2 className={cx(layout.block13)}>Nothing waiting on you</h2>
+          <p className={cx(layout.block14)}>
+            You are fully up to date. No actions are currently pending your
+            approval, decision, or completion.
           </p>
-          <div style={{ marginTop: "1.5rem" }}>
-            <Link href="/projects" className="btn-secondary">
+          <div className={cx(layout.block15)}>
+            <Link href="/projects" className={cx("btn-secondary")}>
               View Active Projects &rarr;
             </Link>
           </div>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+        <div className={cx(layout.block16)}>
           {filteredItems.map((item) => (
             <div
               key={item.id}
-              className="card"
+              className={cx(["card", layout.block17].join(" "))}
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "1rem 1.25rem",
                 borderLeft: item.isOverdue
-                  ? "4px solid var(--merveille-error)"
+                  ? "4px solid var(--ui-danger)"
                   : item.urgency === "URGENT" || item.urgency === "HIGH"
-                  ? "4px solid var(--merveille-gold)"
-                  : "1px solid var(--merveille-border)",
-                flexWrap: "wrap",
-                gap: "1rem",
+                    ? "4px solid var(--ui-action)"
+                    : "1px solid var(--ui-divider)",
               }}
             >
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", maxWidth: "75%" }}>
-                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+              <div className={cx(layout.block18)}>
+                <div className={cx(layout.block19)}>
                   {item.isOverdue && (
-                    <span className="badge badge-error" style={{ fontSize: "0.75rem", padding: "0.15rem 0.45rem" }}>
+                    <span
+                      className={cx(
+                        ["badge badge-error", layout.block20].join(" "),
+                      )}
+                    >
                       OVERDUE
                     </span>
                   )}
-                  <span
-                    className="badge"
-                    style={{
-                      fontSize: "0.75rem",
-                      backgroundColor: "var(--merveille-surface)",
-                      color: "var(--merveille-ink)",
-                      border: "1px solid var(--merveille-border)",
-                    }}
-                  >
+                  <span className={cx(["badge", layout.block21].join(" "))}>
                     {item.entityType.replace("_", " ")}
                   </span>
                   {item.projectCode && (
-                    <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--merveille-gold-text)" }}>
+                    <span className={cx(layout.block22)}>
                       {item.projectCode}
                     </span>
                   )}
                   {item.projectName && (
-                    <span style={{ fontSize: "0.8rem", color: "var(--merveille-muted)" }}>
+                    <span className={cx(layout.block23)}>
                       &bull; {item.projectName}
                     </span>
                   )}
                 </div>
 
-                <div style={{ fontSize: "1rem", fontWeight: 600, color: "var(--merveille-ink)" }}>
-                  {item.title}
-                </div>
+                <div className={cx(layout.block24)}>{item.title}</div>
 
-                <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--merveille-muted)" }}>
-                  {item.description}
-                </p>
+                <p className={cx(layout.block25)}>{item.description}</p>
 
                 {item.dueDate && (
-                  <div style={{ fontSize: "0.8rem", color: item.isOverdue ? "var(--merveille-error)" : "var(--merveille-muted)" }}>
+                  <div
+                    style={{
+                      color: item.isOverdue
+                        ? "var(--ui-danger)"
+                        : "var(--ui-text-muted)",
+                    }}
+                    className={cx(layout.block26)}
+                  >
                     Target Deadline: {item.dueDate}
                   </div>
                 )}
               </div>
 
               <div>
-                <Link href={item.link} className="btn-primary" style={{ padding: "0.5rem 1rem", fontSize: "0.875rem" }}>
+                <Link
+                  href={item.link}
+                  className={cx(["btn-primary", layout.block27].join(" "))}
+                >
                   {item.requiredAction} &rarr;
                 </Link>
               </div>

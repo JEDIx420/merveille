@@ -1,4 +1,9 @@
 "use client";
+import { ProjectMutation } from "@/components/project-mutation";
+import { PermissionGate } from "@/components/permission-gate";
+import { cx } from "@/components/utilities";
+import { Dialog, readResponse } from "@/components/ui";
+import { useFeedback } from "@/components/ui";
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -65,6 +70,7 @@ interface SnagDetail {
 }
 
 export default function SnagsPage() {
+  const feedback = useFeedback();
   const params = useParams();
   const projectId = params?.id as string;
 
@@ -86,11 +92,22 @@ export default function SnagsPage() {
   const [repTitle, setRepTitle] = useState("");
   const [repDesc, setRepDesc] = useState("");
   const [repLocation, setRepLocation] = useState("");
-  const [repSeverity, setRepSeverity] = useState<"LOW" | "MEDIUM" | "HIGH" | "URGENT">("MEDIUM");
+  const [repSeverity, setRepSeverity] = useState<
+    "LOW" | "MEDIUM" | "HIGH" | "URGENT"
+  >("MEDIUM");
 
+  const [participants, setParticipants] = useState<any[]>([]);
+  useEffect(() => {
+    fetch(`/api/projects/${projectId}/participants`)
+      .then(readResponse)
+      .then((d) => setParticipants(d.participants || []))
+      .catch((e) => setError(e.message));
+  }, [projectId]);
   const [triageAssigneeId, setTriageAssigneeId] = useState("");
   const [triageTargetDate, setTriageTargetDate] = useState("");
-  const [triageSeverity, setTriageSeverity] = useState<"LOW" | "MEDIUM" | "HIGH" | "URGENT">("MEDIUM");
+  const [triageSeverity, setTriageSeverity] = useState<
+    "LOW" | "MEDIUM" | "HIGH" | "URGENT"
+  >("MEDIUM");
   const [triageClientShared, setTriageClientShared] = useState(false);
   const [triageChargedWork, setTriageChargedWork] = useState(false);
   const [triageCost, setTriageCost] = useState("");
@@ -108,10 +125,10 @@ export default function SnagsPage() {
       setError(null);
       const res = await fetch(`/api/projects/${projectId}/snags`);
       if (!res.ok) {
-        const err = (await res.json()) as any;
+        const err = (await readResponse(res)) as any;
         throw new Error(err.error || "Failed to load site issues");
       }
-      const data = (await res.json()) as any;
+      const data = (await readResponse(res)) as any;
       setSnagsList(data.snags || []);
       if (data.snags?.length > 0 && !selectedSnagId) {
         setSelectedSnagId(data.snags[0].id);
@@ -127,10 +144,10 @@ export default function SnagsPage() {
     try {
       const res = await fetch(`/api/snags/${id}`);
       if (!res.ok) {
-        const err = (await res.json()) as any;
+        const err = (await readResponse(res)) as any;
         throw new Error(err.error || "Failed to load snag details");
       }
-      const data = (await res.json()) as any;
+      const data = (await readResponse(res)) as any;
       setActiveSnag(data.snag);
     } catch (e: any) {
       setError(e.message);
@@ -160,10 +177,10 @@ export default function SnagsPage() {
         }),
       });
       if (!res.ok) {
-        const err = (await res.json()) as any;
+        const err = (await readResponse(res)) as any;
         throw new Error(err.error || "Failed to report issue");
       }
-      const data = (await res.json()) as any;
+      const data = (await readResponse(res)) as any;
       setShowReportModal(false);
       setRepTitle("");
       setRepDesc("");
@@ -171,7 +188,7 @@ export default function SnagsPage() {
       await loadSnags();
       if (data.result?.id) setSelectedSnagId(data.result.id);
     } catch (e: any) {
-      alert(e.message);
+      feedback.notify(e.message);
     }
   };
 
@@ -179,7 +196,9 @@ export default function SnagsPage() {
     e.preventDefault();
     if (!selectedSnagId) return;
     try {
-      const costMinor = triageCost ? Math.round(parseFloat(triageCost) * 100) : undefined;
+      const costMinor = triageCost
+        ? Math.round(parseFloat(triageCost) * 100)
+        : undefined;
       const res = await fetch(`/api/projects/${projectId}/snags`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -196,14 +215,14 @@ export default function SnagsPage() {
         }),
       });
       if (!res.ok) {
-        const err = (await res.json()) as any;
+        const err = (await readResponse(res)) as any;
         throw new Error(err.error || "Failed to triage snag");
       }
       setShowTriageModal(false);
       await loadSnagDetail(selectedSnagId);
       await loadSnags();
     } catch (e: any) {
-      alert(e.message);
+      feedback.notify(e.message);
     }
   };
 
@@ -219,13 +238,13 @@ export default function SnagsPage() {
         }),
       });
       if (!res.ok) {
-        const err = (await res.json()) as any;
+        const err = (await readResponse(res)) as any;
         throw new Error(err.error || "Failed to start remediation work");
       }
       await loadSnagDetail(selectedSnagId);
       await loadSnags();
     } catch (e: any) {
-      alert(e.message);
+      feedback.notify(e.message);
     }
   };
 
@@ -243,7 +262,7 @@ export default function SnagsPage() {
         }),
       });
       if (!res.ok) {
-        const err = (await res.json()) as any;
+        const err = (await readResponse(res)) as any;
         throw new Error(err.error || "Failed to submit resolution");
       }
       setShowResolutionModal(false);
@@ -251,7 +270,7 @@ export default function SnagsPage() {
       await loadSnagDetail(selectedSnagId);
       await loadSnags();
     } catch (e: any) {
-      alert(e.message);
+      feedback.notify(e.message);
     }
   };
 
@@ -269,7 +288,7 @@ export default function SnagsPage() {
         }),
       });
       if (!res.ok) {
-        const err = (await res.json()) as any;
+        const err = (await readResponse(res)) as any;
         throw new Error(err.error || "Failed to verify closure");
       }
       setShowVerifyModal(false);
@@ -277,7 +296,7 @@ export default function SnagsPage() {
       await loadSnagDetail(selectedSnagId);
       await loadSnags();
     } catch (e: any) {
-      alert(e.message);
+      feedback.notify(e.message);
     }
   };
 
@@ -295,7 +314,7 @@ export default function SnagsPage() {
         }),
       });
       if (!res.ok) {
-        const err = (await res.json()) as any;
+        const err = (await readResponse(res)) as any;
         throw new Error(err.error || "Failed to reopen snag");
       }
       setShowReopenModal(false);
@@ -303,7 +322,7 @@ export default function SnagsPage() {
       await loadSnagDetail(selectedSnagId);
       await loadSnags();
     } catch (e: any) {
-      alert(e.message);
+      feedback.notify(e.message);
     }
   };
 
@@ -322,22 +341,24 @@ export default function SnagsPage() {
         }),
       });
       if (!res.ok) {
-        const err = (await res.json()) as any;
+        const err = (await readResponse(res)) as any;
         throw new Error(err.error || "Failed to post comment");
       }
       setCommentText("");
       setCommentInternal(false);
       await loadSnagDetail(selectedSnagId);
     } catch (e: any) {
-      alert(e.message);
+      feedback.notify(e.message);
     }
   };
 
   const filteredSnags = snagsList.filter((s) => {
     if (statusFilter === "ALL") return true;
-    if (statusFilter === "OPEN") return s.status === "OPEN" || s.status === "REPORTED";
+    if (statusFilter === "OPEN")
+      return s.status === "OPEN" || s.status === "REPORTED";
     if (statusFilter === "IN_PROGRESS") return s.status === "IN_PROGRESS";
-    if (statusFilter === "READY_FOR_VERIFICATION") return s.status === "READY_FOR_VERIFICATION";
+    if (statusFilter === "READY_FOR_VERIFICATION")
+      return s.status === "READY_FOR_VERIFICATION";
     if (statusFilter === "CLOSED") return s.status === "CLOSED";
     return true;
   });
@@ -347,61 +368,92 @@ export default function SnagsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className={cx("max-w-7xl mx-auto px-4 sm:px-6 py-8")}>
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-stone-200 mb-8">
+      <div
+        className={cx(
+          "flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-stone-200 mb-8",
+        )}
+      >
         <div>
-          <span className="text-xs uppercase tracking-widest text-stone-500 font-sans">
-            SCR-17 • Site Quality & Execution
+          <span
+            className={cx(
+              "text-xs uppercase tracking-widest text-stone-500 font-sans",
+            )}
+          >
+            Site Quality & Execution
           </span>
-          <h1 className="text-3xl font-serif text-stone-900 mt-1">
+          <h1 className={cx("text-3xl font-serif text-stone-900 mt-1")}>
             Site Issues & Snag Tracking
           </h1>
-          <p className="text-sm text-stone-600 mt-1">
-            Capture observed defects, assign remediation, and enforce manager inspection verification before closure.
+          <p className={cx("text-sm text-stone-600 mt-1")}>
+            Capture observed defects, assign remediation, and enforce manager
+            inspection verification before closure.
           </p>
         </div>
-        <button
-          onClick={() => setShowReportModal(true)}
-          className="mt-4 md:mt-0 px-4 py-2 bg-stone-900 text-stone-100 text-sm font-sans hover:bg-stone-800 transition"
-        >
-          + Report Site Issue
-        </button>
+        <ProjectMutation>
+          <button
+            onClick={() => setShowReportModal(true)}
+            className={cx(
+              "mt-4 md:mt-0 px-4 py-2 bg-stone-900 text-stone-100 text-sm font-sans hover:bg-stone-800 transition",
+            )}
+          >
+            + Report Site Issue
+          </button>
+        </ProjectMutation>
       </div>
 
       {error && (
-        <div className="p-4 mb-6 bg-red-50 border border-red-200 text-red-800 text-sm rounded">
+        <div
+          className={cx(
+            "p-4 mb-6 bg-red-50 border border-red-200 text-red-800 text-sm rounded",
+          )}
+        >
           {error}
         </div>
       )}
 
       {/* Filter Tabs */}
-      <div className="flex border-b border-stone-200 mb-6 gap-6 overflow-x-auto text-xs font-sans uppercase tracking-wider">
-        {["ALL", "OPEN", "IN_PROGRESS", "READY_FOR_VERIFICATION", "CLOSED"].map((st) => (
-          <button
-            key={st}
-            onClick={() => setStatusFilter(st)}
-            className={`pb-2.5 transition whitespace-nowrap ${
-              statusFilter === st
-                ? "border-b-2 border-stone-900 text-stone-900 font-semibold"
-                : "text-stone-500 hover:text-stone-700"
-            }`}
-          >
-            {st.replace(/_/g, " ")}
-          </button>
-        ))}
+      <div
+        className={cx(
+          "flex border-b border-stone-200 mb-6 gap-6 overflow-x-auto text-xs font-sans uppercase tracking-wider",
+        )}
+      >
+        {["ALL", "OPEN", "IN_PROGRESS", "READY_FOR_VERIFICATION", "CLOSED"].map(
+          (st) => (
+            <button
+              key={st}
+              onClick={() => setStatusFilter(st)}
+              className={cx(
+                `pb-2.5 transition whitespace-nowrap ${
+                  statusFilter === st
+                    ? "border-b-2 border-stone-900 text-stone-900 font-semibold"
+                    : "text-stone-500 hover:text-stone-700"
+                }`,
+              )}
+            >
+              {st.replace(/_/g, " ")}
+            </button>
+          ),
+        )}
       </div>
 
       {loading ? (
-        <div className="py-12 text-center text-stone-400 font-sans text-sm">
+        <div
+          className={cx("py-12 text-center text-stone-400 font-sans text-sm")}
+        >
           Loading site snags...
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className={cx("grid grid-cols-1 lg:grid-cols-3 gap-8")}>
           {/* Left: Issues List */}
-          <div className="lg:col-span-1 space-y-3">
+          <div className={cx("lg:col-span-1 space-y-3")}>
             {filteredSnags.length === 0 ? (
-              <div className="p-8 text-center border border-dashed border-stone-300 text-stone-400 text-sm">
+              <div
+                className={cx(
+                  "p-8 text-center border border-dashed border-stone-300 text-stone-400 text-sm",
+                )}
+              >
                 No issues matching selected filter.
               </div>
             ) : (
@@ -411,43 +463,64 @@ export default function SnagsPage() {
                   <div
                     key={snag.id}
                     onClick={() => setSelectedSnagId(snag.id)}
-                    className={`p-4 border cursor-pointer transition ${
-                      isSelected
-                        ? "border-stone-900 bg-stone-50 shadow-sm"
-                        : "border-stone-200 bg-white hover:border-stone-300"
-                    }`}
+                    className={cx(
+                      `p-4 border cursor-pointer transition ${
+                        isSelected
+                          ? "border-stone-900 bg-stone-50 shadow-sm"
+                          : "border-stone-200 bg-white hover:border-stone-300"
+                      }`,
+                    )}
                   >
-                    <div className="flex items-center justify-between text-xs font-sans mb-1">
-                      <span className="font-mono font-medium text-stone-800">
+                    <div
+                      className={cx(
+                        "flex items-center justify-between text-xs font-sans mb-1",
+                      )}
+                    >
+                      <span
+                        className={cx("font-mono font-medium text-stone-800")}
+                      >
                         {snag.snag_number}
                       </span>
                       <span
-                        className={`px-2 py-0.5 uppercase tracking-wider text-[10px] font-medium ${
-                          snag.status === "CLOSED"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : snag.status === "READY_FOR_VERIFICATION"
-                            ? "bg-purple-100 text-purple-800"
-                            : snag.status === "IN_PROGRESS"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-amber-100 text-amber-800"
-                        }`}
+                        className={cx(
+                          `px-2 py-0.5 uppercase tracking-wider text-[10px] font-medium ${
+                            snag.status === "CLOSED"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : snag.status === "READY_FOR_VERIFICATION"
+                                ? "bg-purple-100 text-purple-800"
+                                : snag.status === "IN_PROGRESS"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-amber-100 text-amber-800"
+                          }`,
+                        )}
                       >
                         {snag.status.replace(/_/g, " ")}
                       </span>
                     </div>
 
-                    <h3 className="text-sm font-serif font-medium text-stone-900 line-clamp-1">
+                    <h3
+                      className={cx(
+                        "text-sm font-serif font-medium text-stone-900 line-clamp-1",
+                      )}
+                    >
                       {snag.title}
                     </h3>
 
-                    <div className="flex items-center justify-between text-xs text-stone-500 font-sans mt-2">
+                    <div
+                      className={cx(
+                        "flex items-center justify-between text-xs text-stone-500 font-sans mt-2",
+                      )}
+                    >
                       <span>{snag.location_area}</span>
                       <span
-                        className={`font-semibold ${
-                          snag.severity === "URGENT" || snag.severity === "HIGH"
-                            ? "text-red-700"
-                            : "text-stone-600"
-                        }`}
+                        className={cx(
+                          `font-semibold ${
+                            snag.severity === "URGENT" ||
+                            snag.severity === "HIGH"
+                              ? "text-red-700"
+                              : "text-stone-600"
+                          }`,
+                        )}
                       >
                         {snag.severity}
                       </span>
@@ -459,185 +532,350 @@ export default function SnagsPage() {
           </div>
 
           {/* Right: Snag Detail */}
-          <div className="lg:col-span-2">
+          <div className={cx("lg:col-span-2")}>
             {!activeSnag ? (
-              <div className="p-12 text-center border border-stone-200 bg-stone-50 text-stone-400">
-                Select an issue to inspect evidence, assignments, and verification.
+              <div
+                className={cx(
+                  "p-12 text-center border border-stone-200 bg-stone-50 text-stone-400",
+                )}
+              >
+                Select an issue to inspect evidence, assignments, and
+                verification.
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className={cx("space-y-6")}>
                 {/* Snag Overview Card */}
-                <div className="bg-white border border-stone-200 p-6 shadow-sm">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-stone-100">
+                <div
+                  className={cx(
+                    "bg-white border border-stone-200 p-6 shadow-sm",
+                  )}
+                >
+                  <div
+                    className={cx(
+                      "flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-stone-100",
+                    )}
+                  >
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm font-bold text-stone-800">
+                      <div className={cx("flex items-center gap-2")}>
+                        <span
+                          className={cx(
+                            "font-mono text-sm font-bold text-stone-800",
+                          )}
+                        >
                           {activeSnag.snag_number}
                         </span>
                         <span
-                          className={`text-xs uppercase px-2 py-0.5 font-sans font-semibold ${
-                            activeSnag.severity === "URGENT" || activeSnag.severity === "HIGH"
-                              ? "bg-red-50 text-red-800"
-                              : "bg-stone-100 text-stone-700"
-                          }`}
+                          className={cx(
+                            `text-xs uppercase px-2 py-0.5 font-sans font-semibold ${
+                              activeSnag.severity === "URGENT" ||
+                              activeSnag.severity === "HIGH"
+                                ? "bg-red-50 text-red-800"
+                                : "bg-stone-100 text-stone-700"
+                            }`,
+                          )}
                         >
                           {activeSnag.severity} Severity
                         </span>
                         {activeSnag.is_charged_work === 1 && (
-                          <span className="text-xs uppercase px-2 py-0.5 bg-amber-100 text-amber-900 font-sans font-bold">
+                          <span
+                            className={cx(
+                              "text-xs uppercase px-2 py-0.5 bg-amber-100 text-amber-900 font-sans font-bold",
+                            )}
+                          >
                             Extra Paid Scope
                           </span>
                         )}
                       </div>
-                      <h2 className="text-xl font-serif text-stone-900 font-medium mt-1">
+                      <h2
+                        className={cx(
+                          "text-xl font-serif text-stone-900 font-medium mt-1",
+                        )}
+                      >
                         {activeSnag.title}
                       </h2>
                     </div>
 
-                    <div className="flex flex-col items-end">
+                    <div className={cx("flex flex-col items-end")}>
                       <span
-                        className={`px-2.5 py-1 text-xs uppercase font-sans tracking-wider font-semibold ${
-                          activeSnag.status === "CLOSED"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : activeSnag.status === "READY_FOR_VERIFICATION"
-                            ? "bg-purple-100 text-purple-800"
-                            : activeSnag.status === "IN_PROGRESS"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-amber-100 text-amber-800"
-                        }`}
+                        className={cx(
+                          `px-2.5 py-1 text-xs uppercase font-sans tracking-wider font-semibold ${
+                            activeSnag.status === "CLOSED"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : activeSnag.status === "READY_FOR_VERIFICATION"
+                                ? "bg-purple-100 text-purple-800"
+                                : activeSnag.status === "IN_PROGRESS"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-amber-100 text-amber-800"
+                          }`,
+                        )}
                       >
                         {activeSnag.status.replace(/_/g, " ")}
                       </span>
                       {activeSnag.reopen_count > 0 && (
-                        <span className="text-[10px] text-amber-800 font-sans mt-1">
+                        <span
+                          className={cx(
+                            "text-[10px] text-amber-800 font-sans mt-1",
+                          )}
+                        >
                           Reopened {activeSnag.reopen_count} time(s)
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <p className="text-sm text-stone-700 font-sans mt-4">
+                  <p className={cx("text-sm text-stone-700 font-sans mt-4")}>
                     {activeSnag.description}
                   </p>
 
-                  <div className="mt-4 pt-4 border-t border-stone-100 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-sans text-stone-600">
+                  <div
+                    className={cx(
+                      "mt-4 pt-4 border-t border-stone-100 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-sans text-stone-600",
+                    )}
+                  >
                     <div>
-                      <span className="text-stone-400 block uppercase text-[10px]">Location:</span>
-                      <span className="font-semibold text-stone-800">{activeSnag.location_area}</span>
+                      <span
+                        className={cx(
+                          "text-stone-400 block uppercase text-[10px]",
+                        )}
+                      >
+                        Location:
+                      </span>
+                      <span className={cx("font-semibold text-stone-800")}>
+                        {activeSnag.location_area}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-stone-400 block uppercase text-[10px]">Reported by:</span>
-                      <span className="font-semibold text-stone-800">{activeSnag.reporter_name}</span>
+                      <span
+                        className={cx(
+                          "text-stone-400 block uppercase text-[10px]",
+                        )}
+                      >
+                        Reported by:
+                      </span>
+                      <span className={cx("font-semibold text-stone-800")}>
+                        {activeSnag.reporter_name}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-stone-400 block uppercase text-[10px]">Assignee:</span>
-                      <span className="font-semibold text-stone-800">
+                      <span
+                        className={cx(
+                          "text-stone-400 block uppercase text-[10px]",
+                        )}
+                      >
+                        Assignee:
+                      </span>
+                      <span className={cx("font-semibold text-stone-800")}>
                         {activeSnag.assignee_name || "Unassigned"}
                       </span>
                     </div>
                     <div>
-                      <span className="text-stone-400 block uppercase text-[10px]">Target Due Date:</span>
-                      <span className="font-semibold text-stone-800">
+                      <span
+                        className={cx(
+                          "text-stone-400 block uppercase text-[10px]",
+                        )}
+                      >
+                        Target Due Date:
+                      </span>
+                      <span className={cx("font-semibold text-stone-800")}>
                         {activeSnag.target_date || "Not set"}
                       </span>
                     </div>
                   </div>
 
-                  {/* Confidential Internal Remediation Notes (Stripped for clients, AC-045) */}
-                  {(activeSnag.internal_notes || activeSnag.internal_cost_minor !== undefined) && (
-                    <div className="mt-4 p-3 bg-stone-50 border-l-2 border-amber-600 text-xs font-sans">
-                      <div className="flex items-center justify-between text-amber-900 font-semibold mb-1">
-                        <span>PRACTICE CONFIDENTIAL REMEDIATION NOTE (HIDDEN FROM CLIENT)</span>
+                  {/* Confidential Internal Remediation Notes (Stripped for clients, */}
+                  {(activeSnag.internal_notes ||
+                    activeSnag.internal_cost_minor !== undefined) && (
+                    <div
+                      className={cx(
+                        "mt-4 p-3 bg-stone-50 border-l-2 border-amber-600 text-xs font-sans",
+                      )}
+                    >
+                      <div
+                        className={cx(
+                          "flex items-center justify-between text-amber-900 font-semibold mb-1",
+                        )}
+                      >
+                        <span>
+                          PRACTICE CONFIDENTIAL REMEDIATION NOTE (HIDDEN FROM
+                          CLIENT)
+                        </span>
                         {activeSnag.internal_cost_minor !== undefined && (
-                          <span>Cost: {formatCurrency(activeSnag.internal_cost_minor)}</span>
+                          <span>
+                            Cost:{" "}
+                            {formatCurrency(activeSnag.internal_cost_minor)}
+                          </span>
                         )}
                       </div>
-                      {activeSnag.internal_notes && <p className="text-stone-700">{activeSnag.internal_notes}</p>}
+                      {activeSnag.internal_notes && (
+                        <p className={cx("text-stone-700")}>
+                          {activeSnag.internal_notes}
+                        </p>
+                      )}
                     </div>
                   )}
 
                   {/* Contextual Action Bar */}
-                  <div className="mt-6 pt-4 border-t border-stone-200 flex flex-wrap gap-3 justify-end">
+                  <div
+                    className={cx(
+                      "mt-6 pt-4 border-t border-stone-200 flex flex-wrap gap-3 justify-end",
+                    )}
+                  >
                     {activeSnag.status === "REPORTED" && (
-                      <button
-                        onClick={() => {
-                          setTriageSeverity(activeSnag.severity as any);
-                          setTriageTargetDate(activeSnag.target_date || "");
-                          setShowTriageModal(true);
-                        }}
-                        className="px-4 py-2 bg-stone-900 text-white text-xs font-sans hover:bg-stone-800 uppercase tracking-wider"
-                      >
-                        Triage & Assign Remediation (Manager)
-                      </button>
+                      <PermissionGate projectId={projectId} roles={["MANAGER"]}>
+                        <ProjectMutation>
+                          <button
+                            onClick={() => {
+                              setTriageSeverity(activeSnag.severity as any);
+                              setTriageTargetDate(activeSnag.target_date || "");
+                              setShowTriageModal(true);
+                            }}
+                            className={cx(
+                              "px-4 py-2 bg-stone-900 text-white text-xs font-sans hover:bg-stone-800 uppercase tracking-wider",
+                            )}
+                          >
+                            Triage & Assign Remediation (Manager)
+                          </button>
+                        </ProjectMutation>
+                      </PermissionGate>
                     )}
 
                     {activeSnag.status === "OPEN" && (
-                      <button
-                        onClick={handleStartWork}
-                        className="px-4 py-2 bg-blue-900 text-white text-xs font-sans hover:bg-blue-800 uppercase tracking-wider"
-                      >
-                        Start Remediation Work
-                      </button>
+                      <ProjectMutation>
+                        <PermissionGate
+                          projectId={projectId}
+                          assigneeId={activeSnag.assigned_to_user_id || ""}
+                        >
+                          <button
+                            onClick={handleStartWork}
+                            className={cx(
+                              "px-4 py-2 bg-blue-900 text-white text-xs font-sans hover:bg-blue-800 uppercase tracking-wider",
+                            )}
+                          >
+                            Start Remediation Work
+                          </button>
+                        </PermissionGate>
+                      </ProjectMutation>
                     )}
 
                     {activeSnag.status === "IN_PROGRESS" && (
-                      <button
-                        onClick={() => setShowResolutionModal(true)}
-                        className="px-4 py-2 bg-purple-900 text-white text-xs font-sans hover:bg-purple-800 uppercase tracking-wider"
-                      >
-                        Submit Resolution Evidence (Assignee)
-                      </button>
+                      <ProjectMutation>
+                        <PermissionGate
+                          projectId={projectId}
+                          assigneeId={activeSnag.assigned_to_user_id || ""}
+                        >
+                          <button
+                            onClick={() => setShowResolutionModal(true)}
+                            className={cx(
+                              "px-4 py-2 bg-purple-900 text-white text-xs font-sans hover:bg-purple-800 uppercase tracking-wider",
+                            )}
+                          >
+                            Submit Resolution Evidence (Assignee)
+                          </button>
+                        </PermissionGate>
+                      </ProjectMutation>
                     )}
 
                     {activeSnag.status === "READY_FOR_VERIFICATION" && (
                       <>
-                        <button
-                          onClick={() => setShowReopenModal(true)}
-                          className="px-4 py-2 border border-amber-600 text-amber-800 text-xs font-sans hover:bg-amber-50 uppercase tracking-wider"
+                        <PermissionGate
+                          projectId={projectId}
+                          roles={["MANAGER"]}
                         >
-                          Reject / Reopen (Manager)
-                        </button>
-                        <button
-                          onClick={() => setShowVerifyModal(true)}
-                          className="px-4 py-2 bg-emerald-800 text-white text-xs font-sans hover:bg-emerald-700 uppercase tracking-wider"
+                          <ProjectMutation>
+                            <button
+                              onClick={() => setShowReopenModal(true)}
+                              className={cx(
+                                "px-4 py-2 border border-amber-600 text-amber-800 text-xs font-sans hover:bg-amber-50 uppercase tracking-wider",
+                              )}
+                            >
+                              Reject / Reopen (Manager)
+                            </button>
+                          </ProjectMutation>
+                        </PermissionGate>
+                        <PermissionGate
+                          projectId={projectId}
+                          roles={["MANAGER"]}
                         >
-                          Verify & Close Issue (Manager)
-                        </button>
+                          <ProjectMutation>
+                            <button
+                              onClick={() => setShowVerifyModal(true)}
+                              className={cx(
+                                "px-4 py-2 bg-emerald-800 text-white text-xs font-sans hover:bg-emerald-700 uppercase tracking-wider",
+                              )}
+                            >
+                              Verify & Close Issue (Manager)
+                            </button>
+                          </ProjectMutation>
+                        </PermissionGate>
                       </>
                     )}
 
                     {activeSnag.status === "CLOSED" && (
-                      <button
-                        onClick={() => setShowReopenModal(true)}
-                        className="px-4 py-2 border border-stone-300 text-stone-700 text-xs font-sans hover:bg-stone-50 uppercase tracking-wider"
-                      >
-                        Reopen Issue
-                      </button>
+                      <PermissionGate projectId={projectId} roles={["MANAGER"]}>
+                        <ProjectMutation>
+                          <button
+                            onClick={() => setShowReopenModal(true)}
+                            className={cx(
+                              "px-4 py-2 border border-stone-300 text-stone-700 text-xs font-sans hover:bg-stone-50 uppercase tracking-wider",
+                            )}
+                          >
+                            Reopen Issue
+                          </button>
+                        </ProjectMutation>
+                      </PermissionGate>
                     )}
                   </div>
                 </div>
 
-                {/* Audit & Transition History (AC-044) */}
-                <div className="bg-white border border-stone-200 p-6 shadow-sm">
-                  <h3 className="text-sm font-sans uppercase tracking-wider text-stone-900 font-semibold mb-4">
+                {/* Audit & Transition History */}
+                <div
+                  className={cx(
+                    "bg-white border border-stone-200 p-6 shadow-sm",
+                  )}
+                >
+                  <h3
+                    className={cx(
+                      "text-sm font-sans uppercase tracking-wider text-stone-900 font-semibold mb-4",
+                    )}
+                  >
                     Resolution & Audit Event History
                   </h3>
 
-                  <div className="space-y-3">
+                  <div className={cx("space-y-3")}>
                     {activeSnag.events?.map((ev) => (
-                      <div key={ev.id} className="p-3 bg-stone-50 border border-stone-200 text-xs font-sans">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="font-semibold text-stone-800">
-                            {ev.event_type.replace(/_/g, " ")} by {ev.actor_name}
+                      <div
+                        key={ev.id}
+                        className={cx(
+                          "p-3 bg-stone-50 border border-stone-200 text-xs font-sans",
+                        )}
+                      >
+                        <div
+                          className={cx(
+                            "flex justify-between items-center mb-1",
+                          )}
+                        >
+                          <span className={cx("font-semibold text-stone-800")}>
+                            {ev.event_type.replace(/_/g, " ")} by{" "}
+                            {ev.actor_name}
                           </span>
-                          <span className="text-stone-400">
+                          <span className={cx("text-stone-400")}>
                             {new Date(ev.created_at).toLocaleString()}
                           </span>
                         </div>
-                        {ev.notes && <p className="text-stone-700">{ev.notes}</p>}
+                        {ev.notes && (
+                          <p className={cx("text-stone-700")}>{ev.notes}</p>
+                        )}
                         {ev.resolution_evidence && (
-                          <div className="mt-2 p-2 bg-purple-50/50 border border-purple-200 rounded text-purple-900 font-medium">
-                            <span className="text-[10px] block uppercase text-purple-700">
+                          <div
+                            className={cx(
+                              "mt-2 p-2 bg-purple-50/50 border border-purple-200 rounded text-purple-900 font-medium",
+                            )}
+                          >
+                            <span
+                              className={cx(
+                                "text-[10px] block uppercase text-purple-700",
+                              )}
+                            >
                               Resolution Evidence:
                             </span>
                             {ev.resolution_evidence}
@@ -649,56 +887,86 @@ export default function SnagsPage() {
                 </div>
 
                 {/* Comments & Discussion */}
-                <div className="bg-white border border-stone-200 p-6 shadow-sm">
-                  <h3 className="text-sm font-sans uppercase tracking-wider text-stone-900 font-semibold mb-4">
+                <div
+                  className={cx(
+                    "bg-white border border-stone-200 p-6 shadow-sm",
+                  )}
+                >
+                  <h3
+                    className={cx(
+                      "text-sm font-sans uppercase tracking-wider text-stone-900 font-semibold mb-4",
+                    )}
+                  >
                     Comments ({activeSnag.comments?.length || 0})
                   </h3>
 
-                  <div className="space-y-3 mb-6">
+                  <div className={cx("space-y-3 mb-6")}>
                     {activeSnag.comments?.length === 0 ? (
-                      <p className="text-xs text-stone-400 font-sans italic">
+                      <p
+                        className={cx(
+                          "text-xs text-stone-400 font-sans italic",
+                        )}
+                      >
                         No comments recorded yet.
                       </p>
                     ) : (
                       activeSnag.comments.map((c) => (
                         <div
                           key={c.id}
-                          className={`p-3 border text-xs font-sans ${
-                            c.is_internal_only
-                              ? "bg-amber-50/50 border-amber-200"
-                              : "bg-stone-50 border-stone-200"
-                          }`}
+                          className={cx(
+                            `p-3 border text-xs font-sans ${
+                              c.is_internal_only
+                                ? "bg-amber-50/50 border-amber-200"
+                                : "bg-stone-50 border-stone-200"
+                            }`,
+                          )}
                         >
-                          <div className="flex justify-between font-medium text-stone-800 mb-1">
+                          <div
+                            className={cx(
+                              "flex justify-between font-medium text-stone-800 mb-1",
+                            )}
+                          >
                             <span>
                               {c.author_name}{" "}
                               {c.is_internal_only === 1 && (
-                                <span className="text-[10px] text-amber-800 font-bold uppercase ml-2">
+                                <span
+                                  className={cx(
+                                    "text-[10px] text-amber-800 font-bold uppercase ml-2",
+                                  )}
+                                >
                                   [Internal]
                                 </span>
                               )}
                             </span>
-                            <span className="text-stone-400 font-normal">
+                            <span className={cx("text-stone-400 font-normal")}>
                               {new Date(c.created_at).toLocaleDateString()}
                             </span>
                           </div>
-                          <p className="text-stone-700">{c.comment_text}</p>
+                          <p className={cx("text-stone-700")}>
+                            {c.comment_text}
+                          </p>
                         </div>
                       ))
                     )}
                   </div>
 
-                  <form onSubmit={handleAddComment} className="space-y-2">
+                  <form onSubmit={handleAddComment} className={cx("space-y-2")}>
                     <input
                       type="text"
                       required
                       value={commentText}
                       onChange={(e) => setCommentText(e.target.value)}
                       placeholder="Add comment..."
-                      className="w-full px-3 py-2 border border-stone-300 text-xs font-sans"
+                      className={cx(
+                        "w-full px-3 py-2 border border-stone-300 text-xs font-sans",
+                      )}
                     />
-                    <div className="flex items-center justify-between">
-                      <label className="flex items-center gap-2 text-xs text-stone-600 font-sans cursor-pointer">
+                    <div className={cx("flex items-center justify-between")}>
+                      <label
+                        className={cx(
+                          "flex items-center gap-2 text-xs text-stone-600 font-sans cursor-pointer",
+                        )}
+                      >
                         <input
                           type="checkbox"
                           checked={commentInternal}
@@ -708,7 +976,9 @@ export default function SnagsPage() {
                       </label>
                       <button
                         type="submit"
-                        className="px-4 py-1.5 bg-stone-900 text-white text-xs font-sans hover:bg-stone-800"
+                        className={cx(
+                          "px-4 py-1.5 bg-stone-900 text-white text-xs font-sans hover:bg-stone-800",
+                        )}
                       >
                         Post Comment
                       </button>
@@ -723,24 +993,48 @@ export default function SnagsPage() {
 
       {/* Report Snag Modal */}
       {showReportModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white max-w-md w-full p-6 shadow-xl border border-stone-200">
-            <h3 className="text-lg font-serif text-stone-900 mb-4">Report Site Issue</h3>
-            <form onSubmit={handleReportSnag} className="space-y-4">
+        <Dialog
+          title="Report Site Issue"
+          onClose={() => setShowReportModal(false)}
+        >
+          <div
+            className={cx(
+              "bg-white max-w-md w-full p-6 shadow-xl border border-stone-200",
+            )}
+          >
+            <h3 className={cx("text-lg font-serif text-stone-900 mb-4")}>
+              Report Site Issue
+            </h3>
+            <form onSubmit={handleReportSnag} className={cx("space-y-4")}>
               <div>
-                <label className="block text-xs font-sans uppercase text-stone-600 mb-1">Title *</label>
+                <label
+                  className={cx(
+                    "block text-xs font-sans uppercase text-stone-600 mb-1",
+                  )}
+                  htmlFor="repTitle"
+                >
+                  Title *
+                </label>
                 <input
                   type="text"
                   required
                   value={repTitle}
                   onChange={(e) => setRepTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 text-sm"
+                  className={cx(
+                    "w-full px-3 py-2 border border-stone-300 text-sm",
+                  )}
                   placeholder="e.g. Paint blister on balcony parapet"
+                  id="repTitle"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-sans uppercase text-stone-600 mb-1">
+                <label
+                  className={cx(
+                    "block text-xs font-sans uppercase text-stone-600 mb-1",
+                  )}
+                  htmlFor="repLocation"
+                >
                   Location / Room / Area *
                 </label>
                 <input
@@ -748,17 +1042,30 @@ export default function SnagsPage() {
                   required
                   value={repLocation}
                   onChange={(e) => setRepLocation(e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 text-sm"
+                  className={cx(
+                    "w-full px-3 py-2 border border-stone-300 text-sm",
+                  )}
                   placeholder="e.g. 1st Floor East Balcony"
+                  id="repLocation"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-sans uppercase text-stone-600 mb-1">Severity</label>
+                <label
+                  className={cx(
+                    "block text-xs font-sans uppercase text-stone-600 mb-1",
+                  )}
+                  htmlFor="repSeverity"
+                >
+                  Severity
+                </label>
                 <select
                   value={repSeverity}
                   onChange={(e) => setRepSeverity(e.target.value as any)}
-                  className="w-full px-3 py-2 border border-stone-300 text-sm"
+                  className={cx(
+                    "w-full px-3 py-2 border border-stone-300 text-sm",
+                  )}
+                  id="repSeverity"
                 >
                   <option value="LOW">Low</option>
                   <option value="MEDIUM">Medium</option>
@@ -768,62 +1075,115 @@ export default function SnagsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-sans uppercase text-stone-600 mb-1">Description *</label>
+                <label
+                  className={cx(
+                    "block text-xs font-sans uppercase text-stone-600 mb-1",
+                  )}
+                >
+                  Description *
+                </label>
                 <textarea
                   required
                   rows={3}
                   value={repDesc}
                   onChange={(e) => setRepDesc(e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 text-sm"
+                  className={cx(
+                    "w-full px-3 py-2 border border-stone-300 text-sm",
+                  )}
                   placeholder="Describe observed defect clearly..."
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-stone-200">
+              <div
+                className={cx(
+                  "flex justify-end gap-3 pt-4 border-t border-stone-200",
+                )}
+              >
                 <button
                   type="button"
                   onClick={() => setShowReportModal(false)}
-                  className="px-4 py-2 border border-stone-300 text-stone-700 text-sm font-sans hover:bg-stone-50"
+                  className={cx(
+                    "px-4 py-2 border border-stone-300 text-stone-700 text-sm font-sans hover:bg-stone-50",
+                  )}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-stone-900 text-white text-sm font-sans hover:bg-stone-800"
+                  className={cx(
+                    "px-4 py-2 bg-stone-900 text-white text-sm font-sans hover:bg-stone-800",
+                  )}
                 >
                   Submit Issue Report
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </Dialog>
       )}
 
       {/* Triage Modal (Manager) */}
       {showTriageModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white max-w-md w-full p-6 shadow-xl border border-stone-200">
-            <h3 className="text-lg font-serif text-stone-900 mb-4">Triage & Assign Issue</h3>
-            <form onSubmit={handleTriageSnag} className="space-y-4">
+        <Dialog
+          title="Triage & Assign Issue"
+          onClose={() => setShowTriageModal(false)}
+        >
+          <div
+            className={cx(
+              "bg-white max-w-md w-full p-6 shadow-xl border border-stone-200",
+            )}
+          >
+            <h3 className={cx("text-lg font-serif text-stone-900 mb-4")}>
+              Triage & Assign Issue
+            </h3>
+            <form onSubmit={handleTriageSnag} className={cx("space-y-4")}>
               <div>
-                <label className="block text-xs font-sans uppercase text-stone-600 mb-1">Assignee User ID *</label>
-                <input
-                  type="text"
+                <label
+                  className={cx(
+                    "block text-xs font-sans uppercase text-stone-600 mb-1",
+                  )}
+                  htmlFor="triageAssigneeId"
+                >
+                  Assignee *
+                </label>
+                <select
                   required
                   value={triageAssigneeId}
                   onChange={(e) => setTriageAssigneeId(e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 text-sm"
-                  placeholder="usr_stf_..."
-                />
+                  aria-label="Assignee"
+                >
+                  <option value="">Select project member</option>
+                  {participants
+                    .filter((p) =>
+                      p.roles?.some((r: string) =>
+                        ["TEAM_MEMBER", "MANAGER"].includes(r),
+                      ),
+                    )
+                    .map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className={cx("grid grid-cols-2 gap-3")}>
                 <div>
-                  <label className="block text-xs font-sans uppercase text-stone-600 mb-1">Severity</label>
+                  <label
+                    className={cx(
+                      "block text-xs font-sans uppercase text-stone-600 mb-1",
+                    )}
+                    htmlFor="triageSeverity"
+                  >
+                    Severity
+                  </label>
                   <select
                     value={triageSeverity}
                     onChange={(e) => setTriageSeverity(e.target.value as any)}
-                    className="w-full px-3 py-2 border border-stone-300 text-sm"
+                    className={cx(
+                      "w-full px-3 py-2 border border-stone-300 text-sm",
+                    )}
+                    id="triageSeverity"
                   >
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Medium</option>
@@ -832,18 +1192,32 @@ export default function SnagsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-sans uppercase text-stone-600 mb-1">Target Due Date</label>
+                  <label
+                    className={cx(
+                      "block text-xs font-sans uppercase text-stone-600 mb-1",
+                    )}
+                    htmlFor="triageTargetDate"
+                  >
+                    Target Due Date
+                  </label>
                   <input
                     type="date"
                     value={triageTargetDate}
                     onChange={(e) => setTriageTargetDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-stone-300 text-sm"
+                    className={cx(
+                      "w-full px-3 py-2 border border-stone-300 text-sm",
+                    )}
+                    id="triageTargetDate"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2 pt-2 border-t border-stone-100">
-                <label className="flex items-center gap-2 text-xs font-sans text-stone-700 cursor-pointer">
+              <div className={cx("space-y-2 pt-2 border-t border-stone-100")}>
+                <label
+                  className={cx(
+                    "flex items-center gap-2 text-xs font-sans text-stone-700 cursor-pointer",
+                  )}
+                >
                   <input
                     type="checkbox"
                     checked={triageClientShared}
@@ -851,7 +1225,11 @@ export default function SnagsPage() {
                   />
                   Approve for Client / Consultant Viewing (Shared)
                 </label>
-                <label className="flex items-center gap-2 text-xs font-sans text-amber-900 font-semibold cursor-pointer">
+                <label
+                  className={cx(
+                    "flex items-center gap-2 text-xs font-sans text-amber-900 font-semibold cursor-pointer",
+                  )}
+                >
                   <input
                     type="checkbox"
                     checked={triageChargedWork}
@@ -861,59 +1239,106 @@ export default function SnagsPage() {
                 </label>
               </div>
 
-              <div className="p-3 bg-stone-50 border border-stone-200 space-y-2">
-                <span className="text-[10px] uppercase font-bold text-stone-500 block">
+              <div
+                className={cx(
+                  "p-3 bg-stone-50 border border-stone-200 space-y-2",
+                )}
+              >
+                <span
+                  className={cx(
+                    "text-[10px] uppercase font-bold text-stone-500 block",
+                  )}
+                >
                   Practice Confidential
                 </span>
                 <div>
-                  <label className="block text-xs text-stone-600 mb-1">Estimated Cost (₹)</label>
+                  <label
+                    className={cx("block text-xs text-stone-600 mb-1")}
+                    htmlFor="triageCost"
+                  >
+                    Estimated Cost (₹)
+                  </label>
                   <input
                     type="number"
                     value={triageCost}
                     onChange={(e) => setTriageCost(e.target.value)}
-                    className="w-full px-2 py-1.5 border border-stone-300 text-sm bg-white"
+                    className={cx(
+                      "w-full px-2 py-1.5 border border-stone-300 text-sm bg-white",
+                    )}
+                    id="triageCost"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-stone-600 mb-1">Internal Remediation Notes</label>
+                  <label
+                    className={cx("block text-xs text-stone-600 mb-1")}
+                    htmlFor="triageNotes"
+                  >
+                    Internal Remediation Notes
+                  </label>
                   <input
                     type="text"
                     value={triageNotes}
                     onChange={(e) => setTriageNotes(e.target.value)}
-                    className="w-full px-2 py-1.5 border border-stone-300 text-sm bg-white"
+                    className={cx(
+                      "w-full px-2 py-1.5 border border-stone-300 text-sm bg-white",
+                    )}
                     placeholder="Backcharge or contractor defect notes..."
+                    id="triageNotes"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-stone-200">
-                <button
-                  type="button"
-                  onClick={() => setShowTriageModal(false)}
-                  className="px-4 py-2 border border-stone-300 text-stone-700 text-sm font-sans hover:bg-stone-50"
-                >
-                  Cancel
-                </button>
+              <div
+                className={cx(
+                  "flex justify-end gap-3 pt-4 border-t border-stone-200",
+                )}
+              >
+                <PermissionGate projectId={projectId} roles={["MANAGER"]}>
+                  <button
+                    type="button"
+                    onClick={() => setShowTriageModal(false)}
+                    className={cx(
+                      "px-4 py-2 border border-stone-300 text-stone-700 text-sm font-sans hover:bg-stone-50",
+                    )}
+                  >
+                    Cancel
+                  </button>
+                </PermissionGate>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-stone-900 text-white text-sm font-sans hover:bg-stone-800"
+                  className={cx(
+                    "px-4 py-2 bg-stone-900 text-white text-sm font-sans hover:bg-stone-800",
+                  )}
                 >
                   Confirm Triage & Assign
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </Dialog>
       )}
 
       {/* Submit Resolution Modal */}
       {showResolutionModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white max-w-md w-full p-6 shadow-xl border border-stone-200">
-            <h3 className="text-lg font-serif text-stone-900 mb-4">Submit Resolution Evidence</h3>
-            <form onSubmit={handleSubmitResolution} className="space-y-4">
+        <Dialog
+          title="Submit Resolution Evidence"
+          onClose={() => setShowResolutionModal(false)}
+        >
+          <div
+            className={cx(
+              "bg-white max-w-md w-full p-6 shadow-xl border border-stone-200",
+            )}
+          >
+            <h3 className={cx("text-lg font-serif text-stone-900 mb-4")}>
+              Submit Resolution Evidence
+            </h3>
+            <form onSubmit={handleSubmitResolution} className={cx("space-y-4")}>
               <div>
-                <label className="block text-xs font-sans uppercase text-stone-600 mb-1">
+                <label
+                  className={cx(
+                    "block text-xs font-sans uppercase text-stone-600 mb-1",
+                  )}
+                >
                   Resolution Evidence & Remediation Details *
                 </label>
                 <textarea
@@ -921,78 +1346,126 @@ export default function SnagsPage() {
                   rows={4}
                   value={resEvidence}
                   onChange={(e) => setResEvidence(e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 text-sm"
+                  className={cx(
+                    "w-full px-3 py-2 border border-stone-300 text-sm",
+                  )}
                   placeholder="Detail work performed to resolve the defect..."
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-stone-200">
+              <div
+                className={cx(
+                  "flex justify-end gap-3 pt-4 border-t border-stone-200",
+                )}
+              >
                 <button
                   type="button"
                   onClick={() => setShowResolutionModal(false)}
-                  className="px-4 py-2 border border-stone-300 text-stone-700 text-sm font-sans hover:bg-stone-50"
+                  className={cx(
+                    "px-4 py-2 border border-stone-300 text-stone-700 text-sm font-sans hover:bg-stone-50",
+                  )}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-purple-900 text-white text-sm font-sans hover:bg-purple-800"
+                  className={cx(
+                    "px-4 py-2 bg-purple-900 text-white text-sm font-sans hover:bg-purple-800",
+                  )}
                 >
                   Submit for Manager Review
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </Dialog>
       )}
 
       {/* Verify & Close Modal (Manager) */}
       {showVerifyModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white max-w-md w-full p-6 shadow-xl border border-stone-200">
-            <h3 className="text-lg font-serif text-stone-900 mb-4">Manager Verified Closure</h3>
-            <form onSubmit={handleVerifyClose} className="space-y-4">
+        <Dialog
+          title="Manager Verified Closure"
+          onClose={() => setShowVerifyModal(false)}
+        >
+          <div
+            className={cx(
+              "bg-white max-w-md w-full p-6 shadow-xl border border-stone-200",
+            )}
+          >
+            <h3 className={cx("text-lg font-serif text-stone-900 mb-4")}>
+              Manager Verified Closure
+            </h3>
+            <form onSubmit={handleVerifyClose} className={cx("space-y-4")}>
               <div>
-                <label className="block text-xs font-sans uppercase text-stone-600 mb-1">
+                <label
+                  className={cx(
+                    "block text-xs font-sans uppercase text-stone-600 mb-1",
+                  )}
+                >
                   Inspection Notes & Verification Confirmation
                 </label>
                 <textarea
                   rows={3}
                   value={verifyNotes}
                   onChange={(e) => setVerifyNotes(e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 text-sm"
+                  className={cx(
+                    "w-full px-3 py-2 border border-stone-300 text-sm",
+                  )}
                   placeholder="Confirmed on site that remediation meets design specifications..."
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-stone-200">
-                <button
-                  type="button"
-                  onClick={() => setShowVerifyModal(false)}
-                  className="px-4 py-2 border border-stone-300 text-stone-700 text-sm font-sans hover:bg-stone-50"
-                >
-                  Cancel
-                </button>
+              <div
+                className={cx(
+                  "flex justify-end gap-3 pt-4 border-t border-stone-200",
+                )}
+              >
+                <PermissionGate projectId={projectId} roles={["MANAGER"]}>
+                  <button
+                    type="button"
+                    onClick={() => setShowVerifyModal(false)}
+                    className={cx(
+                      "px-4 py-2 border border-stone-300 text-stone-700 text-sm font-sans hover:bg-stone-50",
+                    )}
+                  >
+                    Cancel
+                  </button>
+                </PermissionGate>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-emerald-800 text-white text-sm font-sans hover:bg-emerald-700"
+                  className={cx(
+                    "px-4 py-2 bg-emerald-800 text-white text-sm font-sans hover:bg-emerald-700",
+                  )}
                 >
                   Verify & Close Issue
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </Dialog>
       )}
 
       {/* Reopen Modal (Manager) */}
       {showReopenModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white max-w-md w-full p-6 shadow-xl border border-stone-200">
-            <h3 className="text-lg font-serif text-stone-900 mb-4">Reopen Issue with Reason</h3>
-            <form onSubmit={handleReopen} className="space-y-4">
+        <Dialog
+          title="Reopen Issue with Reason"
+          onClose={() => setShowReopenModal(false)}
+        >
+          <div
+            className={cx(
+              "bg-white max-w-md w-full p-6 shadow-xl border border-stone-200",
+            )}
+          >
+            <h3 className={cx("text-lg font-serif text-stone-900 mb-4")}>
+              Reopen Issue with Reason
+            </h3>
+            <form onSubmit={handleReopen} className={cx("space-y-4")}>
               <div>
-                <label className="block text-xs font-sans uppercase text-stone-600 mb-1">
+                <label
+                  className={cx(
+                    "block text-xs font-sans uppercase text-stone-600 mb-1",
+                  )}
+                >
                   Mandatory Reopen Reason *
                 </label>
                 <textarea
@@ -1000,29 +1473,41 @@ export default function SnagsPage() {
                   rows={3}
                   value={reopenReason}
                   onChange={(e) => setReopenReason(e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 text-sm"
+                  className={cx(
+                    "w-full px-3 py-2 border border-stone-300 text-sm",
+                  )}
                   placeholder="Explain why the resolution was rejected and what rework is required..."
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-stone-200">
-                <button
-                  type="button"
-                  onClick={() => setShowReopenModal(false)}
-                  className="px-4 py-2 border border-stone-300 text-stone-700 text-sm font-sans hover:bg-stone-50"
-                >
-                  Cancel
-                </button>
+              <div
+                className={cx(
+                  "flex justify-end gap-3 pt-4 border-t border-stone-200",
+                )}
+              >
+                <PermissionGate projectId={projectId} roles={["MANAGER"]}>
+                  <button
+                    type="button"
+                    onClick={() => setShowReopenModal(false)}
+                    className={cx(
+                      "px-4 py-2 border border-stone-300 text-stone-700 text-sm font-sans hover:bg-stone-50",
+                    )}
+                  >
+                    Cancel
+                  </button>
+                </PermissionGate>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-amber-800 text-white text-sm font-sans hover:bg-amber-700"
+                  className={cx(
+                    "px-4 py-2 bg-amber-800 text-white text-sm font-sans hover:bg-amber-700",
+                  )}
                 >
                   Confirm Reopen
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </Dialog>
       )}
     </div>
   );

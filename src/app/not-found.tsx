@@ -1,19 +1,15 @@
-import { BRAND_CONFIG } from "@/shared/config";
-
+import { AuthShell } from "@/components/shells";
 export default function NotFound() {
   return (
-    <div style={{ maxWidth: "480px", margin: "4rem auto", textAlign: "center" }}>
-      <div className="card">
-        <h1 className="text-section" style={{ fontSize: "1.75rem", marginBottom: "0.5rem" }}>
-          Page Not Found (404)
-        </h1>
-        <p className="text-muted" style={{ marginBottom: "1.5rem" }}>
-          The requested operational resource does not exist or has been archived.
-        </p>
-        <a href="/" className="btn-primary">
-          Return to Portal
-        </a>
-      </div>
-    </div>
+    <AuthShell>
+      <h1>Page not found</h1>
+      <p>
+        The page may have moved, or the link is incomplete. Your projects are
+        available in your workspace.
+      </p>
+      <a href="/overview" className="btn-primary">
+        Open workspace
+      </a>
+    </AuthShell>
   );
 }

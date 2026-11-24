@@ -1,4 +1,7 @@
 "use client";
+import { cx } from "@/components/utilities";
+import { readResponse } from "@/components/ui";
+import layout from "./page.module.css";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -20,13 +23,16 @@ export default function PerformancePage() {
     setError("");
     setIsForbidden(false);
     try {
-      const res = await fetch(`/api/dashboard/performance?periodDays=${periodDays}`);
-      const json: any = await res.json();
+      const res = await fetch(
+        `/api/dashboard/performance?periodDays=${periodDays}`,
+      );
+      const json: any = await readResponse(res);
       if (res.status === 403) {
         setIsForbidden(true);
         throw new Error(json.error || "Forbidden: Owner access required.");
       }
-      if (!res.ok) throw new Error(json.error || "Failed to load team performance");
+      if (!res.ok)
+        throw new Error(json.error || "Failed to load team performance");
       setData(json);
     } catch (err: any) {
       setError(err.message);
@@ -37,16 +43,15 @@ export default function PerformancePage() {
 
   if (isForbidden) {
     return (
-      <div className="card" style={{ padding: "3rem 1.5rem", textAlign: "center", borderColor: "var(--merveille-error)" }}>
-        <h1 style={{ fontSize: "1.35rem", color: "var(--merveille-error)", marginBottom: "0.5rem" }}>
-          Access Denied (403 Forbidden)
-        </h1>
-        <p style={{ color: "var(--merveille-muted)", maxWidth: "540px", margin: "0 auto" }}>
-          Individual performance scorecards and rework analytics are strictly restricted to the practice Owner.
-          Team members, project managers, and administrators cannot view individual performance metrics.
+      <div className={cx(["card", layout.block1].join(" "))}>
+        <h1 className={cx(layout.block2)}>Access Denied (403 Forbidden)</h1>
+        <p className={cx(layout.block3)}>
+          Individual performance scorecards and rework analytics are strictly
+          restricted to the practice Owner. Team members, project managers, and
+          administrators cannot view individual performance metrics.
         </p>
-        <div style={{ marginTop: "1.5rem" }}>
-          <Link href="/overview" className="btn-secondary">
+        <div className={cx(layout.block4)}>
+          <Link href="/overview" className={cx("btn-secondary")}>
             &larr; Return to Dashboard
           </Link>
         </div>
@@ -55,29 +60,34 @@ export default function PerformancePage() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+    <div className={cx(layout.block5)}>
       {/* Header */}
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
+      <header className={cx(layout.block6)}>
         <div>
-          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-            <h1 className="text-display">Team Performance & Rework</h1>
-            <span className="badge" style={{ backgroundColor: "var(--merveille-gold-surface)", color: "var(--merveille-gold-text)", fontWeight: 600 }}>
+          <div className={cx(layout.block7)}>
+            <h1 className={cx("text-display")}>Team Performance & Rework</h1>
+            <span className={cx(["badge", layout.block8].join(" "))}>
               Owner Confidential
             </span>
           </div>
-          <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-            Evidence-based deadline adherence, quality rework, and site milestone progress.
+          <p className={cx(["text-muted", layout.block9].join(" "))}>
+            Evidence-based deadline adherence, quality rework, and site
+            milestone progress.
           </p>
         </div>
 
         {/* Period Selector */}
-        <div style={{ display: "flex", gap: "0.5rem" }}>
+        <div className={cx(layout.block10)}>
           {[30, 90, 180, 365].map((d) => (
             <button
               key={d}
               onClick={() => setPeriodDays(d)}
-              className={periodDays === d ? "btn-primary" : "btn-secondary"}
-              style={{ padding: "0.35rem 0.75rem", fontSize: "0.8rem" }}
+              className={cx(
+                [
+                  periodDays === d ? "btn-primary" : "btn-secondary",
+                  layout.block11,
+                ].join(" "),
+              )}
             >
               Last {d} Days
             </button>
@@ -85,49 +95,57 @@ export default function PerformancePage() {
         </div>
       </header>
 
-      {/* Disclosed Transparent Metric Definitions (REQ-DAS-004) */}
-      <section className="card" style={{ padding: "1.25rem", backgroundColor: "var(--merveille-surface)" }}>
-        <h2 style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--merveille-ink)", marginBottom: "0.5rem" }}>
+      {/* Disclosed Transparent Metric Definitions () */}
+      <section className={cx(["card", layout.block12].join(" "))}>
+        <h2 className={cx(layout.block13)}>
           Transparent Metric Definitions & Fairness Principles
         </h2>
-        <ul style={{ margin: 0, paddingLeft: "1.25rem", fontSize: "0.85rem", color: "var(--merveille-muted)", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+        <ul className={cx(layout.block14)}>
           <li>
-            <strong>Deadline Adherence:</strong> {data?.definitions?.deadlineAdherence || "Calculated against agreed baseline. Denominator: total completed tasks."}
+            <strong>Deadline Adherence:</strong>{" "}
+            {data?.definitions?.deadlineAdherence ||
+              "Calculated against agreed baseline. Denominator: total completed tasks."}
           </li>
           <li>
-            <strong>Rework vs Client Scope (Fairness):</strong> {data?.definitions?.reworkVsClientScope || "Client-driven scope additions or variations are strictly separated from internal quality rework."}
+            <strong>Rework vs Client Scope (Fairness):</strong>{" "}
+            {data?.definitions?.reworkVsClientScope ||
+              "Client-driven scope additions or variations are strictly separated from internal quality rework."}
           </li>
           <li>
-            <strong>Site Progress:</strong> {data?.definitions?.siteProgress || "Evaluated by verified stage completions, never fabricated from task checkboxes."}
+            <strong>Site Progress:</strong>{" "}
+            {data?.definitions?.siteProgress ||
+              "Evaluated by verified stage completions, never fabricated from task checkboxes."}
           </li>
         </ul>
       </section>
 
       {loading ? (
-        <div style={{ padding: "2rem", color: "var(--merveille-muted)" }}>Loading performance metrics...</div>
+        <div className={cx(layout.block15)}>Loading performance metrics...</div>
       ) : error ? (
-        <div className="card" style={{ borderColor: "var(--merveille-error)" }}>
-          <p style={{ color: "var(--merveille-error)" }}>{error}</p>
+        <div className={cx(["card", layout.block16].join(" "))}>
+          <p className={cx(layout.block17)}>{error}</p>
         </div>
       ) : (
         <>
           {/* Team Table */}
-          <section className="card" style={{ padding: "1.5rem" }}>
-            <h2 className="text-section" style={{ fontSize: "1.1rem", marginBottom: "1rem" }}>
+          <section className={cx(["card", layout.block18].join(" "))}>
+            <h2 className={cx(["text-section", layout.block19].join(" "))}>
               Staff & Team Member Metrics
             </h2>
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
+            <div className={cx(layout.block20)}>
+              <table className={cx(layout.block21)}>
                 <thead>
-                  <tr style={{ borderBottom: "1px solid var(--merveille-border)", textAlign: "left" }}>
-                    <th style={{ padding: "0.75rem 0.5rem" }}>Team Member</th>
-                    <th style={{ padding: "0.75rem 0.5rem" }}>Role</th>
-                    <th style={{ padding: "0.75rem 0.5rem" }}>Completed Tasks</th>
-                    <th style={{ padding: "0.75rem 0.5rem" }}>On-Time Rate</th>
-                    <th style={{ padding: "0.75rem 0.5rem" }}>Overdue Open</th>
-                    <th style={{ padding: "0.75rem 0.5rem" }}>Internal Rework</th>
-                    <th style={{ padding: "0.75rem 0.5rem" }}>Client Scope Variations</th>
-                    <th style={{ padding: "0.75rem 0.5rem" }}>Action</th>
+                  <tr className={cx(layout.block22)}>
+                    <th className={cx(layout.block23)}>Team Member</th>
+                    <th className={cx(layout.block24)}>Role</th>
+                    <th className={cx(layout.block25)}>Completed Tasks</th>
+                    <th className={cx(layout.block26)}>On-Time Rate</th>
+                    <th className={cx(layout.block27)}>Overdue Open</th>
+                    <th className={cx(layout.block28)}>Internal Rework</th>
+                    <th className={cx(layout.block29)}>
+                      Client Scope Variations
+                    </th>
+                    <th className={cx(layout.block30)}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -135,39 +153,76 @@ export default function PerformancePage() {
                     <tr
                       key={m.userId}
                       style={{
-                        borderBottom: "1px solid var(--merveille-border)",
-                        backgroundColor: selectedUser?.userId === m.userId ? "var(--merveille-selection)" : "transparent",
+                        backgroundColor:
+                          selectedUser?.userId === m.userId
+                            ? "var(--ui-surface-subtle)"
+                            : "transparent",
                       }}
+                      className={cx(layout.block31)}
                     >
-                      <td style={{ padding: "0.75rem 0.5rem", fontWeight: 600 }}>
+                      <td className={cx(layout.block32)}>
                         {m.displayName}
-                        <div style={{ fontSize: "0.75rem", color: "var(--merveille-muted)", fontWeight: 400 }}>
-                          {m.email}
-                        </div>
+                        <div className={cx(layout.block33)}>{m.email}</div>
                       </td>
-                      <td style={{ padding: "0.75rem 0.5rem" }}>
-                        <span className="badge" style={{ fontSize: "0.75rem" }}>{m.role}</span>
+                      <td className={cx(layout.block34)}>
+                        <span
+                          className={cx(["badge", layout.block35].join(" "))}
+                        >
+                          {m.role}
+                        </span>
                       </td>
-                      <td style={{ padding: "0.75rem 0.5rem" }}>{m.completedTasksCount}</td>
-                      <td style={{ padding: "0.75rem 0.5rem", fontWeight: 600, color: m.onTimePercentage ? "var(--merveille-ink)" : "var(--merveille-muted)" }}>
+                      <td className={cx(layout.block36)}>
+                        {m.completedTasksCount}
+                      </td>
+                      <td
+                        style={{
+                          color: m.onTimePercentage
+                            ? "var(--ui-text)"
+                            : "var(--ui-text-muted)",
+                        }}
+                        className={cx(layout.block37)}
+                      >
                         {m.onTimePercentage || "N/A (0 completed)"}
                       </td>
-                      <td style={{ padding: "0.75rem 0.5rem", color: m.overdueTasksCount > 0 ? "var(--merveille-error)" : "inherit" }}>
+                      <td
+                        style={{
+                          color:
+                            m.overdueTasksCount > 0
+                              ? "var(--ui-danger)"
+                              : "inherit",
+                        }}
+                        className={cx(layout.block38)}
+                      >
                         {m.overdueTasksCount}
                       </td>
-                      <td style={{ padding: "0.75rem 0.5rem", color: m.reopenedTasksCount > 0 ? "var(--merveille-gold-text)" : "inherit" }}>
+                      <td
+                        style={{
+                          color:
+                            m.reopenedTasksCount > 0
+                              ? "var(--ui-text)"
+                              : "inherit",
+                        }}
+                        className={cx(layout.block39)}
+                      >
                         {m.reopenedTasksCount}
                       </td>
-                      <td style={{ padding: "0.75rem 0.5rem", color: "var(--merveille-muted)" }}>
+                      <td className={cx(layout.block40)}>
                         {m.clientScopeRevisionsCount} (client-driven)
                       </td>
-                      <td style={{ padding: "0.75rem 0.5rem" }}>
+                      <td className={cx(layout.block41)}>
                         <button
-                          onClick={() => setSelectedUser(selectedUser?.userId === m.userId ? null : m)}
-                          className="btn-secondary"
-                          style={{ padding: "0.25rem 0.6rem", fontSize: "0.75rem" }}
+                          onClick={() =>
+                            setSelectedUser(
+                              selectedUser?.userId === m.userId ? null : m,
+                            )
+                          }
+                          className={cx(
+                            ["btn-secondary", layout.block42].join(" "),
+                          )}
                         >
-                          {selectedUser?.userId === m.userId ? "Hide Evidence" : "Inspect Evidence"}
+                          {selectedUser?.userId === m.userId
+                            ? "Hide Evidence"
+                            : "Inspect Evidence"}
                         </button>
                       </td>
                     </tr>
@@ -179,58 +234,58 @@ export default function PerformancePage() {
 
           {/* Drilldown Evidence Panel */}
           {selectedUser && (
-            <section className="card" style={{ padding: "1.5rem", borderColor: "var(--merveille-gold)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <section className={cx(["card", layout.block43].join(" "))}>
+              <div className={cx(layout.block44)}>
                 <div>
-                  <h3 style={{ fontSize: "1.1rem", fontWeight: 600, margin: 0 }}>
+                  <h3 className={cx(layout.block45)}>
                     Evidence Log: {selectedUser.displayName}
                   </h3>
-                  <p style={{ fontSize: "0.85rem", color: "var(--merveille-muted)", margin: "0.25rem 0 0 0" }}>
-                    Underlying tasks, baseline deadlines, rework events, and scope change context.
+                  <p className={cx(layout.block46)}>
+                    Underlying tasks, baseline deadlines, rework events, and
+                    scope change context.
                   </p>
                 </div>
-                <button onClick={() => setSelectedUser(null)} className="btn-secondary" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}>
+                <button
+                  onClick={() => setSelectedUser(null)}
+                  className={cx(["btn-secondary", layout.block47].join(" "))}
+                >
                   Close
                 </button>
               </div>
 
               {selectedUser.tasks.length === 0 ? (
-                <p style={{ color: "var(--merveille-muted)", fontSize: "0.875rem" }}>No tasks assigned in this evaluation period.</p>
+                <p className={cx(layout.block48)}>
+                  No tasks assigned in this evaluation period.
+                </p>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                <div className={cx(layout.block49)}>
                   {selectedUser.tasks.map((t: any) => (
-                    <div
-                      key={t.id}
-                      style={{
-                        padding: "0.75rem 1rem",
-                        backgroundColor: "var(--merveille-surface)",
-                        borderRadius: "var(--merveille-radius-sm)",
-                        border: "1px solid var(--merveille-border)",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        fontSize: "0.85rem",
-                        flexWrap: "wrap",
-                        gap: "0.5rem",
-                      }}
-                    >
+                    <div key={t.id} className={cx(layout.block50)}>
                       <div>
-                        <div style={{ fontWeight: 600, color: "var(--merveille-ink)" }}>
+                        <div className={cx(layout.block51)}>
                           [{t.projectCode}] {t.title}
                         </div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--merveille-muted)", marginTop: "0.2rem" }}>
-                          Original Due: {t.originalDueDate || "None"} &bull; Current Due: {t.currentDueDate || "None"} &bull; Status: {t.status}
+                        <div className={cx(layout.block52)}>
+                          Original Due: {t.originalDueDate || "None"} &bull;
+                          Current Due: {t.currentDueDate || "None"} &bull;
+                          Status: {t.status}
                         </div>
                       </div>
 
-                      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                      <div className={cx(layout.block53)}>
                         {t.isClientScopeChange && (
-                          <span className="badge" style={{ backgroundColor: "var(--merveille-selection)", color: "var(--merveille-gold-text)", fontSize: "0.75rem" }}>
+                          <span
+                            className={cx(["badge", layout.block54].join(" "))}
+                          >
                             Client Scope Addition
                           </span>
                         )}
                         {t.reopenCount > 0 && (
-                          <span className="badge badge-error" style={{ fontSize: "0.75rem" }}>
+                          <span
+                            className={cx(
+                              ["badge badge-error", layout.block55].join(" "),
+                            )}
+                          >
                             Reopened {t.reopenCount}x (Internal Quality)
                           </span>
                         )}
@@ -243,48 +298,66 @@ export default function PerformancePage() {
           )}
 
           {/* Project Stage Progress Section */}
-          <section className="card" style={{ padding: "1.5rem" }}>
-            <h2 className="text-section" style={{ fontSize: "1.1rem", marginBottom: "1rem" }}>
+          <section className={cx(["card", layout.block56].join(" "))}>
+            <h2 className={cx(["text-section", layout.block57].join(" "))}>
               Project Milestone & Stage Progress
             </h2>
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
+            <div className={cx(layout.block58)}>
+              <table className={cx(layout.block59)}>
                 <thead>
-                  <tr style={{ borderBottom: "1px solid var(--merveille-border)", textAlign: "left" }}>
-                    <th style={{ padding: "0.75rem 0.5rem" }}>Project</th>
-                    <th style={{ padding: "0.75rem 0.5rem" }}>Stage</th>
-                    <th style={{ padding: "0.75rem 0.5rem" }}>Status</th>
-                    <th style={{ padding: "0.75rem 0.5rem" }}>Planned Target</th>
-                    <th style={{ padding: "0.75rem 0.5rem" }}>Actual Completion</th>
+                  <tr className={cx(layout.block60)}>
+                    <th className={cx(layout.block61)}>Project</th>
+                    <th className={cx(layout.block62)}>Stage</th>
+                    <th className={cx(layout.block63)}>Status</th>
+                    <th className={cx(layout.block64)}>Planned Target</th>
+                    <th className={cx(layout.block65)}>Actual Completion</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(data?.projectStageProgress || []).map((s: any, idx: number) => (
-                    <tr key={`${s.projectId}_${idx}`} style={{ borderBottom: "1px solid var(--merveille-border)" }}>
-                      <td style={{ padding: "0.75rem 0.5rem", fontWeight: 600 }}>
-                        {s.projectCode} &bull; {s.projectName}
-                      </td>
-                      <td style={{ padding: "0.75rem 0.5rem" }}>{s.stageName}</td>
-                      <td style={{ padding: "0.75rem 0.5rem" }}>
-                        <span
-                          className={`badge ${
-                            s.status === "COMPLETED"
-                              ? "badge-success"
-                              : s.status === "IN_PROGRESS"
-                              ? "badge-warning"
-                              : ""
-                          }`}
-                          style={{ fontSize: "0.75rem" }}
+                  {(data?.projectStageProgress || []).map(
+                    (s: any, idx: number) => (
+                      <tr
+                        key={`${s.projectId}_${idx}`}
+                        className={cx(layout.block66)}
+                      >
+                        <td className={cx(layout.block67)}>
+                          {s.projectCode} &bull; {s.projectName}
+                        </td>
+                        <td className={cx(layout.block68)}>{s.stageName}</td>
+                        <td className={cx(layout.block69)}>
+                          <span
+                            className={cx(
+                              [
+                                `badge ${
+                                  s.status === "COMPLETED"
+                                    ? "badge-success"
+                                    : s.status === "IN_PROGRESS"
+                                      ? "badge-warning"
+                                      : ""
+                                }`,
+                                layout.block70,
+                              ].join(" "),
+                            )}
+                          >
+                            {s.status}
+                          </span>
+                        </td>
+                        <td className={cx(layout.block71)}>
+                          {s.plannedCompletionDate || "Not set"}
+                        </td>
+                        <td
+                          style={{
+                            color: s.actualCompletionDate
+                              ? "var(--ui-success)"
+                              : "var(--ui-text-muted)",
+                          }}
+                          className={cx(layout.block72)}
                         >
-                          {s.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: "0.75rem 0.5rem" }}>{s.plannedCompletionDate || "Not set"}</td>
-                      <td style={{ padding: "0.75rem 0.5rem", color: s.actualCompletionDate ? "var(--merveille-success)" : "var(--merveille-muted)" }}>
-                        {s.actualCompletionDate || "Pending"}
-                      </td>
-                    </tr>
-                  ))}
+                          {s.actualCompletionDate || "Pending"}
+                        </td>
+                      </tr>
+                    ),
+                  )}
                 </tbody>
               </table>
             </div>

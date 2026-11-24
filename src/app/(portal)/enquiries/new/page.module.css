@@ -1,0 +1,122 @@
+.block1 {
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.block2 {
+  font-size: 0.875rem;
+  color: var(--ui-text-muted);
+  display: flex;
+  gap: 0.5rem;
+}
+.block3 {
+  color: var(--ui-action);
+  text-decoration: none;
+}
+.block4 {
+  color: var(--ui-text);
+}
+.block5 {
+  margin-top: 0.25rem;
+}
+.block6 {
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  background-color: rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  color: var(--ui-danger);
+  font-size: 0.875rem;
+}
+.block7 {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.block8 {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+}
+.block9 {
+  width: 100%;
+  padding: 0.625rem;
+  border-radius: 4px;
+  background-color: var(--ui-surface);
+  border: 1px solid var(--ui-control-border);
+  color: var(--ui-text);
+  font-size: 16px;
+}
+.block10 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  gap: 1rem;
+}
+.block11 {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+}
+.block12 {
+  width: 100%;
+  padding: 0.625rem;
+  border-radius: 4px;
+  background-color: var(--ui-surface);
+  border: 1px solid var(--ui-control-border);
+  color: var(--ui-text);
+  font-size: 16px;
+}
+.block13 {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+}
+.block14 {
+  width: 100%;
+  padding: 0.625rem;
+  border-radius: 4px;
+  background-color: var(--ui-surface);
+  border: 1px solid var(--ui-control-border);
+  color: var(--ui-text);
+  font-size: 16px;
+}
+.block15 {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+}
+.block16 {
+  width: 100%;
+  padding: 0.625rem;
+  border-radius: 4px;
+  background-color: var(--ui-surface);
+  border: 1px solid var(--ui-control-border);
+  color: var(--ui-text);
+  font-size: 16px;
+}
+.block17 {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+}
+.block18 {
+  width: 100%;
+  padding: 0.625rem;
+  border-radius: 4px;
+  background-color: var(--ui-surface);
+  border: 1px solid var(--ui-control-border);
+  color: var(--ui-text);
+  font-size: 16px;
+}
+.block19 {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
