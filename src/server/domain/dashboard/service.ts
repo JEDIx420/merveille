@@ -15,6 +15,7 @@ import {
   canAccessProject,
   canViewIndividualPerformance,
   canViewPayrollAndProfit,
+  canReadInternalNotes,
   AuthorizationError,
 } from "../../auth/policy";
 
@@ -107,7 +108,7 @@ export interface ClientOverviewData {
     siteAddress?: string | null;
     status: string;
     currentStageName?: string | null;
-    nextMilestone?: {name:string;targetDate:string|null}|null;
+    nextMilestone?: { name: string; targetDate: string | null } | null;
   };
   publishedUpdates: Array<{
     id: string;
@@ -546,24 +547,28 @@ export class DashboardService {
       }
     }
 
-    // 4. Admin actions (ADMIN ONLY)
-    if (isAdmin) {
+    // Receipt confirmation and explicitly granted invoice issue actions.
+    if (isAdmin || principal.projectMemberships.some((m) => m.invoiceIssue)) {
       // Reported receipts awaiting confirmation
       const repReceipts = await db
-        .prepare(`SELECT * FROM receipts WHERE status = 'REPORTED'`)
+        .prepare(
+          `SELECT * FROM receipts WHERE org_id=? AND ?=1 AND status = 'REPORTED'`,
+        )
+        .bind(principal.orgId, Number(isAdmin))
         .all<any>();
       for (const r of repReceipts.results || []) {
         items.push({
           id: `receipt_conf:${r.id}`,
           entityType: "RECEIPT_CONFIRMATION",
           entityId: r.id,
+          projectId: r.project_id,
           title: `Reported Receipt ${r.receipt_number}`,
           description: `Client reported payment of ₹${((r.amount_minor || 0) / 100).toLocaleString("en-IN")}. Verify bank credit and confirm.`,
           requiredAction: `Confirm or reject receipt ${r.receipt_number}`,
           urgency: "HIGH",
           isOverdue: false,
           dueDate: null,
-          link: `/finance`,
+          link: `/projects/${r.project_id}/finance`,
           createdAt: r.created_at || Date.now(),
         });
       }
@@ -778,9 +783,33 @@ export class DashboardService {
       return b.createdAt - a.createdAt;
     });
 
+    const ownProjectRows = await db
+      .prepare("SELECT id FROM projects WHERE org_id=?")
+      .bind(principal.orgId)
+      .all<any>();
+    const ownProjectIds = new Set(ownProjectRows.results.map((p) => p.id));
     return items.filter((item) => {
+      if (item.projectId && !ownProjectIds.has(item.projectId)) return false;
+      if (item.entityType === "INVOICE_ISSUE")
+        return principal.projectMemberships.some(
+          (m) =>
+            m.projectId === item.projectId &&
+            m.invoiceIssue &&
+            (hasCapability(principal, "TEAM_MEMBER", m.projectId) ||
+              hasCapability(principal, "MANAGER", m.projectId)),
+        );
       if (!item.projectId) return hasCapability(principal, "ADMIN");
       if (!canAccessProject(principal, item.projectId)) return false;
+      if (item.entityType === "DRAWING_REVIEW")
+        return hasCapability(principal, "CONSULTANT", item.projectId);
+      if (["TASK", "SNAG_REMEDIATION"].includes(item.entityType))
+        return canReadInternalNotes(principal, item.projectId);
+      if (item.entityType === "PAYMENT_DUE")
+        return canViewFinancials(
+          principal,
+          item.projectId,
+          "CLIENT_COMMERCIAL",
+        );
       if (
         [
           "DRAWING_RELEASE",
@@ -1040,7 +1069,12 @@ export class DashboardService {
       .bind(projectId)
       .first<any>();
 
-    const nextMilestone=await db.prepare("SELECT name,planned_completion_date AS targetDate FROM project_stages WHERE project_id=? AND status!='COMPLETED' ORDER BY stage_order LIMIT 1").bind(projectId).first<any>();
+    const nextMilestone = await db
+      .prepare(
+        "SELECT name,planned_completion_date AS targetDate FROM project_stages WHERE project_id=? AND status!='COMPLETED' ORDER BY stage_order LIMIT 1",
+      )
+      .bind(projectId)
+      .first<any>();
     // 1. Published progress updates ONLY (AC-022, AC-053)
     const updatesRes = await db
       .prepare(
@@ -1290,13 +1324,20 @@ export class DashboardService {
           `SELECT SUM(COALESCE(total_minor, 0)) as total_invoiced,
                   SUM(COALESCE(allocated_minor, 0)) as total_received
            FROM invoices
-           WHERE status IN ('ISSUED', 'PARTIALLY_PAID', 'PAID')`,
+           WHERE org_id=? AND status IN ('ISSUED', 'PARTIALLY_PAID', 'PAID')`,
         )
+        .bind(principal.orgId)
         .first<any>();
 
+      const receiptsTotal = await db
+        .prepare(
+          "SELECT COALESCE(SUM(amount_minor),0) AS received FROM receipts WHERE org_id=? AND status='CONFIRMED'",
+        )
+        .bind(principal.orgId)
+        .first<any>();
       firmFinance = {
         totalInvoicedMinor: invTotal?.total_invoiced || 0,
-        totalReceivedMinor: invTotal?.total_received || 0,
+        totalReceivedMinor: receiptsTotal?.received || 0,
       };
 
       // Only ADMIN can see payroll & profit totals (REQ-DAS-002, AC-005)
@@ -1318,7 +1359,7 @@ export class DashboardService {
           totalPayrollMinor: payrollTotal?.total_payroll || 0,
           totalExpensesMinor: expenseTotal?.total_expenses || 0,
           netProfitMinor:
-            (invTotal?.total_received || 0) -
+            (receiptsTotal?.received || 0) -
             (payrollTotal?.total_payroll || 0) -
             (expenseTotal?.total_expenses || 0),
         };

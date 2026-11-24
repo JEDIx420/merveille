@@ -22,15 +22,20 @@ const nextConfig = {
           },
         ],
       },
-      {
-        source: "/:path*(png|jpg|jpeg|svg|ico)",
+      ...[
+        "/merveille-designs-logo.png",
+        "/merveille-designs-profile.png",
+        "/favicon.png",
+        "/fonts/:path*",
+      ].map((source) => ({
+        source,
         headers: [
           {
             key: "Cache-Control",
             value: "public, max-age=86400, stale-while-revalidate=604800",
           },
         ],
-      },
+      })),
     ];
   },
 };
