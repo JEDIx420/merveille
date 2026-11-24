@@ -1,5 +1,7 @@
 # Product amendment — existing foundation, premium interface, real people
 
+**Later user amendment (24 November 2026):** Cloudflare-managed authentication replaces the Google-only constraint. Jay's account remains build/staging; the company will have its own Cloudflare account and deployment. Ordinary company administration must be browser-only, with automatic invitation admission after one-time operator setup. See [company account setup](../operations/company-account-setup.md). Keep earlier Google setup/evidence as history, not a continuing dependency.
+
 Recorded **24 November 2026** from the user's latest correction. This document takes precedence over conflicting earlier presentation, demo-login and first-build instructions. It changes how the existing product is delivered and accessed; it does not remove the agreed business workflows.
 
 ## Confirmed direction

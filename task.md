@@ -6,25 +6,25 @@ Updated 24 November 2026. The application foundation exists on `implement/mervei
 
 | Stage | Work | Implementation | Local verification | Hosted verification | Team acceptance |
 |---|---|---|---|---|---|
-| R00 | Baseline and demo/diagnostic containment | Passed | Passed | Blocked | Not started |
-| R01 | Real Google accounts and admin lifecycle | Passed | Passed | Blocked | Blocked |
-| R02 | Neutral shared UI and reference screens | Passed | Passed | Blocked | Blocked |
-| R03 | Functional integrity, jobs and recovery | Passed | Passed | Blocked | Blocked |
-| R04 | All routes and interactions | Passed | Passed | Blocked | Blocked |
-| R05 | Integrated verification and real-person handoff | Passed: handoff prepared | Passed | Blocked | Blocked |
+| R00 | Baseline and demo/diagnostic containment | Passed | Passed | In progress | Not started |
+| R01 | Real accounts and admin lifecycle | Passed | Passed | In progress | Blocked |
+| R02 | Neutral shared UI and reference screens | Passed | Passed | In progress | Blocked |
+| R03 | Functional integrity, jobs and recovery | Passed | Passed | In progress | Blocked |
+| R04 | All routes and interactions | Passed | Passed | In progress | Blocked |
+| R05 | Integrated verification and real-person handoff | Passed: handoff prepared | Passed | In progress | In progress |
 
 Dependencies and exact contracts: [active manifest](docs/remediation/manifest.json), [delivery gates](docs/remediation/05-delivery-and-acceptance.md).
 
 ## Current checkpoint
 
-- Application source commit: `41370d9` on `implement/merveille-portal`. Existing Next/OpenNext/Cloudflare/Wrangler foundation and logo preserved. Earlier commits contain real identity, money/file/state repair, durable jobs and shared neutral UI.
-- Current work: protected staging Google login and initial ADMIN onboarding verified. R05 team acceptance and remaining hosted business/integration gates are in progress.
-- Actual checks: typecheck passed; 105 tests across 21 files passed; optimized Workers build passed; nine isolated workerd identity/concurrency/rollback/recovery checks passed through migration 0020; 11 actual private HTTP/CSRF/diagnostic/cache checks passed; generated binding check and jobs dry run passed; dependency audit reports zero advisories; documentation checker passes. See [session evidence](docs/evidence/remediation/session.md).
+- Application source commit: `8e834b6` on `implement/merveille-portal`. Existing Next/OpenNext/Cloudflare/Wrangler foundation and logo preserved. Earlier commits contain real identity, money/file/state repair, durable jobs and shared neutral UI.
+- Current work: R05 independent checks extended: real staged Queue delivery/suppression/replay, private D1/R2 backup transport and quarantined restore, account-neutral browser administration and serialized automatic invitation admission. Google-to-Cloudflare-native policy migration and policy-only credential are prepared but await action-time confirmation; Google login remains active.
+- Actual checks: typecheck passed; 106 tests across 22 files passed; optimized Workers build passed; nine isolated workerd identity/concurrency/rollback/recovery checks passed through migration 0021; 11 actual private HTTP/CSRF/diagnostic/cache checks passed; generated binding check and jobs dry run passed; dependency audit reports zero advisories; documentation checker passes. See [session evidence](docs/evidence/remediation/session.md).
 - Browser: final built frontend passed 112 recorded checks covering all 29 pages at 1440×900, 1024×768 and 390×844, pure external-client navigation, 13 focused interactions/failures and setup states; no overflow/JavaScript errors. Reference screenshots were inspected. Tests use fictional browser-only API fixtures; actual Google/hosted business journeys remain unverified.
-- Next exact action: receive the other pilot Google emails and deliberate roles privately; add Google test-user and exact-email staging policy admission, create explicit application invitations, and have each person accept/test as themselves. No new Access API token is configured; admission is manual.
-- Hosted state: protected staging at https://merveille-web-staging.rhelo-bible.workers.dev, Worker version `1da9cec8-e065-4e86-8c46-66e01db7be68`; actual Google test/login, initial ADMIN acceptance, sign-out/re-entry, used-link rejection and ADMIN-vs-OWNER denial verified. Preview URLs disabled, private bucket, isolated all-20-migration D1; old preview unchanged.
+- Next exact action: receive the two pending security confirmations (native email-code login and single-policy automation credential), finish provider/policy/secret setup and verify a real login/sync; then onboard the other pilot emails/roles privately. The sister/company will own a separate installation; see company-account-setup.md.
+- Hosted state: protected staging at https://merveille-web-staging.rhelo-bible.workers.dev, Worker version `601c9003-2621-4d3f-8b06-a357ba93ea1e`; actual Google test/login, initial ADMIN acceptance, sign-out/re-entry, used-link rejection and ADMIN-vs-OWNER denial verified. Preview URLs disabled, private bucket, isolated all-21-migration D1; old preview unchanged.
 - Private input: Jay's exact supplied Google email is in ignored protected setup data, absent from public source/evidence. Initial staging ADMIN activation was explicitly confirmed; no extra capability was granted.
-- External gates: other pilot emails/roles and Google/edge admission, second-admin/real-role UAT, hosted Queue/provider/recovery checks. No release acceptance inferred from initial login. Use the [real-account handoff](docs/operations/real-account-handoff.md).
+- External gates: native login/policy-token confirmations and hosted sync/login checks, other pilot emails/roles, second-admin/real-role UAT, real provider/webhook/forced retry-DLQ tests and full populated remote business recovery. Queue consumer and private backup transport/quarantine now have hosted evidence; Cron registration is verified but first execution is still under observation. No release acceptance inferred from initial login. Use the [real-account handoff](docs/operations/real-account-handoff.md).
 - Authorized isolated staging resources, migrations, protected deployment, Google IdP/app/policy and initial ADMIN bootstrap completed. No production mutations or WhatsApp sends. Historical P00–P14 release claims remain superseded; complete business acceptance scenarios remain unrun.
 
 ## Historical P00–P14 implementation records

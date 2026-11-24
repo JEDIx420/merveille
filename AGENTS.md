@@ -18,7 +18,7 @@ Follow system/developer instructions and the user's latest instructions. Within 
 
 ## Real people and access
 
-Use individual Google accounts for invited Gmail/Workspace addresses. Jay is the initial ADMIN; obtain his exact email privately when setup requires it. Bootstrap once through authenticated, exact-email, atomic acceptance. Never use first-signup-becomes-admin.
+Latest user amendment: use Cloudflare-managed sign-in for invited individual email addresses; remove the dependency on a company Google Cloud/OAuth project. Cloudflare email-code login is the proposed simple team method; configure and verify actual provider admission before claiming it works. Jay's account is temporary staging; the sister/company will own a separate Cloudflare installation. See docs/operations/company-account-setup.md. Jay is the initial ADMIN; obtain his exact email privately when setup requires it. Bootstrap once through authenticated, exact-email, atomic acceptance. Never use first-signup-becomes-admin.
 
 Remove deployed demo logins, role/view switching, impersonation and synthetic identity fallbacks, including previews. Fixtures belong only in an isolated automated test harness. Keep ordinary project switching, actual account identity/sign-out and administrator role/project editing.
 
@@ -53,6 +53,6 @@ Follow [03 — Premium interface](docs/remediation/03-premium-interface.md): whi
 
 Implement all routes, not only three attractive reference screens. Use actual browser review, truthful loading/error/empty states, meaningful file/photo previews and working keyboard/dialog behavior. Do not expose developer acceptance IDs or runtime jargon in product flows.
 
-The coding agent runs targeted regression/build checks. Jay and the team test through real Google accounts in a browser; no terminal work or impersonation is required from them. Record untested roles and blocked hosted checks honestly.
+The coding agent runs targeted regression/build checks. Jay and the team test through their own real configured Cloudflare Access identities in a browser; no terminal work or impersonation is required from them. Record untested roles and blocked hosted checks honestly.
 
 Continue independent implementation when credentials block one integration. Keep dependent features fail-closed and report the exact input needed. Production changes, messages and destructive actions follow actual session authorization, not a blanket permission inferred from these files.

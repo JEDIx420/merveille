@@ -1,5 +1,7 @@
 # Real accounts, administration and acceptance testing
 
+**Current amendment:** The user now permits Cloudflare-managed sign-in with individual invited email identities; Google Cloud/OAuth is not required for the eventual company installation. The same exact-email invitation, signed Access JWT, immutable issuer/subject binding, independent capabilities and revocation rules below still apply. See [company account setup](../operations/company-account-setup.md). Provider changes must not silently relink identities by email.
+
 ## Outcome and scope
 
 Merveille Designs must work with each person's own Google account. Jay is the initial administrator; he can invite another administrator, teammates, consultants and client contacts. Three people form the initial testing group, not a user limit. Keep Cloudflare Access, Workers, Wrangler, D1 and private R2; application permissions remain in D1.

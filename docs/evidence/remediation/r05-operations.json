@@ -1,0 +1,36 @@
+{
+  "sourceCommit": "8e834b6",
+  "webVersion": "601c9003-2621-4d3f-8b06-a357ba93ea1e",
+  "jobsVersion": "c2f4b42c-6fb9-4252-b0bd-546f9f4e4c2c",
+  "local": {
+    "tests": 106,
+    "testFiles": 22,
+    "workerdChecks": 9,
+    "browserChecks": 112,
+    "invitationParsingCases": 3,
+    "typecheck": "passed",
+    "workerBuild": "passed"
+  },
+  "hosted": {
+    "migrationCount": 21,
+    "queueConsumer": "passed: disabled-recipient suppression and replay",
+    "cron": "registered; execution not yet observed",
+    "backup": {
+      "databaseBytes": 55640,
+      "fileBytes": 65536,
+      "fileSha256": "4e641c593c2c6534e7100ec66a02a0b879b9cbae41291ab1cca62ce3adfc216a",
+      "roundTrip": "passed",
+      "restoreQuarantine": {
+        "activeUsers": 0,
+        "identities": 0,
+        "activeMemberships": 0
+      },
+      "financialReconciliationErrors": 0,
+      "scope": "provider transport and empty-business staging snapshot; populated recovery remains unverified"
+    },
+    "nativeLogin": "provider available; policy/app migration not saved pending confirmation",
+    "policyCredential": "reviewed single-policy Admin; not created pending confirmation",
+    "otherApps": "explicit original Cloudflare provider selected to prevent new-provider inheritance"
+  },
+  "team": "remaining account emails/roles and UAT pending"
+}

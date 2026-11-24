@@ -7,7 +7,7 @@
   "auditedSourceCommit": "813ef8b765045b95ff713665a3217e4487491d75",
   "entryPoint": "docs/remediation/README.md",
   "historicalManifest": "docs/implementation/manifest.json",
-  "status": "R00–R04 implemented and locally verified. R05 protected staging Google login and initial ADMIN onboarding verified; remaining hosted business/integration and real-team gates in progress.",
+  "status": "Independent R05 checks extended: protected staging admin, actual Queue suppression/replay, private backup transport and quarantined restore verified. Native login and policy-only automation credential await security confirmations; real team and remaining provider/recovery gates open.",
   "dependencyPolicy": "Implementation and local-verification contracts unlock independent downstream work. A blocked hosted/provider check remains explicit and blocks real onboarding/release, not unrelated implementation. See stage exit gates.",
   "stages": [
     {
@@ -24,10 +24,11 @@
       "hostedVerification": "in-progress",
       "teamAcceptance": "not-started",
       "evidence": [
-        "docs/evidence/remediation/session.md"
+        "docs/evidence/remediation/session.md",
+        "docs/evidence/remediation/r05-operations.json"
       ],
       "blockers": [
-        "Other pilot Google emails/roles and individual Google/edge admission pending; second-admin and real-role business UAT, hosted jobs/provider/recovery remain unverified. Automatic Access reconciliation is not configured; operator admission required."
+        "Native login switch and policy-only admission credential await action-time confirmation; current Google login remains active. Other real tester emails/roles, second-admin/full-role UAT, real webhook/forced DLQ and populated remote recovery remain outstanding."
       ]
     },
     {
@@ -46,10 +47,11 @@
       "hostedVerification": "in-progress",
       "teamAcceptance": "blocked",
       "evidence": [
-        "docs/evidence/remediation/session.md"
+        "docs/evidence/remediation/session.md",
+        "docs/evidence/remediation/r05-operations.json"
       ],
       "blockers": [
-        "Other pilot Google emails/roles and individual Google/edge admission pending; second-admin and real-role business UAT, hosted jobs/provider/recovery remain unverified. Automatic Access reconciliation is not configured; operator admission required."
+        "Native login switch and policy-only admission credential await action-time confirmation; current Google login remains active. Other real tester emails/roles, second-admin/full-role UAT, real webhook/forced DLQ and populated remote recovery remain outstanding."
       ]
     },
     {
@@ -68,10 +70,11 @@
       "hostedVerification": "in-progress",
       "teamAcceptance": "blocked",
       "evidence": [
-        "docs/evidence/remediation/session.md"
+        "docs/evidence/remediation/session.md",
+        "docs/evidence/remediation/r05-operations.json"
       ],
       "blockers": [
-        "Other pilot Google emails/roles and individual Google/edge admission pending; second-admin and real-role business UAT, hosted jobs/provider/recovery remain unverified. Automatic Access reconciliation is not configured; operator admission required."
+        "Native login switch and policy-only admission credential await action-time confirmation; current Google login remains active. Other real tester emails/roles, second-admin/full-role UAT, real webhook/forced DLQ and populated remote recovery remain outstanding."
       ],
       "parallelWith": [
         "R03"
@@ -94,10 +97,11 @@
       "hostedVerification": "in-progress",
       "teamAcceptance": "blocked",
       "evidence": [
-        "docs/evidence/remediation/session.md"
+        "docs/evidence/remediation/session.md",
+        "docs/evidence/remediation/r05-operations.json"
       ],
       "blockers": [
-        "Other pilot Google emails/roles and individual Google/edge admission pending; second-admin and real-role business UAT, hosted jobs/provider/recovery remain unverified. Automatic Access reconciliation is not configured; operator admission required."
+        "Native login switch and policy-only admission credential await action-time confirmation; current Google login remains active. Other real tester emails/roles, second-admin/full-role UAT, real webhook/forced DLQ and populated remote recovery remain outstanding."
       ],
       "parallelWith": [
         "R02"
@@ -120,10 +124,11 @@
       "hostedVerification": "in-progress",
       "teamAcceptance": "blocked",
       "evidence": [
-        "docs/evidence/remediation/session.md"
+        "docs/evidence/remediation/session.md",
+        "docs/evidence/remediation/r05-operations.json"
       ],
       "blockers": [
-        "Other pilot Google emails/roles and individual Google/edge admission pending; second-admin and real-role business UAT, hosted jobs/provider/recovery remain unverified. Automatic Access reconciliation is not configured; operator admission required."
+        "Native login switch and policy-only admission credential await action-time confirmation; current Google login remains active. Other real tester emails/roles, second-admin/full-role UAT, real webhook/forced DLQ and populated remote recovery remain outstanding."
       ]
     },
     {
@@ -145,10 +150,11 @@
       "hostedVerification": "in-progress",
       "teamAcceptance": "in-progress",
       "evidence": [
-        "docs/evidence/remediation/session.md"
+        "docs/evidence/remediation/session.md",
+        "docs/evidence/remediation/r05-operations.json"
       ],
       "blockers": [
-        "Other pilot Google emails/roles and individual Google/edge admission pending; second-admin and real-role business UAT, hosted jobs/provider/recovery remain unverified. Automatic Access reconciliation is not configured; operator admission required."
+        "Native login switch and policy-only admission credential await action-time confirmation; current Google login remains active. Other real tester emails/roles, second-admin/full-role UAT, real webhook/forced DLQ and populated remote recovery remain outstanding."
       ]
     }
   ]

@@ -1,5 +1,5 @@
 {
-  "environment": "http://127.0.0.1:8799; isolated browser-only API fixtures; no authentication bypass in app",
+  "environment": "http://127.0.0.1:8801; isolated browser-only API fixtures; no authentication bypass in app",
   "results": [
     {
       "path": "/overview",
@@ -915,7 +915,7 @@
       "path": "/api/projects/prj_review/finance/receipts",
       "payload": {
         "action": "REPORT",
-        "idempotencyKey": "70db139b-118c-49bb-be9b-112bd6d524d1",
+        "idempotencyKey": "bf8c8044-d306-4249-a6b5-fadeddf853fa",
         "settlementInvoiceId": "invoice_existing",
         "amountMinor": 10000,
         "receivedDate": "2026-11-24",
@@ -927,7 +927,7 @@
       "path": "/api/projects/prj_review/finance/receipts",
       "payload": {
         "action": "REPORT",
-        "idempotencyKey": "70db139b-118c-49bb-be9b-112bd6d524d1",
+        "idempotencyKey": "bf8c8044-d306-4249-a6b5-fadeddf853fa",
         "settlementInvoiceId": "invoice_existing",
         "amountMinor": 10000,
         "receivedDate": "2026-11-24",
