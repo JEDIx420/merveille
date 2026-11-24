@@ -259,6 +259,13 @@ export default function ProjectOverviewPage({
         {/* Manager Actions Bar */}
         <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
           <a
+            href={`/projects/${projectId}/finance`}
+            className="btn-secondary"
+            style={{ textDecoration: "none" }}
+          >
+            Finance & Invoicing
+          </a>
+          <a
             href={`/projects/${projectId}/updates`}
             className="btn-secondary"
             style={{ textDecoration: "none" }}
