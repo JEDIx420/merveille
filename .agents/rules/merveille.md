@@ -1,6 +1,6 @@
 ---
 trigger: always_on
-description: "Follow the canonical Merveille Designs product and implementation entry points."
+description: "Open the existing Merveille Designs implementation and its current remediation plan."
 ---
 
-Read the repository-root AGENTS.md and START_HERE.md before implementation. Follow the phase manifest and update task.md with verified progress. Read individual screen/workflow files only when their phase needs them. Do not replace the confirmed product rules with generic project-management assumptions.
+Read AGENTS.md, NEXT_AGENT.md and START_HERE.md. This main branch is the historical planning baseline. Resume the existing implement/merveille-portal app and re-read its instructions. Follow R00–R05 remediation, not a new P00 scaffold. Preserve current user work and confirmed business rules.

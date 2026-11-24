@@ -1,7 +1,5 @@
-# Merveille Designs implementation plan
+# Current implementation plan location
 
-The detailed plan is [docs/implementation/roadmap.md](docs/implementation/roadmap.md).
+Continue the existing application on `implement/merveille-portal`. Its [remediation work order](https://github.com/JEDIx420/merveille/blob/implement/merveille-portal/docs/remediation/README.md), [R00–R05 manifest](https://github.com/JEDIx420/merveille/blob/implement/merveille-portal/docs/remediation/manifest.json) and [task state](https://github.com/JEDIx420/merveille/blob/implement/merveille-portal/task.md) are authoritative.
 
-The ordered, machine-readable plan is [manifest.json](docs/implementation/manifest.json). Each phase has a separate file with prerequisites, implementation order, expected code areas, checks and exit criteria.
-
-Start at [START_HERE.md](START_HERE.md); use [task.md](task.md) for current progress. All application phases are initially unstarted.
+Read [NEXT_AGENT.md](NEXT_AGENT.md) and safely switch to that existing branch. The original P00–P14 plan remains historical reference; do not restart it from this default branch.

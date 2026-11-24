@@ -1,4 +1,6 @@
-# Merveille Designs task state
+# Merveille Designs — historical planning checkpoint
+
+**Current work is on `implement/merveille-portal`.** Read [NEXT_AGENT.md](NEXT_AGENT.md), then the [active remediation task state](https://github.com/JEDIx420/merveille/blob/implement/merveille-portal/task.md). The initial-build status below is retained as history and must not trigger a fresh scaffold.
 
 Baseline: 24 November 2026. Application implementation has not started. Planning files, brand assets and acceptance specifications are present; they are not evidence that the application exists.
 
