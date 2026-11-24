@@ -192,7 +192,7 @@ describe("Real identities and independent capabilities", () => {
     expect((await loadPrincipalById("u", db)).principal).toBeNull();
   });
   it("last-admin protection is evaluated inside the atomic mutation", async () => {
-    await expect(disableUser(admin, admin.id, "test", db)).rejects.toThrow();
+    await expect(disableUser(admin, admin.id, "test", db)).rejects.toMatchObject({code:"LAST_ADMIN_CONFLICT"});
     expect((await loadPrincipalById(admin.id, db)).principal).not.toBeNull();
     await expect(
       updateGrants(
@@ -201,7 +201,7 @@ describe("Real identities and independent capabilities", () => {
         { roles: [], projects: [], reason: "test" },
         db,
       ),
-    ).rejects.toThrow();
+    ).rejects.toMatchObject({code:"LAST_ADMIN_CONFLICT"});
     expect((await loadPrincipalById(admin.id, db)).principal?.roles).toContain(
       "ADMIN",
     );

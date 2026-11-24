@@ -30,6 +30,7 @@ export default function People() {
   const [confirm, setConfirm] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+  const [admissionNotice, setAdmissionNotice] = useState("");
   async function load() {
     setLoading(true);
     setError("");
@@ -106,10 +107,12 @@ export default function People() {
   async function retryAdmission() {
     setBusy(true);
     setError("");
+    setAdmissionNotice("");
     try {
       const admission = await readResponse(await fetch("/api/people/admission", { method: "POST" }));
       await load();
       if (admission.status !== "READY") setError("Invitation access is not ready yet. Retry shortly, or contact the person who set up this workspace.");
+      else setAdmissionNotice("Invitation access is up to date.");
     } catch (e: any) { setError(e.message); }
     finally { setBusy(false); }
   }
@@ -212,7 +215,8 @@ export default function People() {
             </div>
             <section className={ui.panel}>
               <h2>Invitations</h2>
-              {data.invitations?.some((inv: any) => inv.status === "PENDING" && inv.admission_status !== "READY") && <Button secondary disabled={busy} onClick={retryAdmission}>Retry invitation access</Button>}
+              <Button secondary disabled={busy} onClick={retryAdmission}>Refresh invitation access</Button>
+              {admissionNotice && <p role="status">{admissionNotice}</p>}
               {data.invitations?.length ? (
                 data.invitations.map((inv: any) => (
                   <div className={ui.row} key={inv.id}>

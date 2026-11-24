@@ -502,6 +502,7 @@ export async function updateGrants(
     [targetId, actor.orgId],
   );
   const now = Date.now();
+  await explainLastAdminRemoval(db, actor.orgId, targetId, input.roles.includes("ADMIN"));
   await db.batch([
     currentAdminGuard(db, actor),
     lastAdminGuard(db, actor.orgId, targetId, input.roles.includes("ADMIN")),
@@ -548,6 +549,16 @@ function currentAdminGuard(db: D1Database, actor: UserPrincipal) {
     [actor.id, actor.orgId],
   );
 }
+const lastAdminCondition = `?=1 OR NOT EXISTS(SELECT 1 FROM role_assignments WHERE org_id=? AND user_id=? AND role='ADMIN' AND revoked_at IS NULL) OR EXISTS(SELECT 1 FROM role_assignments r JOIN users u ON u.id=r.user_id JOIN organization_memberships m ON m.user_id=u.id AND m.org_id=r.org_id WHERE r.org_id=? AND r.user_id!=? AND r.role='ADMIN' AND r.revoked_at IS NULL AND u.status='ACTIVE' AND m.is_active=1 AND EXISTS(SELECT 1 FROM identities i WHERE i.user_id=u.id AND i.provider='cloudflare_access'))`;
+async function explainLastAdminRemoval(db: D1Database, org: string, target: string, keepsAdmin=false) {
+  // Friendly early feedback; the same condition remains inside the batch for concurrent requests.
+  const result = await db.prepare(`SELECT (${lastAdminCondition}) AS allowed`)
+    .bind(Number(keepsAdmin),org,target,org,target).first<{allowed:number}>();
+  if (!result?.allowed) throw new AuthorizationError(
+    "Keep at least one active administrator. Invite and activate another administrator before removing this access.",
+    "LAST_ADMIN_CONFLICT",
+  );
+}
 function lastAdminGuard(
   db: D1Database,
   org: string,
@@ -556,7 +567,7 @@ function lastAdminGuard(
 ) {
   return assertion(
     db,
-    `?=1 OR NOT EXISTS(SELECT 1 FROM role_assignments WHERE org_id=? AND user_id=? AND role='ADMIN' AND revoked_at IS NULL) OR EXISTS(SELECT 1 FROM role_assignments r JOIN users u ON u.id=r.user_id JOIN organization_memberships m ON m.user_id=u.id AND m.org_id=r.org_id WHERE r.org_id=? AND r.user_id!=? AND r.role='ADMIN' AND r.revoked_at IS NULL AND u.status='ACTIVE' AND m.is_active=1 AND EXISTS(SELECT 1 FROM identities i WHERE i.user_id=u.id AND i.provider='cloudflare_access'))`,
+    lastAdminCondition,
     [Number(keepsAdmin), org, target, org, target],
   );
 }
@@ -576,6 +587,7 @@ export async function disableUser(
     [targetUserId, actor.orgId],
   );
   if (!target) throw new AuthorizationError("Account not found.", "NOT_FOUND");
+  await explainLastAdminRemoval(db, actor.orgId, targetUserId);
   await db.batch([
     currentAdminGuard(db, actor),
     lastAdminGuard(db, actor.orgId, targetUserId),

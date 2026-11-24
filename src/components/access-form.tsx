@@ -192,7 +192,7 @@ export function AccessGrants({
             required
             onChange={(e) => setConfirm(e.target.checked)}
           />
-          I confirm this elevated access is intentional. A recent Google sign-in
+          I confirm this elevated access is intentional. A recent sign-in
           is required.
         </label>
       )}

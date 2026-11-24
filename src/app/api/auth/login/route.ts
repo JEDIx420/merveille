@@ -16,6 +16,6 @@ export async function GET(request: Request) {
     !destination.includes("\\")
       ? destination
       : "/overview";
-  // Access owns the Google provider selection; no mailbox scopes are requested.
+  // Access owns the configured login method; the portal never requests mailbox scopes.
   return Response.redirect(`${env.APP_ORIGIN}${safe}`, 303);
 }

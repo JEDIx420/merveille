@@ -47,7 +47,7 @@
         "ACCESS_ACCOUNT_ID": "2dbda19c8f37c5d767acfd842321c4a5",
         "ACCESS_APP_ID": "eb44e1d8-bd9c-437d-8bac-c5a8da71d60c",
         "ACCESS_POLICY_ID": "66d9b567-8837-42a0-b826-2115aacc5505",
-        "ACCESS_GOOGLE_IDP_ID": "94487aea-8041-48ab-a17c-ec2aff33da29"
+        "ACCESS_IDP_ID": "6e6bd247-d2f5-41a7-9c8d-6b0ccb4569e0"
       },
       "d1_databases": [
         {
