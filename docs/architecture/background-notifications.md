@@ -4,7 +4,7 @@
 
 Send in-portal and WhatsApp reminders for payments due, overdue drawings and overdue tasks. Escalate unresolved overdue items to ADMIN. Add notifications for assigned reviews or decisions where they support “Waiting on you.” A notification describes the state of a real entity; dismissing it does not resolve that entity.
 
-WhatsApp is an external delivery service. All Marvel compute, scheduling, persistence and delivery status records remain on Cloudflare. Use the Meta Cloud API through a small adapter, with a fake adapter for local development. Do not add a third-party notification platform or browser automation of WhatsApp.
+WhatsApp is an external delivery service. All Merveille Designs compute, scheduling, persistence and delivery status records remain on Cloudflare. Use the Meta Cloud API through a small adapter, with a fake adapter for local development. Do not add a third-party notification platform or browser automation of WhatsApp.
 
 ## Durable architecture
 

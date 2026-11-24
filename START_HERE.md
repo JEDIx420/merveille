@@ -1,6 +1,8 @@
-# Start here — build Marvel
+# Start here — build Merveille Designs
 
 This is the implementation agent's entry point. The repository is a planning handoff, not a partially working app. Follow the sequence below; carry work forward through the phase manifest instead of inventing a new scope.
+
+Starting from an empty folder? Use the [Antigravity kickoff prompt](docs/implementation/antigravity-kickoff.md). The [skills and tools guide](docs/implementation/skills-and-tools.md) covers cloning, the selected upstream skills and project-local installation. Read the contract below before scaffolding or applying a skill's generic defaults.
 
 ## 1. Understand the contract
 
@@ -23,6 +25,7 @@ Then read the selected phase's prerequisite documents and screen/workflow specif
 
 - Start at **P00** on a fresh checkout.
 - A phase is ready when all dependencies have verified evidence.
+- Dependency readiness means each predecessor's stated exit gate and evidence are satisfied. Foundation checks may cover only the policy/runtime portion of a later end-to-end acceptance case; leave the full case pending until its actual endpoints and integrations have been exercised. Follow each phase's documented evidence scope.
 - Complete a vertical slice: authorised server behaviour, persistence, accessible UI, error states and meaningful tests.
 - Only then mark the phase complete in [task.md](task.md) and add its evidence record.
 - Continue automatically to the next ready phase while work is authorised. Ask only when a genuinely missing decision or access blocks the next step.
@@ -44,7 +47,7 @@ The manifest defines phase dependencies, not permission to deploy production or 
 
 ## 4. First implementation action
 
-Run the handoff checker, inspect the actual checkout and begin [P00](docs/implementation/phases/00-foundation.md). Validate the runtime in workerd with real local D1/R2 bindings before committing to framework versions. Record the adapter choice and pinned versions in an ADR.
+Run the handoff checker, inspect the actual checkout and begin [P00](docs/implementation/phases/00-foundation.md). Complete the [skill/tool bootstrap](docs/implementation/skills-and-tools.md), preserving the requested Wrangler workflow. Validate the runtime in workerd with real local D1/R2 bindings before committing to framework versions. Record the adapter choice and pinned versions in an ADR.
 
 The infrastructure examples are **examples**, not deploy-ready files. Do not copy fictitious account IDs into production or claim a service exists because a configuration skeleton names it.
 

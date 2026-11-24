@@ -1,4 +1,4 @@
-# Contributing to Marvel
+# Contributing to Merveille Designs
 
 Begin with [START_HERE.md](START_HERE.md) and [AGENTS.md](AGENTS.md). The repository contains a specification before it contains an application.
 

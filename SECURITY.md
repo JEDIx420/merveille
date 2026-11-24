@@ -1,6 +1,6 @@
 # Security expectations
 
-Marvel holds client documents, financial information and staff records. The application must enforce the information boundaries in [roles and permissions](docs/product/roles-and-permissions.md) on the server.
+Merveille Designs holds client documents, financial information and staff records. The application must enforce the information boundaries in [roles and permissions](docs/product/roles-and-permissions.md) on the server.
 
 ## Required controls
 

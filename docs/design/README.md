@@ -1,6 +1,6 @@
 # Design specification
 
-Marvel is the working title for a private architecture practice portal. The experience should feel like a carefully organised studio: warm, precise and calm. It is an operational product, so beauty must make decisions easier to see and work easier to complete.
+This is the private architecture practice portal for **Merveille Designs**. The experience should feel like a carefully organised studio: warm, precise and calm. It is an operational product, so beauty must make decisions easier to see and work easier to complete.
 
 Read in this order:
 
@@ -11,7 +11,7 @@ Read in this order:
 
 The [product requirements](../product/requirements.md) and [permission matrix](../product/roles-and-permissions.md) decide what a person may do. Design defaults here decide how to present that permitted work. Visual examples, if added, are not proof of functional implementation.
 
-Brand assets are catalogued in the [brand asset manifest](../../assets/brand/README.md). The [visual direction specimen](visual-direction.html) illustrates the style and is not the application. The wordmark and architectural mark are supplied separately from this documentation. Use the approved asset manifest; do not redraw the logo in individual components.
+Brand assets are catalogued in the [brand asset manifest](../../assets/brand/README.md). The [visual direction specimen](visual-direction.html) illustrates the style and is not the application. The existing logo and smaller published profile image come from the company’s [Refrens profile](https://www.refrens.com/merveille-designs). Both retain the original square charcoal background, gold artwork, company name and embedded tagline. Use the complete supplied image with `object-fit: contain`; do not crop, recolour, redraw or substitute a generated mark. The interface palette below is a proposed interpretation of the artwork, not an official brand manual.
 
 ## Design review gates
 

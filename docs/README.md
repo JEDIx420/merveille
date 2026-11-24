@@ -1,4 +1,4 @@
-# Marvel documentation
+# Merveille Designs documentation
 
 Start at [START_HERE.md](../START_HERE.md). This index is a navigation aid, not an alternative implementation order.
 
@@ -12,9 +12,10 @@ Start at [START_HERE.md](../START_HERE.md). This index is a navigation aid, not 
 | Environments and launch | [Environments](operations/environments.md), [deployment](operations/deployment.md) |
 | Recovery and support | [Recovery](operations/backup-and-recovery.md), [runbooks](operations/runbooks.md) |
 | Ordered implementation | [Roadmap](implementation/roadmap.md), [manifest](implementation/manifest.json), [agent handoff](implementation/agent-handoff.md) |
+| Empty-folder agent setup | [Antigravity kickoff prompt](implementation/antigravity-kickoff.md), [skills and tools](implementation/skills-and-tools.md) |
 | Operational inputs | [Production inputs](implementation/operational-inputs.md) |
 | Quality | [Acceptance](quality/acceptance.md), [traceability](quality/traceability.md), [testing](quality/testing.md), [release checklist](quality/release-checklist.md) |
 | Handoff verification | [Preparation report](quality/handoff-verification.md) |
-| Checked sources | [Cloudflare and messaging](references/cloudflare-sources.md), [Antigravity](references/antigravity-sources.md) |
+| Checked sources | [Cloudflare and messaging](references/cloudflare-sources.md), [Antigravity](references/antigravity-sources.md), [skill sources](references/antigravity-skill-sources.md), [brand provenance](../assets/brand/sources.json) |
 
 The repository's current application status is recorded in [task.md](../task.md) and [walkthrough.md](../walkthrough.md).

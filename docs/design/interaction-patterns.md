@@ -2,6 +2,10 @@
 
 Every screen specification inherits this contract. Implement these states explicitly; do not substitute a generic toast for a failed financial or approval action.
 
+## Brand and orientation
+
+Keep the Merveille Designs identity consistent across sign-in, project pages, notifications and printable records. Use the shared name and original assets from the [brand manifest](../../assets/brand/README.md). A compact logo must have readable company text beside it where the artwork’s lettering becomes too small. Do not use the company mark as a status indicator or recolour it for success, warnings or errors.
+
 ## Page and request states
 
 | State | Required behaviour |

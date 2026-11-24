@@ -4,7 +4,7 @@
  * D1Database, R2Bucket and Queue refer to provider types not installed in this handoff.
  * No browser bundle may import the secret-bearing server interfaces.
  */
-interface MarvelWebBindingsExample {
+interface MerveilleWebBindingsExample {
   DB: D1Database;
   PROJECT_FILES: R2Bucket;
   JOB_QUEUE: Queue<{ eventId: string; schemaVersion: 1 }>;
@@ -16,7 +16,7 @@ interface MarvelWebBindingsExample {
   WHATSAPP_MODE: "fake" | "test" | "live";
 }
 
-interface MarvelJobsBindingsExample {
+interface MerveilleJobsBindingsExample {
   DB: D1Database;
   JOB_QUEUE: Queue<{ eventId: string; schemaVersion: 1 }>;
   APP_ENV: "local" | "staging" | "production";
@@ -28,12 +28,12 @@ interface MarvelJobsBindingsExample {
   META_GRAPH_API_VERSION: string; // Verified supported version chosen at setup.
 }
 
-interface MarvelWebhookSecretsExample {
+interface MerveilleWebhookSecretsExample {
   META_APP_SECRET: string;
   META_VERIFY_TOKEN: string;
 }
 
-interface MarvelIdentityProvisionerExample {
+interface MerveilleIdentityProvisionerExample {
   DB: D1Database;
   ACCESS_MANAGEMENT_TOKEN: string; // Separate control-plane Worker secret.
   ACCESS_ACCOUNT_ID: string;
@@ -41,7 +41,7 @@ interface MarvelIdentityProvisionerExample {
   ACCESS_POLICY_ID: string;
 }
 
-interface MarvelBackupBindingsExample {
+interface MerveilleBackupBindingsExample {
   BACKUP_BUCKET: R2Bucket;
   D1_EXPORT_TOKEN: string; // Separate backup operator/job secret.
   CLOUDFLARE_ACCOUNT_ID: string;

@@ -12,12 +12,13 @@ Prove the chosen Next.js-style runtime works on Workers before business modules 
 - [environments.md](../../../docs/operations/environments.md)
 - [design-system.md](../../../docs/design/design-system.md)
 - [README.md](../../../examples/cloudflare/README.md)
+- [skills-and-tools.md](../skills-and-tools.md)
 
 ## Implementation order
 
-1. Inspect this non-empty repository; preserve its documentation and assets while scaffolding the app.
+1. Inspect this non-empty repository and follow the skill/tool bootstrap. Record the reviewed skill sources, pinned versions and available toolchain. Preserve the documentation and authentic company assets while scaffolding; if a generator requires an empty destination, use a temporary sibling folder and integrate only the required application files.
 
-2. Verify the current official framework support, scaffold vinext first and record exact package/Node/Wrangler versions in an ADR. Use the documented OpenNext alternative only for an evidenced blocker; do not combine adapters.
+2. Verify current official framework support and the Wrangler-compatible installation path. Evaluate vinext first and record exact package/Node/Wrangler versions in an ADR. If using its migration skill, create the compatible Next scaffold first: that skill requires an existing Next dependency. Current generic skill defaults may use cf; preserve the user's explicit Wrangler choice. Use the documented OpenNext alternative only for an evidenced blocker; do not combine adapters.
 
 3. Set up TypeScript, package scripts, a lockfile, local bindings, generated environment types and a minimal accessible branded shell.
 

@@ -2,7 +2,7 @@
 // No secrets here. Cron remains disabled until the staged worker is verified.
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "marvel-jobs-example-do-not-deploy",
+  "name": "merveille-jobs-example-do-not-deploy",
   "main": "./__IMPLEMENTATION_NOT_CREATED__/jobs-entry.ts",
   "compatibility_date": "2026-11-24",
   "compatibility_flags": ["nodejs_compat"],
@@ -11,7 +11,7 @@
   "observability": { "enabled": true },
   "env": {
     "staging": {
-      "name": "marvel-jobs-staging",
+      "name": "merveille-jobs-staging",
       "vars": {
         "APP_ENV": "staging",
         "APP_ORIGIN": "https://replace-staging-host.example.invalid",
@@ -22,27 +22,27 @@
       "d1_databases": [
         {
           "binding": "DB",
-          "database_name": "marvel-data-staging",
+          "database_name": "merveille-data-staging",
           "database_id": "__REPLACE_STAGING_D1_ID__"
         }
       ],
       "queues": {
         "producers": [
-          { "binding": "JOB_QUEUE", "queue": "replace-marvel-jobs-staging" }
+          { "binding": "JOB_QUEUE", "queue": "replace-merveille-jobs-staging" }
         ],
         "consumers": [
           {
-            "queue": "replace-marvel-jobs-staging",
+            "queue": "replace-merveille-jobs-staging",
             "max_batch_size": 5,
             "max_batch_timeout": 5,
             "max_retries": 3,
-            "dead_letter_queue": "replace-marvel-jobs-dead-staging"
+            "dead_letter_queue": "replace-merveille-jobs-dead-staging"
           }
         ]
       }
     },
     "production": {
-      "name": "marvel-jobs-production",
+      "name": "merveille-jobs-production",
       "vars": {
         "APP_ENV": "production",
         "APP_ORIGIN": "https://replace-production-host.example.invalid",
@@ -53,21 +53,21 @@
       "d1_databases": [
         {
           "binding": "DB",
-          "database_name": "marvel-data-production",
+          "database_name": "merveille-data-production",
           "database_id": "__REPLACE_PRODUCTION_D1_ID__"
         }
       ],
       "queues": {
         "producers": [
-          { "binding": "JOB_QUEUE", "queue": "replace-marvel-jobs-production" }
+          { "binding": "JOB_QUEUE", "queue": "replace-merveille-jobs-production" }
         ],
         "consumers": [
           {
-            "queue": "replace-marvel-jobs-production",
+            "queue": "replace-merveille-jobs-production",
             "max_batch_size": 5,
             "max_batch_timeout": 5,
             "max_retries": 3,
-            "dead_letter_queue": "replace-marvel-jobs-dead-production"
+            "dead_letter_queue": "replace-merveille-jobs-dead-production"
           }
         ]
       }

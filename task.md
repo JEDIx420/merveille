@@ -1,4 +1,4 @@
-# Marvel task state
+# Merveille Designs task state
 
 Baseline: 24 November 2026. Application implementation has not started. Planning files, brand assets and acceptance specifications are present; they are not evidence that the application exists.
 

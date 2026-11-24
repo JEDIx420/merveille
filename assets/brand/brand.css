@@ -1,18 +1,18 @@
 :root {
-  --marvel-canvas: #f5f2eb;
-  --marvel-surface: #fffefa;
-  --marvel-ink: #202822;
-  --marvel-muted: #5d665d;
-  --marvel-bronze: #8a6b45;
-  --marvel-bronze-text: #795c39;
-  --marvel-sage: #e2e8dc;
-  --marvel-divider: #c9cec4;
-  --marvel-control-border: #737e72;
-  --marvel-success: #356247;
-  --marvel-warning: #885f15;
-  --marvel-danger: #a73b32;
-  --marvel-font-display: "Source Serif 4", Georgia, serif;
-  --marvel-font-interface: Inter, system-ui, sans-serif;
-  --marvel-radius-control: 8px;
-  --marvel-radius-panel: 12px;
+  --merveille-canvas: #f5f2eb;
+  --merveille-surface: #fffefa;
+  --merveille-ink: #212528;
+  --merveille-muted: #5d6264;
+  --merveille-gold: #f9c65a;
+  --merveille-gold-text: #765719;
+  --merveille-selection: #eee5cd;
+  --merveille-divider: #c9cdcf;
+  --merveille-control-border: #747b7e;
+  --merveille-success: #356247;
+  --merveille-warning: #885f15;
+  --merveille-danger: #a73b32;
+  --merveille-font-display: "Source Serif 4", Georgia, serif;
+  --merveille-font-interface: Inter, system-ui, sans-serif;
+  --merveille-radius-control: 8px;
+  --merveille-radius-panel: 12px;
 }

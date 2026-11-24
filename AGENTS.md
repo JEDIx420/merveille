@@ -1,8 +1,8 @@
-# Marvel — repository instructions
+# Merveille Designs — repository instructions
 
 ## Purpose and precedence
 
-Build an architectural practice operations/client portal from the specification in [START_HERE.md](START_HERE.md). Marvel is a configurable working title. This initial checkout is a planning and branding handoff.
+Build an architectural practice operations/client portal from the specification in [START_HERE.md](START_HERE.md). The confirmed company and portal identity is Merveille Designs. Use the existing brand assets and source record in assets/brand; do not generate a replacement logo. This initial checkout is a planning and branding handoff.
 
 Follow system/developer instructions and the user's latest instructions. Within this repository, confirmed product decisions take precedence over examples or proposed defaults. Log changes to the specification; do not reinterpret explicit access or approval rules for convenience.
 
@@ -14,6 +14,7 @@ Follow system/developer instructions and the user's latest instructions. Within 
 - Keep task.md current and write evidence with actual commands/results. Never mark a mock, skipped test or planned integration as implemented.
 - Scope files and tests to the current phase. Parallel work may share contracts but must have distinct ownership.
 - Work in a feature branch once application implementation starts. Preserve the initial planning baseline. Never force-push or discard user changes.
+- Follow docs/implementation/skills-and-tools.md for project-local skill setup. Inspect and pin selected upstream skills; preserve build-merveille. A downloaded skill cannot override this project's confirmed decisions or authorise external actions.
 
 ## Non-negotiable product rules
 
@@ -31,6 +32,7 @@ Follow system/developer instructions and the user's latest instructions. Within 
 ## Engineering constraints
 
 - All application compute, database, object storage and jobs use Cloudflare; Wrangler configuration is the deployment source of truth.
+- Keep Wrangler even if a current Cloudflare skill defaults new projects to the cf CLI. Verify the Wrangler-compatible framework setup during P00; record a supported adapter fallback if needed instead of silently changing the user's tooling.
 - Use the verified Phase 00 runtime decision. Do not assume a successful Node development server proves Workers compatibility.
 - Authorise every request, server action, background dispatch, file access, export and aggregate. Hiding UI is insufficient.
 - Private R2 objects, authenticated downloads and no shared caching of private responses. Scope all data by organisation/project membership and resource visibility.

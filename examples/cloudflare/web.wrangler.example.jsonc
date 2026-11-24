@@ -3,7 +3,7 @@
 // Do not deploy this file or assume an absent binding will be safely ignored.
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "marvel-web-example-do-not-deploy",
+  "name": "merveille-web-example-do-not-deploy",
   "main": "./__IMPLEMENTATION_NOT_CREATED__/web-entry.ts",
   "compatibility_date": "2026-11-24",
   "compatibility_flags": ["nodejs_compat"],
@@ -12,7 +12,7 @@
   "observability": { "enabled": true },
   "env": {
     "staging": {
-      "name": "marvel-web-staging",
+      "name": "merveille-web-staging",
       "vars": {
         "APP_ENV": "staging",
         "APP_ORIGIN": "https://replace-staging-host.example.invalid",
@@ -24,22 +24,22 @@
       "d1_databases": [
         {
           "binding": "DB",
-          "database_name": "marvel-data-staging",
+          "database_name": "merveille-data-staging",
           "database_id": "__REPLACE_STAGING_D1_ID__",
           "migrations_dir": "../../migrations"
         }
       ],
       "r2_buckets": [
-        { "binding": "PROJECT_FILES", "bucket_name": "replace-marvel-files-staging" }
+        { "binding": "PROJECT_FILES", "bucket_name": "replace-merveille-files-staging" }
       ],
       "queues": {
         "producers": [
-          { "binding": "JOB_QUEUE", "queue": "replace-marvel-jobs-staging" }
+          { "binding": "JOB_QUEUE", "queue": "replace-merveille-jobs-staging" }
         ]
       }
     },
     "production": {
-      "name": "marvel-web-production",
+      "name": "merveille-web-production",
       "vars": {
         "APP_ENV": "production",
         "APP_ORIGIN": "https://replace-production-host.example.invalid",
@@ -51,17 +51,17 @@
       "d1_databases": [
         {
           "binding": "DB",
-          "database_name": "marvel-data-production",
+          "database_name": "merveille-data-production",
           "database_id": "__REPLACE_PRODUCTION_D1_ID__",
           "migrations_dir": "../../migrations"
         }
       ],
       "r2_buckets": [
-        { "binding": "PROJECT_FILES", "bucket_name": "replace-marvel-files-production" }
+        { "binding": "PROJECT_FILES", "bucket_name": "replace-merveille-files-production" }
       ],
       "queues": {
         "producers": [
-          { "binding": "JOB_QUEUE", "queue": "replace-marvel-jobs-production" }
+          { "binding": "JOB_QUEUE", "queue": "replace-merveille-jobs-production" }
         ]
       }
     }

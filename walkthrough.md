@@ -2,9 +2,9 @@
 
 ## Current deliverable
 
-This repository contains the Marvel build handoff: confirmed product rules, role permissions, individual workflow and screen specifications, visual identity, technical architecture, operations planning, ordered implementation phases and acceptance scenarios.
+This repository contains the Merveille Designs build handoff: confirmed product rules, role permissions, individual workflow and screen specifications, visual identity, technical architecture, operations planning, ordered implementation phases and acceptance scenarios.
 
-The original transparent logo is present in assets/brand alongside code-native companion symbols and tokens. The static visual specimen is an aesthetic reference with synthetic data.
+The existing Merveille Designs logo and profile rendition are preserved unchanged from its Refrens profile, with source URLs and SHA-256 hashes in assets/brand. The earlier generated artwork has been removed from the active tree. The static visual specimen is an aesthetic reference with synthetic data.
 
 ## Application status
 

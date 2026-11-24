@@ -1,0 +1,30 @@
+{
+  "company": "Merveille Designs",
+  "profileUrl": "https://www.refrens.com/merveille-designs",
+  "retrievedOn": "2026-11-24",
+  "selection": "The image element identified as Merveille Designs and the profile structured logo URL refer to the same original asset.",
+  "assets": [
+    {
+      "path": "merveille-designs-logo.png",
+      "url": "https://s3.ap-south-1.amazonaws.com/refrens.images/649c00a8f95ab00011269d2d/674564d31ddf6f06a7269d6d/ref1732601194050.png",
+      "dimensions": [
+        683,
+        683
+      ],
+      "mode": "RGB",
+      "sha256": "73700835d953530a7ae74348d166b8d09d6d872ab9554061fd32117ac5352f4e",
+      "modifications": "none"
+    },
+    {
+      "path": "merveille-designs-profile.png",
+      "url": "https://og.refrens.com/img/649c00a8f95ab00011269d2d/674564d31ddf6f06a7269d6d/ref1732601194050.png?fq=eyJ3IjoxNDAsImgiOjE0MCwiYnVja2V0IjoicmVmcmVucy5pbWFnZXMiLCJfX3YiOjIsImUiOiJwbmcifQ%3D%3D",
+      "dimensions": [
+        140,
+        140
+      ],
+      "mode": "RGB",
+      "sha256": "64d9157e2678e3708ec5312a6e61674026e7813a4d7ab4f88680a9bcf819bab4",
+      "modifications": "none; retrieved public Refrens profile rendition"
+    }
+  ]
+}

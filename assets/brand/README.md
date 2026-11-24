@@ -1,29 +1,29 @@
-# Marvel brand package
+# Merveille Designs brand package
 
-Marvel is a working title for the architectural practice portal. The mark is an original architectural M/doorway identity with a restrained serif wordmark.
+**Merveille Designs is the confirmed company name.** Use its existing artwork from the company's [Refrens profile](https://www.refrens.com/merveille-designs), checked 24 November 2026. This is the published gold monogram and wordmark on a charcoal square, including its embedded tagline. No replacement identity is required.
 
 ## Files
 
 | Asset | Purpose |
 | --- | --- |
-| [marvel-logo.png](marvel-logo.png) | Primary generated wordmark, 2172 × 724 RGBA, transparent background |
-| [marvel-symbol.svg](marvel-symbol.svg) | Simple hand-authored vector companion for compact app branding |
-| [marvel-symbol-light.svg](marvel-symbol-light.svg) | Light companion symbol for dark surfaces |
-| [marvel-icon.svg](marvel-icon.svg) | Rounded-square app/favicon source |
+| [merveille-designs-logo.png](merveille-designs-logo.png) | Original published company artwork, 683 × 683 RGB, opaque charcoal background |
+| [merveille-designs-profile.png](merveille-designs-profile.png) | Existing public Refrens profile rendition, 140 × 140 RGB, for compact identity/favicons |
 | [brand.json](brand.json) | Product identity, asset inventory and design-token values |
 | [brand.css](brand.css) | Portable CSS tokens |
-| [logo-prompt.md](logo-prompt.md) | Generation provenance and exact creative brief |
+| [sources.json](sources.json) | Profile/source URLs, retrieval date, image dimensions and SHA-256 integrity hashes |
 
-The primary PNG was generated with the built-in image-generation tool. The SVG companions are deliberately simplified native geometry based on the architectural M/doorway direction; they are not claimed to be an automatic vector conversion of the generated wordmark.
+Both PNG files are unchanged downloads of the published assets. They have not been cropped, recoloured, traced, sharpened, regenerated or given an artificial transparent background. The earlier provisional artwork has been removed from the active repository tree. No vector master is supplied or claimed.
 
 ## Usage
 
-Use the full logo on the login screen and generous header contexts; use the symbol in compact navigation. Keep clear space at least half the symbol's width. Preserve aspect ratio. Use the dark artwork on warm paper and the light symbol on deep ink. Do not add a coloured comic-style box, bevel, animation or shadow to the mark.
+Use the full square logo on the sign-in screen and desktop navigation with enough space for its wordmark to read clearly. Use `object-fit: contain` and preserve the square aspect ratio. On mobile, show the published profile rendition alongside a readable Merveille Designs text label; the tiny embedded lettering must not be the only accessible company identity.
 
-The PNG contains transparent padding; choose a natural display size and confirm the perceived alignment in the actual header. Do not crop using brittle CSS transforms. For a future outlined vector wordmark, commission or draw a faithful approved master rather than presenting an arbitrary substitute as the same artwork.
+The charcoal background is part of the source image. Do not remove it, crop the monogram out, replace the embedded typography or invent a companion symbol. Use the existing profile image as the initial favicon; request a company-supplied approved compact/vector master if a later production context needs one. The current images are sufficient to implement the portal.
 
-Brand bronze is suitable for decorative accents/large text; use the darker bronze-text token for small accent text on paper. Detailed contrast/interaction rules live in [the design system](../../docs/design/design-system.md).
+The charcoal `#212528` and gold `#F9C65A` tokens are sampled approximations of the artwork. Warm neutral surfaces and the rest of the tokens are proposed portal interface choices. Gold works well on charcoal; use the darker `goldText`/`--merveille-gold-text` token for small accent text on light surfaces. Status must also have a text/icon cue. Detailed contrast and interaction rules live in [the design system](../../docs/design/design-system.md).
 
-The wordmark is supplied as artwork; no font binary is required to display it. Proposed interface fonts must be self-hosted with their licence recorded before shipping. The provisional name is not represented as a cleared trademark.
+The wordmark is supplied as existing artwork; no font binary is required to display it. Proposed interface fonts must be self-hosted with their licence recorded before shipping. Preserve company attribution and provenance; the presence of these company assets in a public repository does not grant a general-purpose licence to reuse the identity elsewhere.
 
 The [static design specimen](../../docs/design/visual-direction.html) shows an illustrative application of the brand. Its data is synthetic and its controls are not an implemented application.
+
+Run `node scripts/check-handoff.mjs` from the repository root to verify the asset inventory and unchanged file hashes alongside the rest of the handoff.

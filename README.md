@@ -1,10 +1,10 @@
-# Marvel
+# Merveille Designs
 
-<img src="assets/brand/marvel-logo.png" alt="Marvel — architectural project portal" width="440">
+<img src="assets/brand/merveille-designs-logo.png" alt="Merveille Designs existing company logo" width="240">
 
 **A calm, precise workspace for architectural projects, clients and the people delivering them.**
 
-Working title: **Marvel**. Repository: **JEDIx420/merveille**. The product name is provisional; keep it configurable rather than scattering it through application code.
+Built for **Merveille Designs — Consultancy and Interiors**. Repository: **JEDIx420/merveille**. The company name and existing artwork are confirmed; centralise their use in the application configuration and brand components.
 
 ## Start here
 
@@ -16,6 +16,8 @@ This repository currently contains a **build specification, brand assets and age
 | --- | --- |
 | [START_HERE.md](START_HERE.md) | Single entry point for the implementation agent |
 | [AGENTS.md](AGENTS.md) | Canonical repository instructions |
+| [Antigravity kickoff prompt](docs/implementation/antigravity-kickoff.md) | Copyable instructions starting from an empty folder on a laptop |
+| [Skills and tools](docs/implementation/skills-and-tools.md) | Reviewed-source skill selection, project setup and Wrangler constraints |
 | [Product brief](docs/product/brief.md) | Scope, users and business outcomes |
 | [Requirements and decisions](docs/product/requirements.md) | Confirmed requirements, corrections and engineering defaults |
 | [Roles and permissions](docs/product/roles-and-permissions.md) | Who can access and change each type of information |
@@ -48,17 +50,17 @@ Cloudflare's current Next.js guide recommends **vinext**, which it labels beta. 
 
 ## Visual identity
 
-The [brand package](assets/brand/README.md) includes an original transparent Marvel wordmark, geometric architectural app symbol, colour tokens and usage guidance. The design uses warm mineral surfaces, deep olive ink, restrained bronze and generous space. Screen hierarchy and predictable actions take priority over decorative dashboard widgets.
+The [brand package](assets/brand/README.md) preserves the existing logo published on [Merveille Designs' Refrens profile](https://www.refrens.com/merveille-designs): gold artwork on a charcoal square. It includes the original PNG, the published profile rendition, source URLs and integrity hashes. The original artwork has not been cropped, recoloured, traced or regenerated.
+
+The proposed portal interface pairs that identity with warm neutral surfaces, charcoal navigation, restrained gold accents and generous space. Interface typography and supporting colour tokens are proposed application choices, not a claim that the company supplied a complete brand manual. Screen hierarchy and predictable actions take priority over decorative dashboard widgets.
 
 Open the [static visual specimen](docs/design/visual-direction.html) locally for an illustrative design direction; it is not an application.
 
 ## Continue with an agent
 
-Paste this into the agent with this repository open:
+Open an empty project folder in Antigravity and paste the [complete kickoff prompt](docs/implementation/antigravity-kickoff.md). It covers cloning, the reading order, curated skills, continuous phase execution, evidence and resumable checkpoints.
 
-> Read START_HERE.md and AGENTS.md. Implement Marvel in the order defined in docs/implementation/manifest.json and the phase files. Preserve the confirmed workflows and permission boundaries. Complete and verify each phase, update task.md and the evidence record, then continue to the next ready phase. Treat this repository as the specification; do not stop at mockups or mark unverified work complete.
-
-Antigravity can also discover the repository-local **build-marvel** skill. [Agent setup](docs/implementation/agent-handoff.md) explains the portable entry points and the distinction between these checked-in files and IDE-generated artifacts.
+Antigravity can also discover the repository-local **build-merveille** skill. [Agent setup](docs/implementation/agent-handoff.md) explains the portable entry points; [skills and tools](docs/implementation/skills-and-tools.md) lists the maintainer-owned sources and installation procedure. External skills are guidance: the user's explicit Wrangler requirement and this project's confirmed rules take precedence over generic quickstarts.
 
 ## Verify this handoff
 

@@ -8,7 +8,7 @@ Give each person their own identity and return them to permitted work. Access is
 
 ## Layout and fields
 
-A quiet two-panel desktop composition: brand mark and short product purpose, then a compact sign-in panel. On mobile show only the functional panel and small wordmark. The architecture default is Cloudflare Access hosted email verification for invited identities. Marvel may show a branded continue/help gateway; Access owns the email/verification UI. Do not build a competing password or custom OTP form inside Marvel. If Access redirects before the application renders, that is the expected authentication boundary. Invitation acceptance identifies the invited address, intended role and project scope only after validating the token/session.
+A quiet two-panel desktop composition: brand mark and short product purpose, then a compact sign-in panel. On mobile show only the functional panel and small wordmark. The architecture default is Cloudflare Access hosted email verification for invited identities. Merveille Designs may show a branded continue/help gateway; Access owns the email/verification UI. Do not build a competing password or custom OTP form inside Merveille Designs. If Access redirects before the application renders, that is the expected authentication boundary. Invitation acceptance identifies the invited address, intended role and project scope only after validating the token/session.
 
 **Primary action:** “Continue” or the precise configured provider action; invitation flow uses “Accept invitation.” No social-provider buttons that are not configured. Do not offer public account creation.
 

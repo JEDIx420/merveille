@@ -19,7 +19,7 @@ The provenance column may include more than one label where a confirmed outcome 
 
 | ID | Decision | Provenance | Consequence |
 |---|---|---|---|
-| DEC-001 | App working name is Marvel; fresh repository is `JEDIx420/merveille`. | C: build-handoff instruction | Do not infer the firm's legal name from either spelling. |
+| DEC-001 | Company and portal identity is Merveille Designs; repository is `JEDIx420/merveille`. | C: explicit company-name correction | Use the existing Refrens logo; legal invoice details remain separately configured. |
 | DEC-002 | Approximately 30 projects and 10–15 concurrent users; phone and desktop use; photographs, documents, drawings and videos. | C: discovery answers | Establish a realistic baseline without hard-coding user/project caps. |
 | DEC-003 | Multiple projects per client; separate representative accounts; administrator controls access. | C: discovery answers | Use per-project membership and a named main-client authority. |
 | DEC-004 | Consultants may see the assigned project's **client quotation and payment history**. | C: explicit correction | Do not substitute a consultant's own fee view or hide these project records by assumption. |
@@ -38,6 +38,7 @@ The provenance column may include more than one label where a confirmed outcome 
 | DEC-017 | In-portal and WhatsApp reminders; unresolved overdue escalation to admin. | C: clarification | Delivery and escalation need separate observable records. |
 | DEC-018 | Waiting-on-you and snags included; generated handover pack excluded. | C: discovery answers | Deliver focused actions and site issue closure without a handover-pack generator. |
 | DEC-019 | Client can see appropriate company updates. | C: original request; D: controlled optional announcement module | Announcements need explicit audience and publication controls. |
+| DEC-020 | Preserve the existing Merveille Designs gold/charcoal logo from its public Refrens profile; no generated replacement identity. | C: explicit brand correction, verified source | Source files, hashes and usage rules are recorded in assets/brand. |
 
 ## Engineering default register
 

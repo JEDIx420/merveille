@@ -13,8 +13,9 @@ Verified 24 November 2026. This report covers the repository preparation package
 | Repository-local build skill | Skill frontmatter/structure validator passed |
 | Antigravity modular rule | Valid always_on activation frontmatter; root entry points present |
 | Wrangler configuration examples | Both JSONC examples parsed; placeholder entries/IDs are explicitly non-runnable |
-| Brand assets | Primary logo is 2172 × 724 RGBA with real alpha transparency; 3 SVG companions parse |
+| Brand assets | Existing Refrens PNGs: 683 × 683 original and 140 × 140 profile rendition, both RGB; source SHA-256 hashes match unchanged local files |
 | Independent agent handoff rehearsal | Fresh reader identified P00 and the correct next actions without additional business context |
+| Empty-folder kickoff and skill setup | Fresh review found no execution blockers after clarifying dependency evidence and safe scaffold integration |
 | Application tests / production integrations | Not run; application implementation has not started |
 
 The deterministic checker is [scripts/check-handoff.mjs](../../scripts/check-handoff.mjs). Its final console output provides the current file/link counts, which naturally change if documentation is edited.
@@ -28,10 +29,12 @@ The deterministic checker is [scripts/check-handoff.mjs](../../scripts/check-han
 - Early policy-layer checks are distinguished from later full integration evidence; a foundation phase can proceed without falsely passing the entire finished-product acceptance case.
 - Consultant approval, manager release, client contractual authority and invoice approval are separate commands.
 - Cross-service R2/D1 completion has reconciliation; the plan does not assume distributed atomic transactions.
+- The company identity is Merveille Designs throughout the active plan, entry points, skill, configuration examples and visual specimen. The provisional generated artwork was replaced with the existing published company files.
+- The empty-folder kickoff and skills guide preserve the explicit Wrangler requirement despite generic upstream cf defaults. Conditional vinext migration starts only after a compatible Next scaffold exists.
 
 ## Visual review limits
 
-The generated primary logo was visually inspected in the generation output and its image metadata checked. The static HTML specimen contains desktop/mobile styles and was structurally checked.
+The existing company logo was visually inspected against the asset retrieved from its Refrens profile. Image metadata and byte-for-byte hashes are recorded in [the source record](../../assets/brand/sources.json). The static HTML specimen uses these exact assets, contains desktop/mobile styles and was structurally checked; its local assets, anchors and CSS token references resolve.
 
 Headless browser rendering was attempted. The bundled Playwright browser was unavailable; the installed Chromium process was then blocked by the environment's socket restriction. No desktop/mobile screenshots were produced and browser layout verification is **not claimed**. The implementation agent should render the specimen and actual app during P00/P14 in its browser-capable environment.
 

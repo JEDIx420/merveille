@@ -1,31 +1,37 @@
 {
-  "name": "Marvel",
-  "nameStatus": "working-title",
+  "name": "Merveille Designs",
+  "nameStatus": "confirmed-company-identity",
+  "portalLabel": "Merveille Designs Portal",
   "repository": "JEDIx420/merveille",
-  "description": "Architectural project and practice portal",
+  "descriptor": "Consultancy and Interiors",
   "assets": {
-    "primaryLogo": "marvel-logo.png",
-    "symbol": "marvel-symbol.svg",
-    "symbolLight": "marvel-symbol-light.svg",
-    "appIcon": "marvel-icon.svg"
+    "primaryLogo": "merveille-designs-logo.png",
+    "profileLogo": "merveille-designs-profile.png"
+  },
+  "source": {
+    "profileUrl": "https://www.refrens.com/merveille-designs",
+    "verifiedOn": "2026-11-24",
+    "assetPolicy": "Existing artwork copied without cropping, recolouring, tracing, background removal or generation.",
+    "provenanceFile": "sources.json"
   },
   "colors": {
     "canvas": "#F5F2EB",
     "surface": "#FFFEFA",
-    "ink": "#202822",
-    "mutedText": "#5D665D",
-    "bronze": "#8A6B45",
-    "bronzeText": "#795C39",
-    "sage": "#E2E8DC",
-    "divider": "#C9CEC4",
-    "controlBorder": "#737E72",
+    "ink": "#212528",
+    "mutedText": "#5D6264",
+    "gold": "#F9C65A",
+    "goldText": "#765719",
+    "selection": "#EEE5CD",
+    "divider": "#C9CDCF",
+    "controlBorder": "#747B7E",
     "success": "#356247",
     "warning": "#885F15",
     "danger": "#A73B32"
   },
+  "colorProvenance": "Gold and charcoal are sampled approximations from the existing raster. Other colors are proposed portal UI tokens, not official brand guidelines.",
   "fonts": {
     "display": "Source Serif 4, Georgia, serif",
     "interface": "Inter, system-ui, sans-serif",
-    "status": "Proposed families; no font binaries bundled. License and self-host before adoption."
+    "status": "Proposed interface families, not claims about the existing logo typeface. No font binaries bundled; license and self-host before adoption."
   }
 }

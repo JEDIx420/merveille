@@ -1,4 +1,4 @@
-# Marvel implementation plan
+# Merveille Designs implementation plan
 
 The detailed plan is [docs/implementation/roadmap.md](docs/implementation/roadmap.md).
 

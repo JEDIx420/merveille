@@ -2,6 +2,7 @@
 import { readFile, readdir, stat } from "node:fs/promises";
 import { dirname, resolve, relative, sep, extname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const failures = [];
@@ -65,6 +66,7 @@ for (const path of inventory) {
 const manifest = await json("docs/implementation/manifest.json");
 const acceptance = await json("docs/quality/acceptance-cases.json");
 const brand = await json("assets/brand/brand.json");
+const brandSources = await json("assets/brand/sources.json");
 const cases = acceptance?.cases || [];
 const caseMap = new Map();
 const requirementText = await text(resolve(root, "docs/product/requirements.md"));
@@ -106,11 +108,26 @@ for (const id of caseMap.keys()) if (!assigned.has(id)) fail("Acceptance case ha
 for (const asset of Object.values(brand?.assets || {})) {
   if (!inventory.has("assets/brand/" + asset)) fail("Missing brand asset " + asset);
 }
+if (brand?.name !== "Merveille Designs" || brand?.nameStatus !== "confirmed-company-identity") {
+  fail("Brand metadata must preserve the confirmed Merveille Designs identity");
+}
+const sourcedAssets = new Set();
+for (const source of brandSources?.assets || []) {
+  sourcedAssets.add(source.path);
+  const assetPath = "assets/brand/" + source.path;
+  if (!inventory.has(assetPath)) { fail("Missing sourced brand asset " + assetPath); continue; }
+  const digest = createHash("sha256").update(await readFile(resolve(root, assetPath))).digest("hex");
+  if (digest !== source.sha256) fail("Brand source integrity mismatch: " + assetPath);
+}
+for (const asset of Object.values(brand?.assets || {})) {
+  if (!sourcedAssets.has(asset)) fail("Brand asset has no source record: " + asset);
+}
 const requiredEntrypoints = ["README.md", "START_HERE.md", "AGENTS.md", "GEMINI.md", "agent.md",
-  "task.md", "implementation_plan.md", "walkthrough.md", ".agents/skills/build-marvel/SKILL.md"];
+  "task.md", "implementation_plan.md", "walkthrough.md", ".agents/skills/build-merveille/SKILL.md",
+  "docs/implementation/antigravity-kickoff.md", "docs/implementation/skills-and-tools.md"];
 for (const path of requiredEntrypoints) if (!inventory.has(path)) fail("Missing entry point " + path);
-const skill = await text(resolve(root, ".agents/skills/build-marvel/SKILL.md"));
-if (!/^---\nname: build-marvel\ndescription: .+\n---\n/.test(skill)) fail("Build skill frontmatter missing name/description");
+const skill = await text(resolve(root, ".agents/skills/build-merveille/SKILL.md"));
+if (!/^---\nname: build-merveille\ndescription: .+\n---\n/.test(skill)) fail("Build skill frontmatter missing name/description");
 if (/\[TODO:/.test(skill)) fail("Build skill contains template TODO");
 for (const path of inventory) {
   if (/\.agents\/rules\/[^/]+\.md$/.test(path)) {

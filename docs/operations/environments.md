@@ -8,7 +8,7 @@ Use local development, staging and production with separate D1 databases, privat
 
 Wrangler JSONC is the infrastructure source of truth. Its [environment documentation](https://developers.cloudflare.com/workers/wrangler/environments/) explains that bindings and variables must be specified per named environment rather than assumed to inherit. For the Cloudflare Vite/vinext path, verify the selected environment at **build time** as well as deploy time; Cloudflare's [Wrangler configuration guide](https://developers.cloudflare.com/workers/wrangler/configuration/) documents the Vite plugin distinction. Record the final commands only after the compatibility spike succeeds.
 
-Use names such as `marvel-web-staging`, `marvel-jobs-staging`, `marvel-data-staging` and `marvel-files-staging`. The application display name remains configurable because Marvel is a working title. Naming examples are not provisioned resources.
+Use names such as `merveille-web-staging`, `merveille-jobs-staging`, `merveille-data-staging` and `merveille-files-staging`. The confirmed display name is Merveille Designs; keep it centralised with the existing logo asset paths. Naming examples are not provisioned resources.
 
 ## Binding inventory
 

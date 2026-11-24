@@ -16,7 +16,7 @@ Use one responsive application with role-adaptive navigation. Shared routes retu
 | Archive | Users with archived-project membership | Historical projects and permitted downloads. |
 | Notifications | All signed-in users | Portal messages, WhatsApp preferences and delivery status where permitted. |
 
-Use a stable left navigation on desktop. On mobile, show a compact header with project switcher and a navigation drawer; keep Overview, Projects and Waiting on you readily available without cramming all destinations into a bottom bar. Never show inaccessible admin entries as enticing disabled links.
+Use a stable charcoal left navigation on desktop with the complete square company logo. On small screens, pair the published square profile image with the readable name “Merveille Designs.” Keep the logo’s original colours and proportions. On mobile, show a compact header with project switcher and a navigation drawer; keep Overview, Projects and Waiting on you readily available without cramming all destinations into a bottom bar. Never show inaccessible admin entries as enticing disabled links.
 
 ## Project shell
 
@@ -38,4 +38,4 @@ All notifications, empty states and buttons should describe the user’s task. K
 
 ## Route implementation
 
-Route strings in the [screen index](../screens/README.md) are the proposed routing contract. Keep route identifiers independent of the Marvel brand. Resolve an opaque project identifier on the server; never rely on a guess-resistant URL as access control. Validate return URLs and preserve authorised filter state without putting secrets or sensitive search content in shareable links.
+Route strings in the [screen index](../screens/README.md) are the proposed routing contract. Keep route identifiers independent of the Merveille Designs brand. Resolve an opaque project identifier on the server; never rely on a guess-resistant URL as access control. Validate return URLs and preserve authorised filter state without putting secrets or sensitive search content in shareable links.

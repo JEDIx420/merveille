@@ -72,7 +72,7 @@ Recheck at dispatch, not only when queued. Events can resolve or permissions can
 
 ## Content and privacy
 
-Use concise messages such as “A drawing review is waiting for you in Marvel” plus a sign-in link to the permitted record. As an engineering default, external messages avoid amounts, bank details, draft drawings, salary/profit values, performance data and internal notes.
+Use concise messages such as “A drawing review is waiting for you in Merveille Designs” plus a sign-in link to the permitted record. As an engineering default, external messages avoid amounts, bank details, draft drawings, salary/profit values, performance data and internal notes.
 
 The link requires authentication and current authorization. It must not embed a reusable broad-access token or directly expose a private object. Delivery logs contain only necessary routing/outcome metadata; sensitive payloads do not belong in generic logs.
 

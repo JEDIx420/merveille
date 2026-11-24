@@ -4,7 +4,9 @@
 
 Read [START_HERE.md](../../START_HERE.md). [AGENTS.md](../../AGENTS.md) contains repository-wide rules; [GEMINI.md](../../GEMINI.md) and [agent.md](../../agent.md) are short compatibility pointers. The detailed phase plan is in the [roadmap](roadmap.md).
 
-The repository-local build-marvel skill lives under .agents/skills/build-marvel and can be invoked by a compatible Antigravity installation. The root documents remain usable by any implementation agent. No personal skill installation, IDE account setting or global tool permission is changed by this repository.
+The repository-local build-merveille skill lives under .agents/skills/build-merveille and can be invoked by a compatible Antigravity installation. The root documents remain usable by any implementation agent. No personal skill installation, IDE account setting or global tool permission is changed by this repository.
+
+For an empty project folder on the laptop, use the [complete kickoff prompt](antigravity-kickoff.md). Follow [skills and tools](skills-and-tools.md) for selected project-local skill installation and the explicit Wrangler constraint; [the source record](../references/antigravity-skill-sources.md) distinguishes inspected guidance from bundles the implementation agent must still review.
 
 ## Antigravity files
 

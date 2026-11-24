@@ -6,7 +6,7 @@
 
 ## Meaning of a record
 
-Marvel stores **what staff recorded about an external process**, when they checked it and the evidence they attached. It does not certify the authenticity or legal effect of a permit, determine whether building work is authorized or infer that one government step always follows another.
+Merveille Designs stores **what staff recorded about an external process**, when they checked it and the evidence they attached. It does not certify the authenticity or legal effect of a permit, determine whether building work is authorized or infer that one government step always follows another.
 
 Keep sanction and completion as separate milestone records. Do not encode them as a mandatory legal chain. A project may carry more than one application/reference if the firm's actual process requires it.
 
@@ -42,7 +42,7 @@ Observation status and sharing status may be separate fields rather than one ove
 - Display “Recorded by [staff] · Last checked [date]” on shared information.
 - A newer unreviewed internal observation does not silently replace the client-visible reviewed observation.
 - A screenshot may contain personal details. Share only approved evidence; do not automatically publish every uploaded source file.
-- A reference link does not imply Marvel can log in to or query that service.
+- A reference link does not imply Merveille Designs can log in to or query that service.
 - An overdue follow-up means staff should check the record; it does not mean an external application was rejected or expired.
 - Internal project stages, payment triggers and K-SMART records remain distinct. If the firm later wants an operational dependency, define it explicitly without presenting it as a statutory rule.
 

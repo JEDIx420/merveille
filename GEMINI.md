@@ -1,4 +1,4 @@
-# Marvel for Antigravity
+# Merveille Designs for Antigravity
 
 Read [AGENTS.md](AGENTS.md) for the canonical repository rules and [START_HERE.md](START_HERE.md) for the implementation entry point.
 

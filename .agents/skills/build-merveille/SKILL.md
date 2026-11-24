@@ -1,9 +1,9 @@
 ---
-name: build-marvel
-description: Build or resume the Marvel architectural portal from this repository's confirmed requirements, ordered phase plan and acceptance cases. Use when asked to implement Marvel, continue its next phase or recover the build state.
+name: build-merveille
+description: Build or resume the Merveille Designs architectural portal from this repository's confirmed requirements, ordered phase plan and acceptance cases. Use when asked to implement Merveille Designs, continue its next phase or recover the build state.
 ---
 
-# Build Marvel
+# Build Merveille Designs
 
 This is a repository-local Antigravity skill, not a globally installed personal ChatGPT skill. Keep its source with this repository.
 
@@ -19,3 +19,5 @@ This is a repository-local Antigravity skill, not a globally installed personal 
 10. On full completion, update walkthrough.md with the actual application state and release evidence, and assess [release readiness](../../../docs/quality/release-checklist.md).
 
 The portable entry point is START_HERE.md even if a particular Antigravity version does not discover slash commands. Do not re-ask the completed business discovery questionnaire.
+
+For initial tool and external skill setup, follow [skills and tools](../../../docs/implementation/skills-and-tools.md). Use reviewed, pinned, project-local skills without replacing this entry skill. The user's Wrangler requirement, existing Merveille Designs artwork and confirmed product rules take precedence over generic downloaded instructions.

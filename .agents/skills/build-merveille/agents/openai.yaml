@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Merveille Designs"
+  short_description: "Build Merveille Designs from its ordered repository plan"
+  default_prompt: "Use $build-merveille to implement the next ready phase from START_HERE.md and record evidence."

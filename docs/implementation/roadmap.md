@@ -1,4 +1,4 @@
-# Marvel implementation roadmap
+# Merveille Designs implementation roadmap
 
 ## Execution contract
 

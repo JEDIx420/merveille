@@ -1,8 +1,8 @@
-# Marvel — product brief
+# Merveille Designs — product brief
 
 ## Purpose
 
-Marvel is the working name for an architecture firm's shared project portal. It gives clients a reliable view of their project and payments, gives the delivery team one place to coordinate work and drawings, and gives the owner a prioritized view of delays, decisions and business activity.
+Merveille Designs is the confirmed company identity for this architecture practice's shared project portal. It gives clients a reliable view of their project and payments, gives the delivery team one place to coordinate work and drawings, and gives the owner a prioritized view of delays, decisions and business activity.
 
 This repository is a build handoff, not evidence that the application has been implemented. Begin at [START_HERE](../../START_HERE.md), then use the [requirements](requirements.md), [permissions](roles-and-permissions.md), [workflow index](../workflows/README.md), [architecture](../architecture/overview.md) and [implementation roadmap](../implementation/roadmap.md) together.
 
@@ -51,7 +51,7 @@ The original brief included company updates on a client's profile. Provide **con
 
 ## Business vocabulary
 
-| Term | Meaning in Marvel |
+| Term | Meaning in Merveille Designs |
 |---|---|
 | Client account | The individual or organization commissioning work; it may own several projects and have several contacts. |
 | Main client | The named project contact authorized to accept quotations, changes and binding material decisions. Exactly one active decision contact per project is the initial engineering default. |

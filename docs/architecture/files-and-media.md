@@ -4,7 +4,7 @@
 
 All project originals and derived previews are in **private Cloudflare R2**, with metadata and relationships in D1. Public brand assets may live with static frontend assets. Never place client drawings or screenshots in the repository, static site folder, a public R2 bucket, or a permanent public download URL.
 
-Each object is immutable at the application level. A proposed key shape is `org/{orgId}/project/{projectId}/file/{fileId}/original`; the key is assigned server-side and is not an authorization mechanism. New drawing versions and edited evidence create new objects. There is no assumption that R2 supplies automatic object version history; Marvel retains versions through separate keys and database references.
+Each object is immutable at the application level. A proposed key shape is `org/{orgId}/project/{projectId}/file/{fileId}/original`; the key is assigned server-side and is not an authorization mechanism. New drawing versions and edited evidence create new objects. There is no assumption that R2 supplies automatic object version history; Merveille Designs retains versions through separate keys and database references.
 
 ## File classes and initial limits
 
