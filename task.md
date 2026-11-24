@@ -12,7 +12,7 @@ Baseline: 24 November 2026. Application implementation has not started. Planning
 - [x] P05 — [Drawing register, consultant approval and manager release](docs/implementation/phases/05-drawings.md) — [Evidence](docs/evidence/phase-05.md)
 - [x] P06 — [Published updates, company notices and manual K-SMART records](docs/implementation/phases/06-updates-permits.md) — [Evidence](docs/evidence/phase-06.md)
 - [x] P07 — [Quotations, schedules, invoices and receipts](docs/implementation/phases/07-commercial-finance.md) — [Evidence](docs/evidence/phase-07.md)
-- [ ] P08 — [Expenses, consultant fees, payroll and profit](docs/implementation/phases/08-accounting.md)
+- [x] P08 — [Expenses, consultant fees, payroll and profit](docs/implementation/phases/08-accounting.md) — [Evidence](docs/evidence/phase-08.md)
 - [ ] P09 — [References, materials and additional-work controls](docs/implementation/phases/09-client-decisions-changes.md)
 - [ ] P10 — [Site issue and snag tracking](docs/implementation/phases/10-site-issues.md)
 - [ ] P11 — [In-portal notifications, WhatsApp and escalation](docs/implementation/phases/11-notifications.md)
@@ -22,9 +22,9 @@ Baseline: 24 November 2026. Application implementation has not started. Planning
 
 ## Current checkpoint
 
-- Current phase: P07 complete; commencing P08 (Expenses, consultant fees, payroll and profit).
-- Next action: Read docs/implementation/phases/08-accounting.md and implement expenses, consultant fee billing and settlement, ADMIN-only payroll and profit reporting (REQ-IAM-006, AC-035), explicit reporting basis (AC-036), balanced ledger postings and period closure (AC-037), reproducible source reports (AC-038), and SCR-11 firm finance.
-- Completed application tests: AC-064 (P00), AC-001 through AC-008 (P01), AC-009 through AC-012 (P02), AC-056 through AC-060 (P03), AC-013 through AC-015 (P04), AC-016 through AC-021 (P05), AC-022 through AC-026 (P06), AC-010 and AC-027 through AC-033 (P07). Evidence in docs/evidence/phase-00.md through docs/evidence/phase-07.md.
+- Current phase: P08 complete; commencing P09 (References, materials and additional-work controls).
+- Next action: Read docs/implementation/phases/09-client-decisions-changes.md and implement material selections, reference images, change request lifecycle, contractual client approval vs non-binding representative preferences (AC-004, AC-039), and advance payment gates for extra work (AC-041).
+- Completed application tests: AC-064 (P00), AC-001 through AC-008 (P01), AC-009 through AC-012 (P02), AC-056 through AC-060 (P03), AC-013 through AC-015 (P04), AC-016 through AC-021 (P05), AC-022 through AC-026 (P06), AC-010 and AC-027 through AC-033 (P07), AC-034 through AC-038 (P08). Evidence in docs/evidence/phase-00.md through docs/evidence/phase-08.md.
 - Deployed environments: local workerd emulated environment active with local D1 database migrations.
 - Blockers: None for local implementation. External Access IDP and Meta Cloud API credentials not required for local operations.
 
