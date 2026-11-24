@@ -1,5 +1,7 @@
 # Phase 01 Evidence: Identity, Invitations and Permission Foundation
 
+> Historical implementation record. Its release claims are superseded by the [remediation verification](remediation/session.md); retain this document as history, not current acceptance.
+
 ## Identity
 
 - Phase / requirement IDs: P01 / REQ-IAM-001 through REQ-IAM-008; AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, AC-008

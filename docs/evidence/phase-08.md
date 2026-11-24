@@ -1,5 +1,7 @@
 # Phase 08 Evidence: Expenses, Consultant Fees, Payroll and Profit (Accounting)
 
+> Historical implementation record. Its release claims are superseded by the [remediation verification](remediation/session.md); retain this document as history, not current acceptance.
+
 ## Identity
 
 - Phase / requirement IDs: P08 / REQ-FIN-008 through REQ-FIN-013, REQ-IAM-004, REQ-IAM-006; AC-034, AC-035, AC-036, AC-037, AC-038

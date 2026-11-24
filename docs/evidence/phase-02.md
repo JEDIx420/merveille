@@ -1,5 +1,7 @@
 # Phase 02 Evidence: Client Portfolios, Project Records and Enquiry Intake
 
+> Historical implementation record. Its release claims are superseded by the [remediation verification](remediation/session.md); retain this document as history, not current acceptance.
+
 ## Identity
 
 - Phase / requirement IDs: P02 / REQ-PRJ-001 through REQ-PRJ-008, REQ-IAM-001, REQ-IAM-002; AC-009, AC-010 (commercial activation gate), AC-011, AC-012

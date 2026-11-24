@@ -1,5 +1,7 @@
 # Phase 14 Evidence: Integrated Verification, Staging and Launch Readiness
 
+> Historical implementation record. Its release claims are superseded by the [remediation verification](remediation/session.md); retain this document as history, not current acceptance.
+
 ## Identity
 
 - Phase / requirement IDs: P14 / REQ-OPS-001 through REQ-OPS-004, REQ-IAM-003, REQ-DAS-001, REQ-DAS-005, REQ-PRJ-007; AC-061, AC-062, AC-063, AC-065, AC-067, AC-068, AC-069

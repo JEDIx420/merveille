@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "runtime": "workerd",
+  "passed": [
+    "Concurrent exact-identity bootstrap acceptance yields one initial accepted ADMIN",
+    "Second bootstrap fails after temporary setup input is removed",
+    "Explicit second-admin invitation and concurrent removals preserve one accepted administrator",
+    "D1 financial batch rollback preserved invoice, journal and sequence",
+    "Invoice replay retains one number and balanced source journal",
+    "Concurrent D1 allocations cannot overspend a confirmed receipt",
+    "D1 failed drawing release preserved previous version and pointer",
+    "Drawing release and replay commit one release audit",
+    "Independent R2 bytes, complete financial history and quarantined memberships restored in workerd"
+  ]
+}

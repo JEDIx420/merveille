@@ -1,5 +1,7 @@
 # Phase 13 Evidence: Archive, Audit Exports and Recovery
 
+> Historical implementation record. Its release claims are superseded by the [remediation verification](remediation/session.md); retain this document as history, not current acceptance.
+
 ## Identity
 
 - Phase / requirement IDs: P13 / REQ-ARC-001 through REQ-ARC-005, REQ-OPS-004; AC-054, AC-055, AC-066

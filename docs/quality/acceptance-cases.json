@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "baselineDate": "2026-11-24",
-  "status": "Legacy cases remain not-run in this register. Historical implementation evidence requires re-verification through R00\u2013R05; this documentation update runs no application tests.",
+  "status": "Remediation local evidence is recorded separately. Legacy end-to-end cases remain not-run until their complete hosted/real-account scenarios are observed; no blanket pass is inferred from local tests.",
   "cases": [
     {
       "id": "AC-001",
@@ -903,5 +903,11 @@
       "then": "Assignment may prepare the task but starting charged work is blocked until P09 commercial gates pass; existing included-scope remediation remains usable.",
       "status": "not-run"
     }
+  ],
+  "remediationEvidence": [
+    "docs/evidence/remediation/session.md",
+    "docs/evidence/remediation/identity.md",
+    "docs/evidence/remediation-finance.md",
+    "docs/evidence/remediation-operations.md"
   ]
 }

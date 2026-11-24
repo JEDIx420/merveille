@@ -1,5 +1,7 @@
 # Phase 00 Evidence: Runtime Foundation and Compatibility
 
+> Historical implementation record. Its release claims are superseded by the [remediation verification](remediation/session.md); retain this document as history, not current acceptance.
+
 ## Identity
 
 - Phase / requirement IDs: P00 / REQ-OPS-002, AC-064

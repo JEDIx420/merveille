@@ -1,14 +1,7 @@
-# Merveille Designs — active implementation plan
+# Current implementation plan
 
-Improve the existing app through [docs/remediation/README.md](docs/remediation/README.md). The current sequence is [R00–R05](docs/remediation/manifest.json), with detailed gates in [delivery and acceptance](docs/remediation/05-delivery-and-acceptance.md).
+Use [docs/remediation/manifest.json](docs/remediation/manifest.json) in R00–R05 dependency order. The old P00–P14 plan is historical reference.
 
-1. R00 — Baseline and containment of demo/diagnostic entry points.
-2. R01 — Real Google identities, Jay bootstrap and administrator-managed access.
-3. R02 — Neutral shared visual system and three complete reference screens.
-4. R03 — Functional integrity, durable reminders and genuine recovery.
-5. R04 — Migrate every remaining route and interaction.
-6. R05 — Real-person UAT, integrated verification and honest handoff.
+Local containment, identity/capability repairs, shared neutral UI, business integrity, background jobs and independent recovery have been implemented. Final integrated browser/workerd verification and external onboarding gates are tracked in [task.md](task.md). See [session evidence](docs/evidence/remediation/session.md) for exact results.
 
-R02 and R03 may progress independently after shared identity contracts are agreed. A missing provider credential blocks only its dependent verification, never unrelated work. Do not declare a blocked integration complete.
-
-Start at [START_HERE.md](START_HERE.md); current progress is [task.md](task.md). P00–P14 is retained as historical specification/evidence. This plan update implements no application changes and claims no application verification.
+Hosted Google/Access onboarding and real-person acceptance are distinct gates. The [operator and browser-only handoff](docs/operations/real-account-handoff.md) explains the remaining steps. No unconfigured provider or unrun team test may be described as passed.

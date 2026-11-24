@@ -1,5 +1,7 @@
 # Phase 12 Evidence: Role Dashboards, Waiting-on-you and Owner Performance
 
+> Historical implementation record. Its release claims are superseded by the [remediation verification](remediation/session.md); retain this document as history, not current acceptance.
+
 ## Identity
 
 - Phase / requirement IDs: P12 / REQ-DAS-001 through REQ-DAS-005, REQ-TSK-006; AC-051, AC-052, AC-053

@@ -1,0 +1,75 @@
+{
+  "environment": "http://127.0.0.1:8799",
+  "realHTTP": true,
+  "authenticatedWrites": 0,
+  "passed": [
+    {
+      "path": "/api/session",
+      "method": "GET",
+      "status": 401,
+      "private": true
+    },
+    {
+      "path": "/api/projects",
+      "method": "GET",
+      "status": 401,
+      "private": true
+    },
+    {
+      "path": "/api/projects/secret.png",
+      "method": "GET",
+      "status": 401,
+      "private": true
+    },
+    {
+      "path": "/api/session",
+      "method": "GET",
+      "status": 401,
+      "private": true
+    },
+    {
+      "path": "/api/session",
+      "method": "GET",
+      "status": 401,
+      "private": true
+    },
+    {
+      "path": "/api/files/unknown/download",
+      "method": "GET",
+      "status": 401,
+      "private": true
+    },
+    {
+      "path": "/api/files/unknown/download",
+      "method": "HEAD",
+      "status": 401,
+      "private": true
+    },
+    {
+      "path": "/api/runtime/spike",
+      "method": "GET",
+      "status": 404,
+      "private": true
+    },
+    {
+      "path": "/api/runtime/spike",
+      "method": "POST",
+      "status": 404,
+      "private": true
+    },
+    {
+      "path": "/api/people",
+      "method": "POST",
+      "status": 403,
+      "private": true
+    },
+    {
+      "path": "/api/people",
+      "method": "POST",
+      "status": 401,
+      "private": true
+    }
+  ],
+  "rootRedirect": "/overview",
+  "deployedFixtureControls": false
+}

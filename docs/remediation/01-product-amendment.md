@@ -50,3 +50,7 @@ The initial operating scale remains approximately 30 projects and 10–15 concur
 The old `docs/design/visual-direction.html`, warm/gold token interpretation and large desktop logo are historical references. Existing runtime token files may still contain those values until remediation implements the new system; their presence does not override document 03.
 
 P00–P14 remain useful business/architecture specifications and implementation history. Their previous “fully complete” labels do not establish readiness. Do not restart P00, keep a fixture login for testers or infer that all integrations only need credentials. The active sequence and verification rules are in [05 — Delivery and acceptance](05-delivery-and-acceptance.md).
+
+## Implementation interpretations recorded during remediation
+
+The [authority ADR](../architecture/decisions/0002-remediation-authority.md) records additive engineering interpretations: project conversion is ADMIN-only because it assigns project contacts/access and contractual authority; optional organization intake/company-publishing grants never imply scoped project approval; archived new receipts must name an existing invoice and use normal financial confirmation/allocation. These preserve the confirmed authority rules rather than introducing substitute actors. Provider and hosted acceptance remain separate gates.

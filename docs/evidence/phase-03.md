@@ -1,5 +1,7 @@
 # Phase 03 Evidence: Private Documents, Media Storage and Authenticated File Delivery
 
+> Historical implementation record. Its release claims are superseded by the [remediation verification](remediation/session.md); retain this document as history, not current acceptance.
+
 ## Identity
 
 - Phase / requirement IDs: P03 / REQ-FIL-001 through REQ-FIL-005, REQ-IAM-007; AC-056, AC-057, AC-058, AC-059, AC-060

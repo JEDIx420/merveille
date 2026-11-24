@@ -1,5 +1,7 @@
 # Phase 06 Evidence: Published Updates, Company Notices, and Manual K-SMART Records
 
+> Historical implementation record. Its release claims are superseded by the [remediation verification](remediation/session.md); retain this document as history, not current acceptance.
+
 ## Identity
 
 - Phase / requirement IDs: P06 / REQ-UPD-001 through REQ-UPD-005, REQ-KSM-001 through REQ-KSM-004, REQ-IAM-003, REQ-IAM-004, REQ-FIL-002, REQ-FIL-004; AC-022, AC-023, AC-024, AC-025, AC-026

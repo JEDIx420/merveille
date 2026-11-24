@@ -1,5 +1,7 @@
 # Phase 10 Evidence: Site Issue and Snag Tracking
 
+> Historical implementation record. Its release claims are superseded by the [remediation verification](remediation/session.md); retain this document as history, not current acceptance.
+
 ## Identity
 
 - Phase / requirement IDs: P10 / REQ-SNG-001 through REQ-SNG-004, REQ-TSK-005, REQ-UPD-002, REQ-UPD-003; AC-044, AC-045, AC-070

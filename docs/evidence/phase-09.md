@@ -1,5 +1,7 @@
 # Phase 09 Evidence: References, Materials and Additional-Work Controls (Client Decisions & Changes)
 
+> Historical implementation record. Its release claims are superseded by the [remediation verification](remediation/session.md); retain this document as history, not current acceptance.
+
 ## Identity
 
 - Phase / requirement IDs: P09 / REQ-CHG-001 through REQ-CHG-005, REQ-MAT-001 through REQ-MAT-004, REQ-IAM-005; AC-039, AC-040, AC-041, AC-042, AC-043

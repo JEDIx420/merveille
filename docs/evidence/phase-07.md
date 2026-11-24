@@ -1,5 +1,7 @@
 # Phase 07 Evidence: Quotations, Schedules, Invoices and Receipts (Commercial Finance)
 
+> Historical implementation record. Its release claims are superseded by the [remediation verification](remediation/session.md); retain this document as history, not current acceptance.
+
 ## Identity
 
 - Phase / requirement IDs: P07 / REQ-FIN-001 through REQ-FIN-006, REQ-FIN-010, REQ-FIN-011, REQ-FIN-013, REQ-PRJ-002, REQ-PRJ-004, REQ-IAM-004; AC-010, AC-027, AC-028, AC-029, AC-030, AC-031, AC-032, AC-033

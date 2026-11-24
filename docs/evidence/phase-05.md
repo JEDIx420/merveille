@@ -1,5 +1,7 @@
 # Phase 05 Evidence: Drawing Register, Consultant Approval, and Manager Release
 
+> Historical implementation record. Its release claims are superseded by the [remediation verification](remediation/session.md); retain this document as history, not current acceptance.
+
 ## Identity
 
 - Phase / requirement IDs: P05 / REQ-DRW-001 through REQ-DRW-008, REQ-FIL-001 through REQ-FIL-005, REQ-IAM-003, REQ-IAM-004; AC-016, AC-017, AC-018, AC-019, AC-020, AC-021

@@ -1,5 +1,7 @@
 # Phase 04 Evidence: Tasks, Deadlines and Completion History
 
+> Historical implementation record. Its release claims are superseded by the [remediation verification](remediation/session.md); retain this document as history, not current acceptance.
+
 ## Identity
 
 - Phase / requirement IDs: P04 / REQ-TSK-001 through REQ-TSK-006, REQ-DAS-001, REQ-DAS-003, REQ-DAS-004; AC-013, AC-014, AC-015

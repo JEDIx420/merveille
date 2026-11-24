@@ -7,7 +7,7 @@
   "auditedSourceCommit": "813ef8b765045b95ff713665a3217e4487491d75",
   "entryPoint": "docs/remediation/README.md",
   "historicalManifest": "docs/implementation/manifest.json",
-  "status": "Instructions prepared; application remediation not started by this documentation change.",
+  "status": "R00\u2013R04 implemented and locally verified; R05 technical verification/handoff prepared. Hosted Google/Access, provider/recovery and real-person acceptance remain blocked.",
   "dependencyPolicy": "Implementation and local-verification contracts unlock independent downstream work. A blocked hosted/provider check remains explicit and blocks real onboarding/release, not unrelated implementation. See stage exit gates.",
   "stages": [
     {
@@ -19,12 +19,16 @@
         "docs/remediation/01-product-amendment.md",
         "docs/remediation/04-functional-repairs.md"
       ],
-      "implementation": "not-started",
-      "localVerification": "not-started",
-      "hostedVerification": "not-started",
+      "implementation": "passed",
+      "localVerification": "passed",
+      "hostedVerification": "blocked",
       "teamAcceptance": "not-started",
-      "evidence": [],
-      "blockers": []
+      "evidence": [
+        "docs/evidence/remediation/session.md"
+      ],
+      "blockers": [
+        "Google OAuth/Access app/IdP and protected authorized review environment not configured; hosted and real-person gates not run."
+      ]
     },
     {
       "id": "R01",
@@ -37,12 +41,16 @@
         "docs/remediation/02-identity-and-real-user-testing.md",
         "docs/remediation/04-functional-repairs.md"
       ],
-      "implementation": "not-started",
-      "localVerification": "not-started",
-      "hostedVerification": "not-started",
-      "teamAcceptance": "not-started",
-      "evidence": [],
-      "blockers": []
+      "implementation": "passed",
+      "localVerification": "passed",
+      "hostedVerification": "blocked",
+      "teamAcceptance": "blocked",
+      "evidence": [
+        "docs/evidence/remediation/session.md"
+      ],
+      "blockers": [
+        "Google OAuth/Access app/IdP and protected authorized review environment not configured; hosted and real-person gates not run."
+      ]
     },
     {
       "id": "R02",
@@ -55,12 +63,16 @@
       "read": [
         "docs/remediation/03-premium-interface.md"
       ],
-      "implementation": "not-started",
-      "localVerification": "not-started",
-      "hostedVerification": "not-started",
-      "teamAcceptance": "not-started",
-      "evidence": [],
-      "blockers": [],
+      "implementation": "passed",
+      "localVerification": "passed",
+      "hostedVerification": "blocked",
+      "teamAcceptance": "blocked",
+      "evidence": [
+        "docs/evidence/remediation/session.md"
+      ],
+      "blockers": [
+        "Google OAuth/Access app/IdP and protected authorized review environment not configured; hosted and real-person gates not run."
+      ],
       "parallelWith": [
         "R03"
       ],
@@ -77,12 +89,16 @@
       "read": [
         "docs/remediation/04-functional-repairs.md"
       ],
-      "implementation": "not-started",
-      "localVerification": "not-started",
-      "hostedVerification": "not-started",
-      "teamAcceptance": "not-started",
-      "evidence": [],
-      "blockers": [],
+      "implementation": "passed",
+      "localVerification": "passed",
+      "hostedVerification": "blocked",
+      "teamAcceptance": "blocked",
+      "evidence": [
+        "docs/evidence/remediation/session.md"
+      ],
+      "blockers": [
+        "Google OAuth/Access app/IdP and protected authorized review environment not configured; hosted and real-person gates not run."
+      ],
       "parallelWith": [
         "R02"
       ]
@@ -99,12 +115,16 @@
         "docs/remediation/03-premium-interface.md",
         "docs/remediation/04-functional-repairs.md"
       ],
-      "implementation": "not-started",
-      "localVerification": "not-started",
-      "hostedVerification": "not-started",
-      "teamAcceptance": "not-started",
-      "evidence": [],
-      "blockers": []
+      "implementation": "passed",
+      "localVerification": "passed",
+      "hostedVerification": "blocked",
+      "teamAcceptance": "blocked",
+      "evidence": [
+        "docs/evidence/remediation/session.md"
+      ],
+      "blockers": [
+        "Google OAuth/Access app/IdP and protected authorized review environment not configured; hosted and real-person gates not run."
+      ]
     },
     {
       "id": "R05",
@@ -120,12 +140,16 @@
         "docs/remediation/02-identity-and-real-user-testing.md",
         "docs/remediation/05-delivery-and-acceptance.md"
       ],
-      "implementation": "not-started",
-      "localVerification": "not-started",
-      "hostedVerification": "not-started",
-      "teamAcceptance": "not-started",
-      "evidence": [],
-      "blockers": []
+      "implementation": "passed",
+      "localVerification": "passed",
+      "hostedVerification": "blocked",
+      "teamAcceptance": "blocked",
+      "evidence": [
+        "docs/evidence/remediation/session.md"
+      ],
+      "blockers": [
+        "Google OAuth/Access app/IdP and protected authorized review environment not configured; hosted and real-person gates not run."
+      ]
     }
   ]
 }

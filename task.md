@@ -1,28 +1,31 @@
 # Merveille Designs — current task state
 
-Updated 24 November 2026. The application foundation exists on `implement/merveille-portal`. The current assignment is [remediation](docs/remediation/README.md), based on audited source `813ef8b765045b95ff713665a3217e4487491d75`. This documentation update performs no application changes, deployment or account setup.
+Updated 24 November 2026. The application foundation exists on `implement/merveille-portal`. The current assignment is [remediation](docs/remediation/README.md), based on audited source `813ef8b765045b95ff713665a3217e4487491d75`. This session implements remediation locally; hosted setup and team acceptance remain separate gates.
 
 ## Active stages
 
 | Stage | Work | Implementation | Local verification | Hosted verification | Team acceptance |
 |---|---|---|---|---|---|
-| R00 | Baseline and demo/diagnostic containment | Not started | Not started | Not started | Not started |
-| R01 | Real Google accounts and admin lifecycle | Not started | Not started | Not started | Not started |
-| R02 | Neutral shared UI and reference screens | Not started | Not started | Not started | Not started |
-| R03 | Functional integrity, jobs and recovery | Not started | Not started | Not started | Not started |
-| R04 | All remaining routes and interactions | Not started | Not started | Not started | Not started |
-| R05 | Integrated verification and real-person UAT | Not started | Not started | Not started | Not started |
+| R00 | Baseline and demo/diagnostic containment | Passed | Passed | Blocked | Not started |
+| R01 | Real Google accounts and admin lifecycle | Passed | Passed | Blocked | Blocked |
+| R02 | Neutral shared UI and reference screens | Passed | Passed | Blocked | Blocked |
+| R03 | Functional integrity, jobs and recovery | Passed | Passed | Blocked | Blocked |
+| R04 | All routes and interactions | Passed | Passed | Blocked | Blocked |
+| R05 | Integrated verification and real-person handoff | Passed: handoff prepared | Passed | Blocked | Blocked |
 
 Dependencies and exact contracts: [active manifest](docs/remediation/manifest.json), [delivery gates](docs/remediation/05-delivery-and-acceptance.md).
 
 ## Current checkpoint
 
-- Current work: remediation instructions prepared; implementation has not begun under this new plan.
-- Next exact action: inspect the latest implementation branch and effective deployment configuration, read the ordered work order, then begin R00 without recreating the app.
-- Existing hosted preview: [merveille-web.rhelo-bible.workers.dev](https://merveille-web.rhelo-bible.workers.dev). Its observed fixture login/diagnostic experience is part of the repair baseline, not an accepted testing model.
-- Earlier claims that P00–P14 were fully verified and ready for production are superseded pending meaningful re-verification. The original acceptance JSON still lists cases as not-run; do not infer a pass from old prose.
-- Required future setup inputs: Jay's exact Google email and other identities privately; explicit optional grants; Google/Cloudflare Access configuration; authorized review deployment; messaging/provider inputs where applicable. These do not block independent code and visual work.
-- Application checks in this documentation update: not run. The documentation/link/manifest validation result belongs to the publishing handoff, not application readiness.
+- Application source commit: `7e08db6` on `implement/merveille-portal`. Existing Next/OpenNext/Cloudflare/Wrangler foundation and logo preserved. Earlier commits contain real identity, money/file/state repair, durable jobs and shared neutral UI.
+- Current work: R00–R04 implemented and locally verified; R05 technical handoff prepared. Hosted and real-person gates remain blocked. Source is frozen; evidence/progress documents are finalized.
+- Actual checks: typecheck passed; 105 tests across 21 files passed; optimized Workers build passed; nine isolated workerd identity/concurrency/rollback/recovery checks passed through migration 0020; 11 actual private HTTP/CSRF/diagnostic/cache checks passed; generated binding check and jobs dry run passed; dependency audit reports zero advisories; documentation checker passes. See [session evidence](docs/evidence/remediation/session.md).
+- Browser: final built frontend passed 112 recorded checks covering all 29 pages at 1440×900, 1024×768 and 390×844, pure external-client navigation, 13 focused interactions/failures and setup states; no overflow/JavaScript errors. Reference screenshots were inspected. Tests use fictional browser-only API fixtures; actual Google/hosted business journeys remain unverified.
+- Next exact action: configure the authorized protected review environment and Google/Access app/IdP, then have the coding operator apply reviewed migrations/build, prepare the private bootstrap and run the real-account browser walkthrough. Do not reintroduce demo auth or repeat finished local discovery.
+- Hosted state: old preview remains unmodified, not accepted for real-user testing. Read-only account inspection found zero Access applications/identity providers; organization lookup returned 403 despite existing Wrangler deployment authentication.
+- Private input: Jay's exact supplied Google email is in ignored protected setup data, absent from public source/evidence. No initial hosted administrator or extra capability was silently granted.
+- External gates: Google OAuth/Access team/app/audience/exact-email policies, authorized protected review hostname/resources, hosted Queue/provider checks, remote restore and real-person UAT. These block hosted acceptance and release, not the completed independent local implementation. Use the [real-account handoff](docs/operations/real-account-handoff.md).
+- No remote migration, deployment, policy change, account setup or WhatsApp send was performed. P00–P14 historical release claims remain superseded. Legacy acceptance cases remain not-run until their complete scenarios are observed.
 
 ## Historical P00–P14 implementation records
 

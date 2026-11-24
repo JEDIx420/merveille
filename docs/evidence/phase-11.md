@@ -1,5 +1,7 @@
 # Phase 11 Evidence: In-Portal Notifications, WhatsApp and Escalation
 
+> Historical implementation record. Its release claims are superseded by the [remediation verification](remediation/session.md); retain this document as history, not current acceptance.
+
 ## Identity
 
 - Phase / requirement IDs: P11 / REQ-NOT-001 through REQ-NOT-005; AC-046, AC-047, AC-048, AC-049, AC-050
