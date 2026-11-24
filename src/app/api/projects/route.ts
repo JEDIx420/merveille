@@ -1,0 +1,32 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { getSessionPrincipal } from "@/server/auth/session";
+import { listProjects } from "@/server/domain/projects/service";
+
+export async function GET(request: NextRequest) {
+  const { env } = await getCloudflareContext({ async: true });
+  const auth = await getSessionPrincipal(request, env);
+
+  if (!auth.principal) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const q = searchParams.get("query") || undefined;
+  const stage = searchParams.get("stage") || undefined;
+  const includeArchived = searchParams.get("includeArchived") === "true";
+
+  try {
+    const projects = await listProjects(auth.principal, env.DB, {
+      query: q,
+      stage,
+      includeArchived,
+    });
+    return NextResponse.json({ ok: true, projects });
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err.message, code: err.code || "FORBIDDEN" },
+      { status: 403 }
+    );
+  }
+}

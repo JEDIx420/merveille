@@ -6,7 +6,7 @@ Baseline: 24 November 2026. Application implementation has not started. Planning
 
 - [x] P00 — [Runtime foundation and compatibility](docs/implementation/phases/00-foundation.md) — [Evidence](docs/evidence/phase-00.md)
 - [x] P01 — [Identity, invitations and permission foundation](docs/implementation/phases/01-identity-permissions.md) — [Evidence](docs/evidence/phase-01.md)
-- [ ] P02 — [Client portfolios, project records and enquiry intake](docs/implementation/phases/02-projects-intake.md)
+- [x] P02 — [Client portfolios, project records and enquiry intake](docs/implementation/phases/02-projects-intake.md) — [Evidence](docs/evidence/phase-02.md)
 - [ ] P03 — [Private documents and media](docs/implementation/phases/03-private-files.md)
 - [ ] P04 — [Tasks, deadlines and completion history](docs/implementation/phases/04-tasks.md)
 - [ ] P05 — [Drawing register, consultant approval and manager release](docs/implementation/phases/05-drawings.md)
@@ -22,9 +22,9 @@ Baseline: 24 November 2026. Application implementation has not started. Planning
 
 ## Current checkpoint
 
-- Current phase: P01 complete; commencing P02 (Client portfolios, project records and enquiry intake).
-- Next action: Read docs/implementation/phases/02-projects-intake.md and implement enquiries, feasibility studies, project lifecycle records, activation rules, and intake/portfolio screens.
-- Completed application tests: AC-064 (P00), AC-001 through AC-008 (P01). Evidence in docs/evidence/phase-00.md and docs/evidence/phase-01.md.
+- Current phase: P02 complete; commencing P03 (Private documents and media).
+- Next action: Read docs/implementation/phases/03-private-files.md and implement private R2 object storage, presigned upload/download authorization gates, MIME type inspection, file integrity tracking, and SCR-09 document manager.
+- Completed application tests: AC-064 (P00), AC-001 through AC-008 (P01), AC-009 through AC-012 (P02). Evidence in docs/evidence/phase-00.md, docs/evidence/phase-01.md, and docs/evidence/phase-02.md.
 - Deployed environments: local workerd emulated environment active with local D1 database migrations.
 - Blockers: None for local implementation. External Access IDP and Meta Cloud API credentials not required for local operations.
 

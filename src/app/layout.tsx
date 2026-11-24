@@ -83,7 +83,7 @@ export default function RootLayout({
               </div>
 
               {/* Navigation links */}
-              <nav style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <nav style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                 <a
                   href="/"
                   style={{
@@ -92,12 +92,79 @@ export default function RootLayout({
                     gap: "0.75rem",
                     padding: "0.625rem 0.875rem",
                     borderRadius: "6px",
-                    backgroundColor: "rgba(255, 255, 255, 0.08)",
-                    color: "var(--merveille-gold)",
+                    color: "var(--merveille-foreground)",
+                    textDecoration: "none",
+                    fontSize: "0.875rem",
                     fontWeight: 500,
                   }}
                 >
-                  <span>Portal Overview</span>
+                  <span>Overview</span>
+                </a>
+                <a
+                  href="/projects"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                    padding: "0.625rem 0.875rem",
+                    borderRadius: "6px",
+                    color: "var(--merveille-foreground)",
+                    textDecoration: "none",
+                    fontSize: "0.875rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  <span>Projects</span>
+                </a>
+                <a
+                  href="/enquiries"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                    padding: "0.625rem 0.875rem",
+                    borderRadius: "6px",
+                    color: "var(--merveille-foreground)",
+                    textDecoration: "none",
+                    fontSize: "0.875rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  <span>Enquiries & Pipeline</span>
+                </a>
+                <a
+                  href="/people"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                    padding: "0.625rem 0.875rem",
+                    borderRadius: "6px",
+                    color: "var(--merveille-foreground)",
+                    textDecoration: "none",
+                    fontSize: "0.875rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  <span>People & Access</span>
+                </a>
+                <a
+                  href="/login"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                    padding: "0.625rem 0.875rem",
+                    borderRadius: "6px",
+                    color: "var(--merveille-gold)",
+                    textDecoration: "none",
+                    fontSize: "0.875rem",
+                    fontWeight: 500,
+                    marginTop: "0.5rem",
+                    border: "1px dashed rgba(197, 160, 89, 0.3)",
+                  }}
+                >
+                  <span>Switch Role / User</span>
                 </a>
               </nav>
             </div>

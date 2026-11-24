@@ -87,8 +87,15 @@ export function createTestD1Database(): D1Database {
  */
 export async function setupMigratedTestDb(): Promise<D1Database> {
   const db = createTestD1Database();
-  const migrationPath = path.resolve(__dirname, "../migrations/0001_identity_and_permissions.sql");
-  const sql = fs.readFileSync(migrationPath, "utf-8");
-  await executeMigration(db, sql);
+  const migrationsDir = path.resolve(__dirname, "../migrations");
+  const files = ["0001_identity_and_permissions.sql", "0002_projects_and_enquiries.sql"];
+
+  for (const file of files) {
+    const migrationPath = path.join(migrationsDir, file);
+    if (fs.existsSync(migrationPath)) {
+      const sql = fs.readFileSync(migrationPath, "utf-8");
+      await executeMigration(db, sql);
+    }
+  }
   return db;
 }

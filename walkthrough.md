@@ -21,8 +21,14 @@ The confirmed company identity, brand assets in `assets/brand/`, and tokens are 
   - Built identity domain services (`inviteUser`, `acceptInvitation`, `disableUser`, `reassignMainClient`, `listPeople`).
   - Implemented `/login` (SCR-01), `/invite/accept` (SCR-01), `/access-denied`, `/people` (SCR-18), and `/people/:id` (SCR-18).
   - Evidence: [docs/evidence/phase-01.md](docs/evidence/phase-01.md).
-- **P02 — Client portfolios, project records and enquiry intake:** In Progress.
-- **P02–P14:** Pending dependency order.
+- **P02 — Client portfolios, project records and enquiry intake:** **COMPLETED & VERIFIED (AC-009–AC-012)**
+  - Applied D1 migration `0002_projects_and_enquiries.sql` containing enquiries, feasibility studies, project stages, project lifecycle events, and commercial activation gates.
+  - Implemented enquiry intake domain services: `createEnquiry`, `recordFeasibilityStudy`, `closeEnquiry` (closes lost/declined without creating active project, AC-009), `convertEnquiryToProject` (with 6 baseline architectural stages), `listEnquiries`, and `getEnquiry`.
+  - Implemented project lifecycle services: `listProjects` (multi-project client visibility and representative isolation, AC-011), `getProject`, `activateProject` (guarded manager command requiring accepted quote AND confirmed advance receipt, AC-010), `updateProjectStage` (optimistic concurrency and auto-advancement, AC-012), `pauseProject` and `resumeProject` with mandatory reason and audit logging.
+  - Built UI screens: `/projects` (SCR-03 projects directory with stage filter and status badges), `/projects/:id/overview` (SCR-05 overview, commercial gate indicators, guarded activation, pause/resume modals, stage timeline), `/enquiries` (SCR-04 pipeline), `/enquiries/new` (intake form), `/enquiries/:id` (detail, feasibility study form, convert/close modals).
+  - Evidence: [docs/evidence/phase-02.md](docs/evidence/phase-02.md).
+- **P03 — Private documents and media:** Commencing next.
+- **P03–P14:** Pending dependency order.
 
 ## Verification Commands
 
