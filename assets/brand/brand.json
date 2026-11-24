@@ -1,0 +1,31 @@
+{
+  "name": "Marvel",
+  "nameStatus": "working-title",
+  "repository": "JEDIx420/merveille",
+  "description": "Architectural project and practice portal",
+  "assets": {
+    "primaryLogo": "marvel-logo.png",
+    "symbol": "marvel-symbol.svg",
+    "symbolLight": "marvel-symbol-light.svg",
+    "appIcon": "marvel-icon.svg"
+  },
+  "colors": {
+    "canvas": "#F5F2EB",
+    "surface": "#FFFEFA",
+    "ink": "#202822",
+    "mutedText": "#5D665D",
+    "bronze": "#8A6B45",
+    "bronzeText": "#795C39",
+    "sage": "#E2E8DC",
+    "divider": "#C9CEC4",
+    "controlBorder": "#737E72",
+    "success": "#356247",
+    "warning": "#885F15",
+    "danger": "#A73B32"
+  },
+  "fonts": {
+    "display": "Source Serif 4, Georgia, serif",
+    "interface": "Inter, system-ui, sans-serif",
+    "status": "Proposed families; no font binaries bundled. License and self-host before adoption."
+  }
+}

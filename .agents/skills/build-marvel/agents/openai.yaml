@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Marvel"
+  short_description: "Build Marvel from its ordered repository plan"
+  default_prompt: "Use $build-marvel to implement the next ready phase from START_HERE.md and record evidence."

@@ -1,0 +1,907 @@
+{
+  "schemaVersion": 1,
+  "baselineDate": "2026-11-24",
+  "status": "Specification only; no application tests have been run.",
+  "cases": [
+    {
+      "id": "AC-001",
+      "suite": "access",
+      "requirements": [
+        "REQ-IAM-001",
+        "REQ-IAM-002"
+      ],
+      "title": "An invited representative signs in with their own identity",
+      "given": "Main client and representative have separate invites",
+      "when": "Both sign in",
+      "then": "Each has a distinct audited user; representative cannot submit a main-client contractual decision.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-002",
+      "suite": "access",
+      "requirements": [
+        "REQ-IAM-003",
+        "REQ-PRJ-007"
+      ],
+      "title": "Cross-project enumeration is denied",
+      "given": "User belongs only to Project A",
+      "when": "Request Project B list rows, detail, search, dashboard counts, file IDs and export",
+      "then": "No Project B names, records, counts, amounts or files are disclosed.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-003",
+      "suite": "access",
+      "requirements": [
+        "REQ-IAM-004",
+        "REQ-FIN-007"
+      ],
+      "title": "Consultant financial scope is intentional",
+      "given": "Consultant assigned Project A",
+      "when": "Open that project's quotation, schedule, invoice and payment history",
+      "then": "Client-facing financial records are visible; internal notes, receipt evidence, expenses, salaries and profit remain denied.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-004",
+      "suite": "access",
+      "requirements": [
+        "REQ-IAM-005",
+        "REQ-MAT-004"
+      ],
+      "title": "Representative authority cannot be escalated",
+      "given": "Representative has project access",
+      "when": "Call quote acceptance, change acceptance or binding material-selection endpoint",
+      "then": "403 or equivalent denial; no acceptance/event is recorded; permitted comment remains possible.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-005",
+      "suite": "access",
+      "requirements": [
+        "REQ-IAM-006",
+        "REQ-FIN-009",
+        "REQ-DAS-002"
+      ],
+      "title": "Admin and owner capabilities remain separate",
+      "given": "Create admin-without-owner, owner-without-admin and manager accounts",
+      "when": "Read payroll/profit and individual-performance endpoints and exports",
+      "then": "Admin can see payroll/profit only; owner can see performance only; manager sees neither, including inferred aggregate values.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-006",
+      "suite": "access",
+      "requirements": [
+        "REQ-IAM-007",
+        "REQ-ARC-004"
+      ],
+      "title": "Account removal is effective across surfaces",
+      "given": "Signed-in user has a file URL and a queued notification",
+      "when": "Admin disables them then they request a page/download and job executes",
+      "then": "All new access and notification dispatch is denied; historic authorship remains.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-007",
+      "suite": "access",
+      "requirements": [
+        "REQ-IAM-008",
+        "REQ-OPS-003"
+      ],
+      "title": "Access changes have an audit record",
+      "given": "Admin changes assignment, elevated capability and main-client contact",
+      "when": "Inspect authorised audit history",
+      "then": "Actor, subject, old/new scope, reason and time are recorded without secrets.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-008",
+      "suite": "access",
+      "requirements": [
+        "REQ-IAM-001",
+        "REQ-OPS-002"
+      ],
+      "title": "Identity cannot be forged",
+      "given": "Worker endpoint reachable and attacker sends fabricated identity headers",
+      "when": "Use unsigned/expired/wrong-audience JWT, absent assertion, or guessed email",
+      "then": "All fail in staging; developer fixture auth is impossible on deployed bindings.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-009",
+      "suite": "intake",
+      "requirements": [
+        "REQ-PRJ-001"
+      ],
+      "title": "Enquiry can finish without a project",
+      "given": "New lead with requirements and site feasibility",
+      "when": "Record study then mark enquiry lost/declined",
+      "then": "History and reason remain; no active project or invoice appears as a side effect.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-010",
+      "suite": "intake",
+      "requirements": [
+        "REQ-PRJ-002"
+      ],
+      "title": "Activation requires the two commercial gates",
+      "given": "Quoted enquiry with no acceptance or confirmed advance",
+      "when": "Try activation with each gate missing, client-reported transfer, then both valid",
+      "then": "Missing gates deny; manager activation succeeds only with current accepted quote and admin-confirmed required advance.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-011",
+      "suite": "intake",
+      "requirements": [
+        "REQ-PRJ-003",
+        "REQ-PRJ-005"
+      ],
+      "title": "Client portfolio and project assignment",
+      "given": "One main client has two projects and different representatives",
+      "when": "Each contact opens project switcher",
+      "then": "Only each contact's assigned projects appear; single main-client authority per project is enforced.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-012",
+      "suite": "intake",
+      "requirements": [
+        "REQ-PRJ-004",
+        "REQ-PRJ-006"
+      ],
+      "title": "Stages and lifecycle are explicit",
+      "given": "Active project with linked milestone invoice schedule",
+      "when": "Manager completes a stage, pauses and resumes project",
+      "then": "Actor/reason/history preserved; stage may trigger due evaluation but does not issue invoice or assert government permission.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-013",
+      "suite": "tasks",
+      "requirements": [
+        "REQ-TSK-001",
+        "REQ-TSK-002"
+      ],
+      "title": "Staff task and manager deadline authority",
+      "given": "Assigned team member creates a project task",
+      "when": "Staff proposes task; manager assigns and revises deadline",
+      "then": "Task persists; manager-only assignment/deadline changes enforced and prior values retained.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-014",
+      "suite": "tasks",
+      "requirements": [
+        "REQ-TSK-003",
+        "REQ-TSK-004"
+      ],
+      "title": "Complete and reopen tasks",
+      "given": "Open task with due date and assignee",
+      "when": "Assignee completes; manager reopens with reason; clock moves beyond due date",
+      "then": "History is retained; current overdue classification uses current open state and agreed due date.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-015",
+      "suite": "tasks",
+      "requirements": [
+        "REQ-TSK-005",
+        "REQ-TSK-006"
+      ],
+      "title": "Internal task evidence stays internal",
+      "given": "Task contains notes and attachments",
+      "when": "Client/consultant requests task evidence or related search results",
+      "then": "Access denied; owner performance can use permitted event metadata without publishing notes.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-016",
+      "suite": "drawings",
+      "requirements": [
+        "REQ-DRW-001",
+        "REQ-DRW-002"
+      ],
+      "title": "Version-bound consultant review",
+      "given": "Drawing version V1 sent to two required assigned consultants",
+      "when": "First approves; second has not approved; unrelated consultant tries approval",
+      "then": "Approval refers to V1; incomplete set blocks release; unassigned reviewer cannot decide.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-017",
+      "suite": "drawings",
+      "requirements": [
+        "REQ-DRW-003",
+        "REQ-DRW-004"
+      ],
+      "title": "Manager release is a distinct gate",
+      "given": "Consultant approved V1",
+      "when": "Client attempts approval/release, then manager releases",
+      "then": "Client cannot approve/release; manager release succeeds and records actor/time. Consultant approval alone never publishes.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-018",
+      "suite": "drawings",
+      "requirements": [
+        "REQ-DRW-005",
+        "REQ-DRW-006"
+      ],
+      "title": "Replacement never hides the current release prematurely",
+      "given": "V1 released; V2 uploaded and returned for changes",
+      "when": "Client views drawing; V3 later approved and released",
+      "then": "V1 stays current during review; V3 release supersedes V1; rejected V2 is not mislabeled superseded.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-019",
+      "suite": "drawings",
+      "requirements": [
+        "REQ-DRW-007"
+      ],
+      "title": "Revision invalidates only the changed version's approvals",
+      "given": "V1 approved but unreleased",
+      "when": "Author revises content to V2; attempts release based on V1 approval",
+      "then": "V2 requires fresh approvals; manager cannot release edited content under V1's approval.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-020",
+      "suite": "drawings",
+      "requirements": [
+        "REQ-DRW-008",
+        "REQ-FIL-004"
+      ],
+      "title": "Draft file and preview URLs are protected",
+      "given": "Client knows draft object/thumbnail identifier",
+      "when": "Request original, thumbnail, preview and notification URL",
+      "then": "All unreleased internal content denied; released current and permitted historical versions work.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-021",
+      "suite": "drawings",
+      "requirements": [
+        "REQ-DRW-003",
+        "REQ-DRW-005",
+        "REQ-OPS-003"
+      ],
+      "title": "Concurrent drawing releases remain consistent",
+      "given": "Two eligible revisions share expected current-version value",
+      "when": "Release concurrently or retry same release command",
+      "then": "At most one current version; stale operation conflicts; retry is idempotent; audit/outbox agree with committed state.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-022",
+      "suite": "updates",
+      "requirements": [
+        "REQ-UPD-001",
+        "REQ-UPD-002",
+        "REQ-UPD-003"
+      ],
+      "title": "Manager publishes selected audience",
+      "given": "Staff submits photos/progress and keeps separate internal note",
+      "when": "Client checks feed before and after manager publication",
+      "then": "Only published approved audience content appears; internal notes never appear.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-023",
+      "suite": "updates",
+      "requirements": [
+        "REQ-UPD-004"
+      ],
+      "title": "Published update edit needs review",
+      "given": "Published update V1",
+      "when": "Staff proposes V2 and another manager returns it",
+      "then": "V1 remains published until reviewed replacement/retraction; changed text does not silently reach clients.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-024",
+      "suite": "updates",
+      "requirements": [
+        "REQ-UPD-005"
+      ],
+      "title": "Announcements have a separate audience",
+      "given": "Manager prepares company announcement for selected clients",
+      "when": "Publish and open feeds as included and excluded users",
+      "then": "Only selected audience sees it; project data is not auto-promoted to company-wide content.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-025",
+      "suite": "permits",
+      "requirements": [
+        "REQ-KSM-001",
+        "REQ-KSM-002",
+        "REQ-KSM-003"
+      ],
+      "title": "K-SMART evidence is manual and dated",
+      "given": "Project with sanction and completion milestones",
+      "when": "Staff enters observed statuses and uploads screenshots",
+      "then": "Separate records show entered-by, checked date and evidence; no automatic verification or legal validity claim.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-026",
+      "suite": "permits",
+      "requirements": [
+        "REQ-KSM-004"
+      ],
+      "title": "Permit evidence can remain restricted",
+      "given": "Internal supporting screenshot and proposed client status update",
+      "when": "Manager publishes redacted/permitted update",
+      "then": "Client receives approved status and shared files only; original sensitive screenshot remains private.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-027",
+      "suite": "finance",
+      "requirements": [
+        "REQ-FIN-001",
+        "REQ-FIN-002"
+      ],
+      "title": "Schedule is upfront and versioned",
+      "given": "Accepted quotation with advance/date/stage instalments",
+      "when": "Manager revises schedule; staff attempts same action",
+      "then": "Only manager succeeds; prior schedule/reason retained; clients see correct current schedule and history policy.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-028",
+      "suite": "finance",
+      "requirements": [
+        "REQ-FIN-002",
+        "REQ-PRJ-004"
+      ],
+      "title": "Due rules resolve date/stage disagreement explicitly",
+      "given": "Date-only, stage-only, both and either synthetic schedule items",
+      "when": "Date passes while stage incomplete, then stage completes",
+      "then": "Each configured policy gives deterministic due state; no accidental default makes every item due.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-029",
+      "suite": "finance",
+      "requirements": [
+        "REQ-FIN-003"
+      ],
+      "title": "Invoice issue uses approved content",
+      "given": "Staff drafts invoice and manager approves it",
+      "when": "Staff edits line/amount after approval then tries issue",
+      "then": "Edited version requires reapproval; approved unchanged version can issue once.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-030",
+      "suite": "finance",
+      "requirements": [
+        "REQ-FIN-004",
+        "REQ-FIN-013"
+      ],
+      "title": "Issued invoice cannot be overwritten",
+      "given": "Invoice is issued with unique reference",
+      "when": "Attempt edit/delete; then create permitted correction",
+      "then": "Mutation denied; linked credit/reversal/replacement preserves original and audit, including concurrent numbering.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-031",
+      "suite": "finance",
+      "requirements": [
+        "REQ-FIN-005"
+      ],
+      "title": "Only admin confirms real money",
+      "given": "Client/staff uploads evidence claiming payment",
+      "when": "They call confirm receipt; admin later verifies and confirms",
+      "then": "Only admin records confirmed receipt; evidence alone never activates a project or extra work.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-032",
+      "suite": "finance",
+      "requirements": [
+        "REQ-FIN-006",
+        "REQ-FIN-010"
+      ],
+      "title": "Part payment and overpayment remain exact",
+      "given": "Invoice INR 10000.00; confirmed receipts INR 3000.00 and 8000.00",
+      "when": "Allocate up to outstanding balance",
+      "then": "Paid allocation 10000.00, outstanding 0.00, unallocated 1000.00; no floating-point drift or negative outstanding.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-033",
+      "suite": "finance",
+      "requirements": [
+        "REQ-FIN-006",
+        "REQ-FIN-011"
+      ],
+      "title": "Duplicate receipt confirmation is idempotent",
+      "given": "Pending receipt with stable idempotency key",
+      "when": "Confirm twice and replay queue event",
+      "then": "One economic posting, one receipt and matching audit/outbox; changed payload under same key conflicts.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-034",
+      "suite": "finance",
+      "requirements": [
+        "REQ-FIN-008"
+      ],
+      "title": "Expense approval and posting",
+      "given": "Staff submits non-payroll expense or consultant fee",
+      "when": "Manager reviews then admin posts; staff tries posting",
+      "then": "Correct actor separation; evidence and project allocation retained; no posting without authorised review.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-035",
+      "suite": "finance",
+      "requirements": [
+        "REQ-FIN-009",
+        "REQ-IAM-006"
+      ],
+      "title": "Payroll does not leak through totals",
+      "given": "Project has salary allocation",
+      "when": "Non-admin queries total costs, export, chart, search, logs and difference of reports",
+      "then": "Restricted amounts cannot be obtained directly or by supplied totals; admin sees permitted cost/profit views.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-036",
+      "suite": "finance",
+      "requirements": [
+        "REQ-FIN-010",
+        "REQ-FIN-012"
+      ],
+      "title": "Reporting basis and currency are explicit",
+      "given": "Posted INR events and a separate foreign-currency draft",
+      "when": "Open invoiced, received and profit reports",
+      "then": "No cross-currency summing; report names period/basis and costs; invoiced and received are distinct, not additive sales.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-037",
+      "suite": "finance",
+      "requirements": [
+        "REQ-FIN-011"
+      ],
+      "title": "Balanced postings and period closure",
+      "given": "Approved invoice/receipt/expense and closed period",
+      "when": "Post, attempt edit, reverse with explicit authority",
+      "then": "Debits equal credits per event/currency; journal immutable; closed-period write denied; authorised correction audit retained.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-038",
+      "suite": "finance",
+      "requirements": [
+        "REQ-FIN-013",
+        "REQ-FIN-012"
+      ],
+      "title": "Report reproduces source records",
+      "given": "Known synthetic invoices, credits, receipts and expenses",
+      "when": "Generate same filtered report twice and reconcile with rows",
+      "then": "Amounts match source formula and permissions; period, currency and generation time shown; no guessed profit.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-039",
+      "suite": "changes",
+      "requirements": [
+        "REQ-CHG-001",
+        "REQ-CHG-002"
+      ],
+      "title": "Only main client accepts additional estimate",
+      "given": "Change with quoted price and time impact",
+      "when": "Representative or consultant attempts accept; main client accepts current version",
+      "then": "Only main-client acceptance binds the current estimate version; others can comment.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-040",
+      "suite": "changes",
+      "requirements": [
+        "REQ-CHG-003",
+        "REQ-CHG-004"
+      ],
+      "title": "Extra work gate requires all conditions",
+      "given": "Accepted change without payment or manager authorisation",
+      "when": "Attempt start with each condition missing, then fully satisfy",
+      "then": "Work remains blocked until required admin-confirmed payment and manager authorisation; prepared task is not permission to start.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-041",
+      "suite": "changes",
+      "requirements": [
+        "REQ-CHG-005"
+      ],
+      "title": "Change revision cannot reuse old acceptance",
+      "given": "Accepted/paid but unstarted change",
+      "when": "Revise scope/price and attempt execution",
+      "then": "Revised work requires fresh acceptance and authorisation plus correct payment assessment; old record remains auditable.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-042",
+      "suite": "materials",
+      "requirements": [
+        "REQ-MAT-001",
+        "REQ-MAT-002"
+      ],
+      "title": "References and material decisions",
+      "given": "Main client and representative upload inspiration",
+      "when": "Staff creates decision options; main client selects",
+      "then": "Files scoped correctly; comments distinct from authoritative main-client selection.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-043",
+      "suite": "materials",
+      "requirements": [
+        "REQ-MAT-003",
+        "REQ-MAT-004"
+      ],
+      "title": "Material selection respects commercial gates",
+      "given": "Selected material increases agreed cost",
+      "when": "Representative changes selection or staff starts extra work",
+      "then": "Representative cannot overwrite; added cost enters change process; selection alone doesn't authorise work.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-044",
+      "suite": "snags",
+      "requirements": [
+        "REQ-SNG-001",
+        "REQ-SNG-002",
+        "REQ-SNG-003"
+      ],
+      "title": "Snag resolution needs verification",
+      "given": "Issue with photo/location and assignee",
+      "when": "Staff provides resolution; manager verifies or reopens",
+      "then": "States/history distinguish resolved from verified closed; evidence and due date retained.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-045",
+      "suite": "snags",
+      "requirements": [
+        "REQ-SNG-004"
+      ],
+      "title": "Shared snag hides internal remediation",
+      "given": "Public-facing issue with internal cost note",
+      "when": "Client/consultant opens detail and attachments",
+      "then": "Only approved visible fields and files appear; internal notes/costs remain denied.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-046",
+      "suite": "notifications",
+      "requirements": [
+        "REQ-NOT-001",
+        "REQ-NOT-003"
+      ],
+      "title": "Due reminders and overdue escalation",
+      "given": "Clock set to known Asia/Kolkata policy with eligible due items",
+      "when": "Scheduler runs through normal reminder and escalation times",
+      "then": "Portal notification and eligible WhatsApp delivery created; unresolved item escalates to admin after configured threshold.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-047",
+      "suite": "notifications",
+      "requirements": [
+        "REQ-NOT-002",
+        "REQ-NOT-006"
+      ],
+      "title": "Notification eligibility checked at dispatch",
+      "given": "Queued reminder for now-resolved task or removed user",
+      "when": "Consumer processes queue later",
+      "then": "Obsolete message suppressed; read status never resolves task, approves drawing or confirms payment.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-048",
+      "suite": "notifications",
+      "requirements": [
+        "REQ-NOT-004"
+      ],
+      "title": "Retries do not blindly double-send",
+      "given": "Queue redelivers event or provider times out after possible accept",
+      "when": "Consumer retries and webhook arrives twice",
+      "then": "Delivery state reconciles provider ID; ambiguous timeout stays uncertain/reconciled rather than immediate blind resend; duplicates don't create extra portal rows.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-049",
+      "suite": "notifications",
+      "requirements": [
+        "REQ-NOT-005"
+      ],
+      "title": "WhatsApp provider policy and privacy",
+      "given": "Authorised test number with required opt-in/template configuration",
+      "when": "Send outside allowed conversation window via approved template path",
+      "then": "Only minimal safe context and authenticated link sent; unsupported/unapproved setup is blocked visibly, no raw documents or salaries.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-050",
+      "suite": "notifications",
+      "requirements": [
+        "REQ-NOT-004",
+        "REQ-OPS-003"
+      ],
+      "title": "Webhook verifies sender and state",
+      "given": "Webhook endpoint receives invalid signature, replay and valid delivery status",
+      "when": "Process each",
+      "then": "Invalid messages denied; valid events deduplicated; incoming text never mutates money/approval states.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-051",
+      "suite": "dashboard",
+      "requirements": [
+        "REQ-DAS-001",
+        "REQ-DAS-003"
+      ],
+      "title": "Waiting on you is actionable",
+      "given": "Seed overdue task, consultant review, manager release, invoice approval and client change decision",
+      "when": "Each role opens overview and waiting list",
+      "then": "Only that role's current actionable items appear, ordered by useful urgency and linked to exact version.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-052",
+      "suite": "dashboard",
+      "requirements": [
+        "REQ-DAS-002",
+        "REQ-DAS-004",
+        "REQ-TSK-006"
+      ],
+      "title": "Performance is evidence-based and owner-only",
+      "given": "Tasks have original/revised dates, reopened items and quality observations",
+      "when": "Owner and normal staff open performance views",
+      "then": "Owner sees disclosed metrics and context; staff is denied; client-driven scope revisions are not auto-scored as employee errors.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-053",
+      "suite": "dashboard",
+      "requirements": [
+        "REQ-DAS-005",
+        "REQ-PRJ-007"
+      ],
+      "title": "Client overview is calm and private",
+      "given": "Project has mixed published/internal updates and multiple payments",
+      "when": "Client opens phone and desktop overview",
+      "then": "Published progress, current released drawing, next due payment and relevant decisions shown; no internal task/financial-detail leakage.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-054",
+      "suite": "archive",
+      "requirements": [
+        "REQ-ARC-001",
+        "REQ-ARC-002",
+        "REQ-ARC-004"
+      ],
+      "title": "Archive preserves permitted external access",
+      "given": "Completed project with current and superseded drawings",
+      "when": "Archive then sign in as client, consultant, revoked user and outsider",
+      "then": "Authorised released history remains viewable/downloadable; no drafts/internal data; revoked/outsider denied.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-055",
+      "suite": "archive",
+      "requirements": [
+        "REQ-ARC-003",
+        "REQ-ARC-005"
+      ],
+      "title": "Archive is read-only without forgiving balances",
+      "given": "Project with unpaid invoice is archived",
+      "when": "Attempt normal edit, append an ADMIN-confirmed settlement for an existing invoice, then manager reopens with reason",
+      "then": "Operational mutation is denied while archived; normally authorised existing-obligation settlement is appended without reopening, preserving correction approvals. No new invoice, schedule or work is allowed by this exception; controlled reopen rechecks memberships and reminders.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-056",
+      "suite": "files",
+      "requirements": [
+        "REQ-FIL-001",
+        "REQ-FIL-003"
+      ],
+      "title": "Large file upload survives bounded retry online",
+      "given": "Configured large PDF/CAD/video and allowed chunk size",
+      "when": "Upload with failed part then retry while online",
+      "then": "Only failed parts retry; finalised object verified; upload UI reports exact success/failure; no pretend CAD/video preview.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-057",
+      "suite": "files",
+      "requirements": [
+        "REQ-FIL-002",
+        "REQ-FIL-004"
+      ],
+      "title": "Upload cannot select its own audience or object key",
+      "given": "Client reference uploader",
+      "when": "Submit foreign project ID, payroll parent, internal path or altered completion metadata",
+      "then": "Server rejects; storage key assigned server-side; file attached only to authorised parent.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-058",
+      "suite": "files",
+      "requirements": [
+        "REQ-FIL-001",
+        "REQ-FIL-003"
+      ],
+      "title": "Unsafe/unrenderable upload handling is honest",
+      "given": "HTML/SVG active payload, misleading extension, oversize and unsupported CAD",
+      "when": "Attempt upload or preview",
+      "then": "Configured type/size checks enforced; unsafe active content not executed; accepted download-only types labelled; no false malware-scan claim.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-059",
+      "suite": "files",
+      "requirements": [
+        "REQ-FIL-004",
+        "REQ-IAM-007"
+      ],
+      "title": "Download and Range stay private",
+      "given": "Permitted user views video/PDF then loses access",
+      "when": "Request Range, HEAD, thumbnail and direct bucket address",
+      "then": "Current authenticated requests denied after revocation; bucket not public; private responses not shared-cached.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-060",
+      "suite": "files",
+      "requirements": [
+        "REQ-FIL-005",
+        "REQ-DRW-006"
+      ],
+      "title": "Retained file cannot be purged accidentally",
+      "given": "File referenced by released drawing or issued invoice",
+      "when": "Cleanup job and ordinary delete action run",
+      "then": "Referenced object preserved; only eligible temporary upload debris removed according to documented policy.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-061",
+      "suite": "ux",
+      "requirements": [
+        "REQ-OPS-001"
+      ],
+      "title": "Online-only save failure is visible",
+      "given": "Phone loses internet while editing",
+      "when": "Attempt save then reconnect",
+      "then": "No false saved message; no background offline queue; user can retry explicitly without accidental duplicate write.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-062",
+      "suite": "ux",
+      "requirements": [
+        "REQ-OPS-001",
+        "REQ-DAS-005"
+      ],
+      "title": "Responsive accessible core flow",
+      "given": "Synthetic client and staff sessions",
+      "when": "Use keyboard and phone-sized viewport for task, drawing and invoice views",
+      "then": "Visible focus, labelled errors, readable type/contrast and reachable primary actions; no horizontal page overflow.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-063",
+      "suite": "ux",
+      "requirements": [
+        "REQ-DAS-001",
+        "REQ-PRJ-007"
+      ],
+      "title": "Empty/error/loading/forbidden states are truthful",
+      "given": "No projects, filter with no match, network failure and revoked access",
+      "when": "Open relevant screens",
+      "then": "Distinct recoverable states; no fake KPI data or misleading zero in place of forbidden/unavailable information.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-064",
+      "suite": "operations",
+      "requirements": [
+        "REQ-OPS-002"
+      ],
+      "title": "Real Worker runtime compatibility",
+      "given": "Selected pinned scaffold and local Cloudflare bindings",
+      "when": "Build/preview SSR, mutation, D1 and R2 in workerd",
+      "then": "All work without Node-only assumptions; adapter and tool versions recorded; no production credentials needed for local check.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-065",
+      "suite": "operations",
+      "requirements": [
+        "REQ-OPS-002",
+        "REQ-OPS-003"
+      ],
+      "title": "Environment and secret separation",
+      "given": "Local/staging/production configuration",
+      "when": "Run config review and bundle/log inspection",
+      "then": "Distinct bindings; no secret in client bundle, logs or repository; deploy script names environment explicitly.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-066",
+      "suite": "operations",
+      "requirements": [
+        "REQ-OPS-004",
+        "REQ-ARC-001"
+      ],
+      "title": "Restore database and files together",
+      "given": "Synthetic project with versions, invoices, receipts and archive grants",
+      "when": "Restore separate backup to isolated recovery environment",
+      "then": "Counts/checksums/links, invoice balances and authorisation reconcile; result recorded; source production not modified.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-067",
+      "suite": "operations",
+      "requirements": [
+        "REQ-OPS-004"
+      ],
+      "title": "Migration and recovery gates",
+      "given": "Seeded database and current deployment",
+      "when": "Apply next migration and exercise documented failed-release recovery",
+      "then": "Old retained data preserved; restore/forward-fix plan works; untested destructive migration never reaches production.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-068",
+      "suite": "operations",
+      "requirements": [
+        "REQ-OPS-004",
+        "REQ-OPS-003"
+      ],
+      "title": "Integration blockers remain visible",
+      "given": "WhatsApp/account policy/provider credentials missing",
+      "when": "Complete local phase and inspect readiness",
+      "then": "Local fake clearly labelled; blocker recorded; live integration remains disabled; no fabricated success evidence.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-069",
+      "suite": "operations",
+      "requirements": [
+        "REQ-IAM-003",
+        "REQ-OPS-002"
+      ],
+      "title": "Authenticated responses never cross-cache",
+      "given": "Two users with disjoint projects",
+      "when": "Repeat same routes/actions with different cookies and cache headers",
+      "then": "No response reuse discloses other user's data; static public brand assets alone use public caching.",
+      "status": "not-run"
+    },
+    {
+      "id": "AC-070",
+      "suite": "snags",
+      "requirements": [
+        "REQ-SNG-002",
+        "REQ-CHG-004"
+      ],
+      "title": "Charged snag remediation obeys the change gate",
+      "given": "A snag requires work outside the agreed scope",
+      "when": "Manager assigns remediation before change acceptance, payment or authorisation is complete",
+      "then": "Assignment may prepare the task but starting charged work is blocked until P09 commercial gates pass; existing included-scope remediation remains usable.",
+      "status": "not-run"
+    }
+  ]
+}

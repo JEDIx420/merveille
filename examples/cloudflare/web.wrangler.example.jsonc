@@ -1,0 +1,69 @@
+// DOCUMENTATION ONLY. Deliberately nonexistent entry and placeholder IDs.
+// Obtain real entry/assets configuration from the verified vinext scaffold.
+// Do not deploy this file or assume an absent binding will be safely ignored.
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "marvel-web-example-do-not-deploy",
+  "main": "./__IMPLEMENTATION_NOT_CREATED__/web-entry.ts",
+  "compatibility_date": "2026-11-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": true },
+  "env": {
+    "staging": {
+      "name": "marvel-web-staging",
+      "vars": {
+        "APP_ENV": "staging",
+        "APP_ORIGIN": "https://replace-staging-host.example.invalid",
+        "ACCESS_ISSUER": "https://replace-team.cloudflareaccess.com",
+        "ACCESS_AUDIENCE": "__REPLACE_STAGING_ACCESS_AUDIENCE__",
+        "BUSINESS_TIMEZONE": "Asia/Kolkata",
+        "WHATSAPP_MODE": "fake"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "marvel-data-staging",
+          "database_id": "__REPLACE_STAGING_D1_ID__",
+          "migrations_dir": "../../migrations"
+        }
+      ],
+      "r2_buckets": [
+        { "binding": "PROJECT_FILES", "bucket_name": "replace-marvel-files-staging" }
+      ],
+      "queues": {
+        "producers": [
+          { "binding": "JOB_QUEUE", "queue": "replace-marvel-jobs-staging" }
+        ]
+      }
+    },
+    "production": {
+      "name": "marvel-web-production",
+      "vars": {
+        "APP_ENV": "production",
+        "APP_ORIGIN": "https://replace-production-host.example.invalid",
+        "ACCESS_ISSUER": "https://replace-team.cloudflareaccess.com",
+        "ACCESS_AUDIENCE": "__REPLACE_PRODUCTION_ACCESS_AUDIENCE__",
+        "BUSINESS_TIMEZONE": "Asia/Kolkata",
+        "WHATSAPP_MODE": "fake"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "marvel-data-production",
+          "database_id": "__REPLACE_PRODUCTION_D1_ID__",
+          "migrations_dir": "../../migrations"
+        }
+      ],
+      "r2_buckets": [
+        { "binding": "PROJECT_FILES", "bucket_name": "replace-marvel-files-production" }
+      ],
+      "queues": {
+        "producers": [
+          { "binding": "JOB_QUEUE", "queue": "replace-marvel-jobs-production" }
+        ]
+      }
+    }
+  }
+}

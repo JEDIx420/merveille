@@ -1,0 +1,18 @@
+:root {
+  --marvel-canvas: #f5f2eb;
+  --marvel-surface: #fffefa;
+  --marvel-ink: #202822;
+  --marvel-muted: #5d665d;
+  --marvel-bronze: #8a6b45;
+  --marvel-bronze-text: #795c39;
+  --marvel-sage: #e2e8dc;
+  --marvel-divider: #c9cec4;
+  --marvel-control-border: #737e72;
+  --marvel-success: #356247;
+  --marvel-warning: #885f15;
+  --marvel-danger: #a73b32;
+  --marvel-font-display: "Source Serif 4", Georgia, serif;
+  --marvel-font-interface: Inter, system-ui, sans-serif;
+  --marvel-radius-control: 8px;
+  --marvel-radius-panel: 12px;
+}

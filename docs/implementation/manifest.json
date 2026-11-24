@@ -1,0 +1,251 @@
+{
+  "schemaVersion": 1,
+  "product": "Marvel",
+  "baselineDate": "2026-11-24",
+  "kind": "implementation-specification",
+  "phases": [
+    {
+      "id": "P00",
+      "title": "Runtime foundation and compatibility",
+      "file": "docs/implementation/phases/00-foundation.md",
+      "dependsOn": [],
+      "acceptance": [
+        "AC-064"
+      ]
+    },
+    {
+      "id": "P01",
+      "title": "Identity, invitations and permission foundation",
+      "file": "docs/implementation/phases/01-identity-permissions.md",
+      "dependsOn": [
+        "P00"
+      ],
+      "acceptance": [
+        "AC-001",
+        "AC-002",
+        "AC-003",
+        "AC-004",
+        "AC-005",
+        "AC-006",
+        "AC-007",
+        "AC-008"
+      ]
+    },
+    {
+      "id": "P02",
+      "title": "Client portfolios, project records and enquiry intake",
+      "file": "docs/implementation/phases/02-projects-intake.md",
+      "dependsOn": [
+        "P01"
+      ],
+      "acceptance": [
+        "AC-009",
+        "AC-011",
+        "AC-012"
+      ]
+    },
+    {
+      "id": "P03",
+      "title": "Private documents and media",
+      "file": "docs/implementation/phases/03-private-files.md",
+      "dependsOn": [
+        "P02"
+      ],
+      "acceptance": [
+        "AC-056",
+        "AC-057",
+        "AC-058",
+        "AC-059",
+        "AC-060"
+      ]
+    },
+    {
+      "id": "P04",
+      "title": "Tasks, deadlines and completion history",
+      "file": "docs/implementation/phases/04-tasks.md",
+      "dependsOn": [
+        "P02",
+        "P03"
+      ],
+      "acceptance": [
+        "AC-013",
+        "AC-014",
+        "AC-015"
+      ]
+    },
+    {
+      "id": "P05",
+      "title": "Drawing register, consultant approval and manager release",
+      "file": "docs/implementation/phases/05-drawings.md",
+      "dependsOn": [
+        "P02",
+        "P03"
+      ],
+      "acceptance": [
+        "AC-016",
+        "AC-017",
+        "AC-018",
+        "AC-019",
+        "AC-020",
+        "AC-021"
+      ]
+    },
+    {
+      "id": "P06",
+      "title": "Published updates, company notices and manual K-SMART records",
+      "file": "docs/implementation/phases/06-updates-permits.md",
+      "dependsOn": [
+        "P02",
+        "P03"
+      ],
+      "acceptance": [
+        "AC-022",
+        "AC-023",
+        "AC-024",
+        "AC-025",
+        "AC-026"
+      ]
+    },
+    {
+      "id": "P07",
+      "title": "Quotations, schedules, invoices and receipts",
+      "file": "docs/implementation/phases/07-commercial-finance.md",
+      "dependsOn": [
+        "P02",
+        "P03"
+      ],
+      "acceptance": [
+        "AC-010",
+        "AC-027",
+        "AC-028",
+        "AC-029",
+        "AC-030",
+        "AC-031",
+        "AC-032",
+        "AC-033"
+      ]
+    },
+    {
+      "id": "P08",
+      "title": "Expenses, consultant fees, payroll and profit",
+      "file": "docs/implementation/phases/08-accounting.md",
+      "dependsOn": [
+        "P07"
+      ],
+      "acceptance": [
+        "AC-034",
+        "AC-035",
+        "AC-036",
+        "AC-037",
+        "AC-038"
+      ]
+    },
+    {
+      "id": "P09",
+      "title": "References, materials and additional-work controls",
+      "file": "docs/implementation/phases/09-client-decisions-changes.md",
+      "dependsOn": [
+        "P03",
+        "P07"
+      ],
+      "acceptance": [
+        "AC-039",
+        "AC-040",
+        "AC-041",
+        "AC-042",
+        "AC-043"
+      ]
+    },
+    {
+      "id": "P10",
+      "title": "Site issue and snag tracking",
+      "file": "docs/implementation/phases/10-site-issues.md",
+      "dependsOn": [
+        "P03",
+        "P04",
+        "P09"
+      ],
+      "acceptance": [
+        "AC-044",
+        "AC-045",
+        "AC-070"
+      ]
+    },
+    {
+      "id": "P11",
+      "title": "In-portal notifications, WhatsApp and escalation",
+      "file": "docs/implementation/phases/11-notifications.md",
+      "dependsOn": [
+        "P04",
+        "P05",
+        "P06",
+        "P07",
+        "P09",
+        "P10"
+      ],
+      "acceptance": [
+        "AC-046",
+        "AC-047",
+        "AC-048",
+        "AC-049",
+        "AC-050"
+      ]
+    },
+    {
+      "id": "P12",
+      "title": "Role dashboards, waiting-on-you and owner performance",
+      "file": "docs/implementation/phases/12-overviews-performance.md",
+      "dependsOn": [
+        "P04",
+        "P05",
+        "P06",
+        "P07",
+        "P08",
+        "P09",
+        "P10",
+        "P11"
+      ],
+      "acceptance": [
+        "AC-051",
+        "AC-052",
+        "AC-053"
+      ]
+    },
+    {
+      "id": "P13",
+      "title": "Archive, audit exports and recovery",
+      "file": "docs/implementation/phases/13-archive-recovery.md",
+      "dependsOn": [
+        "P05",
+        "P06",
+        "P07",
+        "P09",
+        "P10",
+        "P11"
+      ],
+      "acceptance": [
+        "AC-054",
+        "AC-055",
+        "AC-066"
+      ]
+    },
+    {
+      "id": "P14",
+      "title": "Integrated verification, staging and launch readiness",
+      "file": "docs/implementation/phases/14-release-readiness.md",
+      "dependsOn": [
+        "P12",
+        "P13"
+      ],
+      "acceptance": [
+        "AC-061",
+        "AC-062",
+        "AC-063",
+        "AC-065",
+        "AC-067",
+        "AC-068",
+        "AC-069"
+      ]
+    }
+  ]
+}

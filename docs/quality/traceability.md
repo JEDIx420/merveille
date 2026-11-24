@@ -1,0 +1,95 @@
+# Requirement traceability
+
+This is a coverage map, not a test result. All application cases remain not run. Requirements are defined in [the requirements register](../product/requirements.md), cases in [the acceptance catalogue](acceptance.md), and phase ordering in [the roadmap](../implementation/roadmap.md).
+
+| Requirement | Acceptance cases | Build phases |
+| --- | --- | --- |
+| REQ-PRJ-001 | AC-009 | P02 |
+| REQ-PRJ-002 | AC-010 | P07 |
+| REQ-PRJ-003 | AC-011 | P02 |
+| REQ-PRJ-004 | AC-012, AC-028 | P02, P07 |
+| REQ-PRJ-005 | AC-011 | P02 |
+| REQ-PRJ-006 | AC-012 | P02 |
+| REQ-PRJ-007 | AC-002, AC-053, AC-063 | P01, P12, P14 |
+| REQ-IAM-001 | AC-001, AC-008 | P01 |
+| REQ-IAM-002 | AC-001 | P01 |
+| REQ-IAM-003 | AC-002, AC-069 | P01, P14 |
+| REQ-IAM-004 | AC-003 | P01 |
+| REQ-IAM-005 | AC-004 | P01 |
+| REQ-IAM-006 | AC-005, AC-035 | P01, P08 |
+| REQ-IAM-007 | AC-006, AC-059 | P01, P03 |
+| REQ-IAM-008 | AC-007 | P01 |
+| REQ-TSK-001 | AC-013 | P04 |
+| REQ-TSK-002 | AC-013 | P04 |
+| REQ-TSK-003 | AC-014 | P04 |
+| REQ-TSK-004 | AC-014 | P04 |
+| REQ-TSK-005 | AC-015 | P04 |
+| REQ-TSK-006 | AC-015, AC-052 | P04, P12 |
+| REQ-DRW-001 | AC-016 | P05 |
+| REQ-DRW-002 | AC-016 | P05 |
+| REQ-DRW-003 | AC-017, AC-021 | P05 |
+| REQ-DRW-004 | AC-017 | P05 |
+| REQ-DRW-005 | AC-018, AC-021 | P05 |
+| REQ-DRW-006 | AC-018, AC-060 | P03, P05 |
+| REQ-DRW-007 | AC-019 | P05 |
+| REQ-DRW-008 | AC-020 | P05 |
+| REQ-UPD-001 | AC-022 | P06 |
+| REQ-UPD-002 | AC-022 | P06 |
+| REQ-UPD-003 | AC-022 | P06 |
+| REQ-UPD-004 | AC-023 | P06 |
+| REQ-UPD-005 | AC-024 | P06 |
+| REQ-KSM-001 | AC-025 | P06 |
+| REQ-KSM-002 | AC-025 | P06 |
+| REQ-KSM-003 | AC-025 | P06 |
+| REQ-KSM-004 | AC-026 | P06 |
+| REQ-CHG-001 | AC-039 | P09 |
+| REQ-CHG-002 | AC-039 | P09 |
+| REQ-CHG-003 | AC-040 | P09 |
+| REQ-CHG-004 | AC-040, AC-070 | P09, P10 |
+| REQ-CHG-005 | AC-041 | P09 |
+| REQ-FIN-001 | AC-027 | P07 |
+| REQ-FIN-002 | AC-027, AC-028 | P07 |
+| REQ-FIN-003 | AC-029 | P07 |
+| REQ-FIN-004 | AC-030 | P07 |
+| REQ-FIN-005 | AC-031 | P07 |
+| REQ-FIN-006 | AC-032, AC-033 | P07 |
+| REQ-FIN-007 | AC-003 | P01 |
+| REQ-FIN-008 | AC-034 | P08 |
+| REQ-FIN-009 | AC-005, AC-035 | P01, P08 |
+| REQ-FIN-010 | AC-032, AC-036 | P07, P08 |
+| REQ-FIN-011 | AC-033, AC-037 | P07, P08 |
+| REQ-FIN-012 | AC-036, AC-038 | P08 |
+| REQ-FIN-013 | AC-030, AC-038 | P07, P08 |
+| REQ-MAT-001 | AC-042 | P09 |
+| REQ-MAT-002 | AC-042 | P09 |
+| REQ-MAT-003 | AC-043 | P09 |
+| REQ-MAT-004 | AC-004, AC-043 | P01, P09 |
+| REQ-SNG-001 | AC-044 | P10 |
+| REQ-SNG-002 | AC-044, AC-070 | P10 |
+| REQ-SNG-003 | AC-044 | P10 |
+| REQ-SNG-004 | AC-045 | P10 |
+| REQ-ARC-001 | AC-054, AC-066 | P13 |
+| REQ-ARC-002 | AC-054 | P13 |
+| REQ-ARC-003 | AC-055 | P13 |
+| REQ-ARC-004 | AC-006, AC-054 | P01, P13 |
+| REQ-ARC-005 | AC-055 | P13 |
+| REQ-NOT-001 | AC-046 | P11 |
+| REQ-NOT-002 | AC-047 | P11 |
+| REQ-NOT-003 | AC-046 | P11 |
+| REQ-NOT-004 | AC-048, AC-050 | P11 |
+| REQ-NOT-005 | AC-049 | P11 |
+| REQ-NOT-006 | AC-047 | P11 |
+| REQ-DAS-001 | AC-051, AC-063 | P12, P14 |
+| REQ-DAS-002 | AC-005, AC-052 | P01, P12 |
+| REQ-DAS-003 | AC-051 | P12 |
+| REQ-DAS-004 | AC-052 | P12 |
+| REQ-DAS-005 | AC-053, AC-062 | P12, P14 |
+| REQ-FIL-001 | AC-056, AC-058 | P03 |
+| REQ-FIL-002 | AC-057 | P03 |
+| REQ-FIL-003 | AC-056, AC-058 | P03 |
+| REQ-FIL-004 | AC-020, AC-057, AC-059 | P03, P05 |
+| REQ-FIL-005 | AC-060 | P03 |
+| REQ-OPS-001 | AC-061, AC-062 | P14 |
+| REQ-OPS-002 | AC-008, AC-064, AC-065, AC-069 | P00, P01, P14 |
+| REQ-OPS-003 | AC-007, AC-021, AC-050, AC-065, AC-068 | P01, P05, P11, P14 |
+| REQ-OPS-004 | AC-066, AC-067, AC-068 | P13, P14 |

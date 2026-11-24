@@ -1,0 +1,76 @@
+// DOCUMENTATION ONLY. No jobs code, queues or routes exist yet.
+// No secrets here. Cron remains disabled until the staged worker is verified.
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "marvel-jobs-example-do-not-deploy",
+  "main": "./__IMPLEMENTATION_NOT_CREATED__/jobs-entry.ts",
+  "compatibility_date": "2026-11-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": true },
+  "env": {
+    "staging": {
+      "name": "marvel-jobs-staging",
+      "vars": {
+        "APP_ENV": "staging",
+        "APP_ORIGIN": "https://replace-staging-host.example.invalid",
+        "BUSINESS_TIMEZONE": "Asia/Kolkata",
+        "WHATSAPP_MODE": "fake"
+      },
+      "triggers": { "crons": [] },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "marvel-data-staging",
+          "database_id": "__REPLACE_STAGING_D1_ID__"
+        }
+      ],
+      "queues": {
+        "producers": [
+          { "binding": "JOB_QUEUE", "queue": "replace-marvel-jobs-staging" }
+        ],
+        "consumers": [
+          {
+            "queue": "replace-marvel-jobs-staging",
+            "max_batch_size": 5,
+            "max_batch_timeout": 5,
+            "max_retries": 3,
+            "dead_letter_queue": "replace-marvel-jobs-dead-staging"
+          }
+        ]
+      }
+    },
+    "production": {
+      "name": "marvel-jobs-production",
+      "vars": {
+        "APP_ENV": "production",
+        "APP_ORIGIN": "https://replace-production-host.example.invalid",
+        "BUSINESS_TIMEZONE": "Asia/Kolkata",
+        "WHATSAPP_MODE": "fake"
+      },
+      "triggers": { "crons": [] },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "marvel-data-production",
+          "database_id": "__REPLACE_PRODUCTION_D1_ID__"
+        }
+      ],
+      "queues": {
+        "producers": [
+          { "binding": "JOB_QUEUE", "queue": "replace-marvel-jobs-production" }
+        ],
+        "consumers": [
+          {
+            "queue": "replace-marvel-jobs-production",
+            "max_batch_size": 5,
+            "max_batch_timeout": 5,
+            "max_retries": 3,
+            "dead_letter_queue": "replace-marvel-jobs-dead-production"
+          }
+        ]
+      }
+    }
+  }
+}
