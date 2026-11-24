@@ -225,6 +225,8 @@ await page.route("**/api/**", async (route) => {
           ? {
               ...principal,
               role: "MAIN_CLIENT",
+              roles: [],
+              intakeAccess: false,
               name: "Review client",
               projectMemberships: [
                 {
@@ -463,6 +465,7 @@ for (const size of process.env.BROWSER_SCOPE === "actions"
   mode = "client";
   await visit(base + "/projects/prj_review/overview");
   await page.waitForTimeout(100);
+  results.push({case:"external client navigation",width:size.width,healthyView:await page.getByRole("link",{name:"Enquiries",exact:true}).count()===0});
   await page.screenshot({
     path: `${out}/client-home-${size.width}.png`,
     fullPage: true,

@@ -37,6 +37,13 @@ export async function validateAccessJwt(
       clockTolerance: 30,
     });
     if (
+      typeof payload.iat !== "number" ||
+      payload.iat > Math.floor(Date.now() / 1000) + 30 ||
+      typeof payload.exp !== "number" ||
+      payload.exp <= payload.iat
+    )
+      throw new Error("Invalid identity issue time.");
+    if (
       payload.type !== "app" ||
       typeof payload.email !== "string" ||
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email) ||

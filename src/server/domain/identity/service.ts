@@ -682,7 +682,7 @@ export async function listPeople(actor: UserPrincipal, db: D1Database) {
       ).map((r) => r.role),
       accessHistory: await query<any>(
         db,
-        `SELECT a.action,a.reason,a.created_at,a.old_state,a.new_state,COALESCE(u.display_name,'Infrastructure operator') AS actor_name FROM audit_events a LEFT JOIN users u ON u.id=a.actor_id WHERE a.org_id=? AND a.entity_type='USER' AND a.entity_id=? AND a.action IN ('GRANTS_CHANGED','USER_DISABLED','IDENTITY_RECOVERED','MAIN_CLIENT_REASSIGNED') ORDER BY a.created_at DESC LIMIT 50`,
+        `SELECT a.action,a.reason,a.created_at,a.old_state,a.new_state,COALESCE(u.display_name,'Infrastructure operator') AS actor_name FROM audit_events a LEFT JOIN users u ON u.id=a.actor_id WHERE a.org_id=? AND a.entity_type='USER' AND a.entity_id=? AND a.action IN ('GRANTS_CHANGED','USER_DISABLED','IDENTITY_RECOVERED','IDENTITY_LINKED','MAIN_CLIENT_REASSIGNED') ORDER BY a.created_at DESC LIMIT 50`,
         [actor.orgId, u.id],
       ),
       projects: await query<any>(

@@ -11,7 +11,7 @@ const input = JSON.parse(await fs.readFile(inputFile, "utf8"));
 if (
   !input.reason?.trim() ||
   !input.userId ||
-  !input.expectedOldSubject ||
+  (!input.expectedOldSubject && input.linkUnbound !== true) ||
   !/^https:\/\/[a-z0-9-]+\.cloudflareaccess\.com$/.test(input.issuer) ||
   !input.audience
 )
@@ -33,14 +33,15 @@ if (
   !payload.sub ||
   String(payload.email).toLowerCase().trim() !==
     input.email?.toLowerCase().trim() ||
-  Date.now() / 1000 - Number(payload.iat) > 900
+  Date.now() / 1000 - Number(payload.iat) > 900 ||
+  Number(payload.iat) > Date.now() / 1000 + 30
 )
   throw new Error(
     "A fresh exact-account verified Google/Access identity is required.",
   );
 const q = (v) => `'${String(v).replaceAll("'", "''")}'`;
 // The migration trigger updates only an explicitly operator-verified binding, atomically with audit.
-const statement = `INSERT INTO identity_recovery_requests(id,user_id,issuer,old_subject,new_subject,email,reason,created_at) VALUES(${q(crypto.randomUUID())},${q(input.userId)},${q(input.issuer)},${q(input.expectedOldSubject)},${q(payload.sub)},${q(input.email.toLowerCase().trim())},${q(input.reason)},${Date.now()});`;
+const statement = `INSERT INTO identity_recovery_requests(id,user_id,issuer,old_subject,new_subject,email,reason,created_at) VALUES(${q(crypto.randomUUID())},${q(input.userId)},${q(input.issuer)},${q(input.linkUnbound === true ? "" : input.expectedOldSubject)},${q(payload.sub)},${q(input.email.toLowerCase().trim())},${q(input.reason)},${Date.now()});`;
 await fs.mkdir(".private", { recursive: true, mode: 0o700 });
 const file = ".private/recovery.sql";
 await fs.writeFile(file, statement, { mode: 0o600 });
