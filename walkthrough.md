@@ -37,8 +37,18 @@ The confirmed company identity, brand assets in `assets/brand/`, and tokens are 
     - Accidental purge protection for retained legal records and drawings, plus orphan session debris cleanup (AC-060).
   - Built SCR-09 Document Manager UI (`/projects/:id/documents`) with chunk progress bar, honest CAD download-only treatment, and clear security policy statement.
   - Evidence: [docs/evidence/phase-03.md](docs/evidence/phase-03.md).
-- **P04 — Tasks, deadlines and completion history:** Commencing next.
-- **P04–P14:** Pending dependency order.
+- **P04 — Tasks, deadlines and completion history:** **COMPLETED & VERIFIED (AC-013–AC-015)**
+  - Applied D1 migration `0004_tasks_and_deadlines.sql` containing tasks, task events, and task comments.
+  - Implemented task domain service `src/server/domain/tasks/service.ts`:
+    - Staff task creation with initial `PENDING_ASSIGNMENT` status (AC-013).
+    - Manager-only assignment and deadline authority, retaining prior values and reasons (AC-013).
+    - Staff completion and manager-only reopening with structured category logging (`CORRECTION_DEFECT`, `CLIENT_SCOPE_CHANGE`, `EXTERNAL_DEPENDENCY`, `ADMINISTRATIVE`) (AC-014).
+    - Accurate overdue computation using current open status and effective due dates (AC-014).
+    - Strict internal confidentiality denying clients and consultants access to tasks, discussions, and internal notes (AC-015).
+  - Built SCR-07 Task Manager UI (`/projects/:id/tasks`) with status filters, priority badges, visual overdue indicators, and manager action modals.
+  - Evidence: [docs/evidence/phase-04.md](docs/evidence/phase-04.md).
+- **P05 — Drawing register, consultant approval and manager release:** Commencing next.
+- **P05–P14:** Pending dependency order.
 
 ## Verification Commands
 
