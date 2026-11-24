@@ -1,6 +1,6 @@
 # Merveille Designs — current task state
 
-Updated 24 November 2026. The application foundation exists on `implement/merveille-portal`. The current assignment is [remediation](docs/remediation/README.md), based on audited source `813ef8b765045b95ff713665a3217e4487491d75`. This session implements remediation locally; hosted setup and team acceptance remain separate gates.
+Updated 24 November 2026. The application foundation exists on `implement/merveille-portal`. The current assignment is [remediation](docs/remediation/README.md), based on audited source `813ef8b765045b95ff713665a3217e4487491d75`. Remediation is locally verified; isolated staging provisioning is underway and real-account acceptance remains a separate gate.
 
 ## Active stages
 
@@ -18,14 +18,14 @@ Dependencies and exact contracts: [active manifest](docs/remediation/manifest.js
 ## Current checkpoint
 
 - Application source commit: `7e08db6` on `implement/merveille-portal`. Existing Next/OpenNext/Cloudflare/Wrangler foundation and logo preserved. Earlier commits contain real identity, money/file/state repair, durable jobs and shared neutral UI.
-- Current work: R00–R04 implemented and locally verified; R05 technical handoff prepared. Hosted and real-person gates remain blocked. Source is frozen; evidence/progress documents are finalized.
+- Current work: R00–R04 implemented and locally verified; R05 technical handoff prepared. Isolated staging is uploaded with ingress disabled; Google/Access and real-person gates remain blocked.
 - Actual checks: typecheck passed; 105 tests across 21 files passed; optimized Workers build passed; nine isolated workerd identity/concurrency/rollback/recovery checks passed through migration 0020; 11 actual private HTTP/CSRF/diagnostic/cache checks passed; generated binding check and jobs dry run passed; dependency audit reports zero advisories; documentation checker passes. See [session evidence](docs/evidence/remediation/session.md).
 - Browser: final built frontend passed 112 recorded checks covering all 29 pages at 1440×900, 1024×768 and 390×844, pure external-client navigation, 13 focused interactions/failures and setup states; no overflow/JavaScript errors. Reference screenshots were inspected. Tests use fictional browser-only API fixtures; actual Google/hosted business journeys remain unverified.
-- Next exact action: configure the authorized protected review environment and Google/Access app/IdP, then have the coding operator apply reviewed migrations/build, prepare the private bootstrap and run the real-account browser walkthrough. Do not reintroduce demo auth or repeat finished local discovery.
-- Hosted state: old preview remains unmodified, not accepted for real-user testing. Read-only account inspection found zero Access applications/identity providers; organization lookup returned 403 despite existing Wrangler deployment authentication.
+- Next exact action: receive the actual Zero Trust team domain, dashboard-tested Google provider and private Access setup token per the real-account handoff; create exact-email Google protection, verify it, activate staging ingress, then bootstrap Jay and run hosted/UAT checks.
+- Hosted state: new isolated staging Worker version `9837f799-b94b-4912-a92c-79238d14e019` uploaded; workers.dev/previews disabled, no routes, private R2 public domain disabled. New APAC staging D1 has all 20 migrations and zero reconciliation errors. Old preview unchanged.
 - Private input: Jay's exact supplied Google email is in ignored protected setup data, absent from public source/evidence. No initial hosted administrator or extra capability was silently granted.
 - External gates: Google OAuth/Access team/app/audience/exact-email policies, authorized protected review hostname/resources, hosted Queue/provider checks, remote restore and real-person UAT. These block hosted acceptance and release, not the completed independent local implementation. Use the [real-account handoff](docs/operations/real-account-handoff.md).
-- No remote migration, deployment, policy change, account setup or WhatsApp send was performed. P00–P14 historical release claims remain superseded. Legacy acceptance cases remain not-run until their complete scenarios are observed.
+- Authorized isolated remote staging resources, migrations and dark Worker upload completed. No Access policy, Google account setup, bootstrap or WhatsApp send performed. P00–P14 historical release claims remain superseded. Legacy acceptance cases remain not-run until their complete scenarios are observed.
 
 ## Historical P00–P14 implementation records
 

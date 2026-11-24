@@ -4,15 +4,25 @@ The coding agent owns migration/build/regression commands. Jay and the pilot tea
 
 ## Current environment
 
-The existing hosted URL is the previous, unremediated preview. This work has not changed its code, records, identities, or policy. It is **not** the review deployment for this remediation. Local Workers/browser evidence is recorded separately in the [remediation checkpoint](../evidence/remediation/session.md).
+Staging deployment is explicitly authorized for R05. The operator created an isolated APAC D1 database (`merveille-data-staging`) and private R2 bucket (`merveille-files-staging`), and applied all 20 migrations. The remote reconciliation view reports zero errors. Existing preview/production resources were not modified.
 
-A read-only Cloudflare API inspection during this session returned zero Access applications and zero identity providers in the authenticated account. The organization endpoint returned 403. Existing Wrangler deployment authentication is present, but Google OAuth, the Access team/application/audience and review-host ingress protection are not configured or verified. No provider was silently substituted.
+The proposed review origin is `https://merveille-web-staging.rhelo-bible.workers.dev`. Staging ingress and preview URLs stay disabled until Google/Access protection is configured and verified. This is not yet a usable team-testing URL. Issuer/audience are deliberately empty pending actual provider values.
 
-Jay's supplied exact Google email is held only in ignored, mode-0600 local setup data. No real identity/address or token is included in this document. Initial bootstrap grants ADMIN only; OWNER, project MANAGER and finance author/issue permissions require separate deliberate grants.
+Current Wrangler OAuth has Workers/D1/R2 capability but no Access management scope. Access apps and identity providers each return zero entries; organization lookup returns 403. This does not establish whether a Zero Trust organization already exists.
+
+Jay's exact Google email is held only in ignored, mode-0600 local setup data. Initial bootstrap grants ADMIN only. No hosted bootstrap has run.
+
+## Exact account-owner inputs
+
+1. Finish Cloudflare Zero Trust onboarding if needed and supply the actual team domain.
+2. Create a Google OAuth Web client using the team domain as JavaScript origin and `https://<team>.cloudflareaccess.com/cdn-cgi/access/callback` as redirect. Use External audience and identity/profile scopes only. In Google Testing mode add the pilot accounts as test users. Add the client under Zero Trust → Integrations → Identity providers → Google and run Test. Keep its client secret in the dashboard; no secret is needed in chat.
+3. Create a short-lived API token scoped only to the connected Cloudflare account, with **Access: Apps and Policies Write**, **Access: Organizations Read**, and **Access: Identity Providers Read** (the dashboard may label Write as Edit). Save its value as `apiToken` and the team URL as `teamDomain` in ignored `.private/access-setup.json` (already created mode 0600). Do not paste the token in chat. This permits the operator to create the dedicated exact-email Google app/policy; the narrower app-policy reconciliation token is stored as a platform secret only if configured.
+
+After these inputs the coding operator handles app/policy creation, actual issuer/audience, protection verification, staging ingress activation, bootstrap and hosted checks. Jay then opens the private bootstrap link and invites colleagues through People & access. No tester email list is required in public documentation.
 
 ## Setup the operator must complete
 
-1. Select and authorize an isolated review environment, canonical HTTPS hostname, D1 database and private R2 bucket. Keep the existing production records intact. Configure the named Wrangler environment with real resource IDs and the exact `APP_ORIGIN`; never deploy placeholder IDs or the local default to a hosted target.
+1. Use the authorized isolated staging resources and proposed canonical HTTPS hostname above. Keep the existing production records intact. Configure the named Wrangler environment with real resource IDs and the exact `APP_ORIGIN`; never deploy placeholder IDs or the local default to a hosted target.
 2. Set up Google through Cloudflare Access using [Cloudflare's personal Google account instructions](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/google/). Gmail and Workspace addresses work. Use identity/profile scopes only; no Gmail/mailbox access. Store Google client secrets in the provider dashboard, not Git or chat. Register the actual team origin and callback `https://<team>.cloudflareaccess.com/cdn-cgi/access/callback`.
 3. Protect **every** review ingress/hostname with the selected Google provider and exact invited emails; no domain-wide/everyone/bypass policies. Keep workers.dev/version URLs disabled unless explicitly protected. Configure issuer and audience. JWT verification fetches only that trusted issuer's JWKS and checks RS256 signature, human subject/email, issuer, audience and time claims.
 4. Provision a dedicated exact-email Access policy for the app. Configure the optional narrowly scoped reconciliation credential in platform secret storage (`ACCESS_API_TOKEN`), plus account/app/policy/Google-IdP IDs. Scheduled reconciliation updates that dedicated policy, retains pending errors and never treats D1 writes as edge provisioning. An operator may instead confirm the exact-email admission manually; the invitation remains “Awaiting access setup” until confirmed. Application revocation is immediate even if edge synchronization fails. Operator session revocation remains part of the provider procedure.
@@ -50,4 +60,4 @@ For changed Access subjects, use `scripts/recover-identity.mjs` only with authen
 
 ## Release gate
 
-Hosted Google onboarding, second-admin delegation, all distinct real-role passes, hosted Queue/provider delivery, remote restore and explicit deployment approval remain **blocked/pending**, not passed. Local implementation and tests are evidence for their stated scope only.
+Hosted Google onboarding, second-admin delegation, all distinct real-role passes, hosted Queue/provider delivery, remote restore remain **blocked/pending**, not passed. Local implementation and tests are evidence for their stated scope only.

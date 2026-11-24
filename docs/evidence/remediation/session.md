@@ -51,3 +51,15 @@ Read-only inspection confirmed Wrangler infrastructure authentication, zero Acce
 Jay's exact supplied Google address is held only in ignored, protected private setup data. Initial bootstrap is ADMIN-only and has not been executed against a hosted environment. Google OAuth/Access team/app/audience/exact-email policies, protected authorized review ingress, named environment resources, hosted Queue/provider checks, remote restore and real-person UAT remain blocked/pending.
 
 Next: configure the approved Google/Access review environment, then let the coding operator apply reviewed migrations/build, prepare bootstrap, and run the real-account walkthrough with Jay and the pilot team. All setup/operational commands are in the handoff; the team is not asked to use a terminal. Production readiness is not claimed.
+
+## R05 staging provisioning — 24 November 2026
+
+User explicitly authorized isolated protected staging and Google Access setup. Source artifact remains application source `7e08db6` (documentation baseline `21ec699`).
+
+- Created APAC `merveille-data-staging`, ID `55b52363-a87e-4b4f-a551-607ad26c6b20`, and private `merveille-files-staging`; existing resources untouched.
+- `npx wrangler d1 migrations apply DB --remote --env staging`: PASS, all 20 migrations applied to the new empty database. Read-only query: 20 migration records, zero `financial_reconciliation_errors`.
+- `npx wrangler deploy --env staging --dry-run`: PASS for isolated bindings. `npx wrangler deploy --env staging`: uploaded Worker version `9837f799-b94b-4912-a92c-79238d14e019`, no targets deployed. Issuer/audience empty: fail closed pending actual configuration.
+- API verification: Worker subdomain `enabled:false, previews_enabled:false`; Worker routes empty; R2 managed public domain `enabled:false`. Anonymous proposed origin returned 404. These prove disabled ingress, not working Access protection.
+- `npm run types:bindings` and `npm run typecheck`: PASS. No application behavior changed; previous local tests not represented as rerun.
+- Read-only account inspection: zero Access apps/IdPs, organization 403; Wrangler OAuth scope inventory has no Access write permission. Need actual Zero Trust domain, dashboard-tested Google provider, short-lived account-scoped Access setup token. Exact private instructions in real-account handoff.
+- No bootstrap, Access policy, real-person login, provider send, production mutation or team UAT performed. Staging is uploaded but unavailable to testers until protection is configured and verified. R05 hosted/team gates remain blocked.
