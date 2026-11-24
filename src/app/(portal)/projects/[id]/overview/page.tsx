@@ -257,7 +257,15 @@ export default function ProjectOverviewPage({
         </div>
 
         {/* Manager Actions Bar */}
-        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
+          <a
+            href={`/projects/${projectId}/documents`}
+            className="btn-secondary"
+            style={{ textDecoration: "none" }}
+          >
+            Documents & Media
+          </a>
+
           {project.status === "DRAFT" && (
             <button
               onClick={handleActivate}

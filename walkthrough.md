@@ -27,8 +27,18 @@ The confirmed company identity, brand assets in `assets/brand/`, and tokens are 
   - Implemented project lifecycle services: `listProjects` (multi-project client visibility and representative isolation, AC-011), `getProject`, `activateProject` (guarded manager command requiring accepted quote AND confirmed advance receipt, AC-010), `updateProjectStage` (optimistic concurrency and auto-advancement, AC-012), `pauseProject` and `resumeProject` with mandatory reason and audit logging.
   - Built UI screens: `/projects` (SCR-03 projects directory with stage filter and status badges), `/projects/:id/overview` (SCR-05 overview, commercial gate indicators, guarded activation, pause/resume modals, stage timeline), `/enquiries` (SCR-04 pipeline), `/enquiries/new` (intake form), `/enquiries/:id` (detail, feasibility study form, convert/close modals).
   - Evidence: [docs/evidence/phase-02.md](docs/evidence/phase-02.md).
-- **P03 — Private documents and media:** Commencing next.
-- **P03–P14:** Pending dependency order.
+- **P03 — Private documents and media:** **COMPLETED & VERIFIED (AC-056–AC-060)**
+  - Applied D1 migration `0003_files_and_media.sql` containing files metadata, upload sessions, and multipart parts tracking.
+  - Implemented private storage service `src/server/files/service.ts`:
+    - Strict validation: enforced size ceilings (25MB image, 100MB PDF, 250MB CAD, 1GB video, 50MB document) and rejection of active HTML/executable extensions (AC-058).
+    - Server-assigned immutable keys (`org/.../original`) preventing client key tampering or audience manipulation (AC-057).
+    - Bounded multipart upload with streaming chunks and safe online retries (AC-056).
+    - Current-authorization download gate on every request with private non-cacheable headers and HTTP 206 Range streaming (AC-059).
+    - Accidental purge protection for retained legal records and drawings, plus orphan session debris cleanup (AC-060).
+  - Built SCR-09 Document Manager UI (`/projects/:id/documents`) with chunk progress bar, honest CAD download-only treatment, and clear security policy statement.
+  - Evidence: [docs/evidence/phase-03.md](docs/evidence/phase-03.md).
+- **P04 — Tasks, deadlines and completion history:** Commencing next.
+- **P04–P14:** Pending dependency order.
 
 ## Verification Commands
 
