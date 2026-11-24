@@ -424,3 +424,6 @@
   font-size: 14px;
   font-weight: 500;
 }
+/* Long architectural filenames must not push the download control out of view. */
+.previewToolbar strong { min-width: 0; overflow-wrap: anywhere; }
+.previewToolbar > a { flex-shrink: 0; }

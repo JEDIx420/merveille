@@ -83,7 +83,8 @@ const waiting = [
 let mode = "manager",
   fail = false,
   interrupt = false,
-  failSettlementOnce = false;
+  failSettlementOnce = false,
+  longFilename=false;
 const page = await browser.newPage();
 async function visit(url) {
   try {
@@ -341,7 +342,7 @@ await page.route("**/api/**", async (route) => {
           version_label: "C",
           status: "CONSULTANT_APPROVED",
           file_id: "file_review",
-          file_name: "Ground-floor-plan.svg",
+          file_name: longFilename?"CourtyardHouseGroundFloorPlanRevisionCFullSizeApprovedIssuedForConstruction20261124.svg":"Ground-floor-plan.svg",
           mime_type: "image/svg+xml",
           created_at: 1795521600000,
           author_name: "Design team",
@@ -664,6 +665,14 @@ results.push({
       .getByRole("button", { name: "Open navigation", exact: true })
       .getAttribute("aria-expanded")) === "false",
 });
+longFilename=true;
+await visit(base+'/projects/prj_review/drawings');
+await page.getByRole('button',{name:'Open drawing',exact:true}).click();
+await page.getByText('CourtyardHouseGroundFloorPlanRevisionCFullSizeApprovedIssuedForConstruction20261124.svg',{exact:true}).waitFor();
+const downloadContained=await page.getByRole('link',{name:'Download',exact:true}).evaluate(el=>{const rect=el.getBoundingClientRect();return rect.left>=0&&rect.right<=innerWidth});
+results.push({case:'long drawing filename keeps download reachable',visible:downloadContained,overflow:await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1)});
+await page.screenshot({path:out+'/drawing-long-name-390.png',fullPage:true});
+longFilename=false;
 fail = true;
 await visit(base + "/overview");
 await page
