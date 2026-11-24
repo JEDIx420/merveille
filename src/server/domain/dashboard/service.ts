@@ -1194,6 +1194,13 @@ export class DashboardService {
         }
       }
 
+      const received = await db
+        .prepare(
+          "SELECT COALESCE(SUM(amount_minor),0) AS amount FROM receipts WHERE org_id=? AND project_id=? AND status='CONFIRMED'",
+        )
+        .bind(principal.orgId, projectId)
+        .first<any>();
+      totalPaidMinor = received?.amount ?? 0;
       billingSummary = {
         nextDueInvoice,
         totalInvoicedMinor,

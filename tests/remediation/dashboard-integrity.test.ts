@@ -27,6 +27,12 @@ it("dashboard totals include confirmed unallocated advances and exclude another 
   const result = await DashboardService.getRoleOverview(db, p, p.orgId);
   expect(result.firmFinance.totalReceivedMinor).toBe(500);
   expect(result.firmFinance.totalInvoicedMinor).toBe(0);
+  const clientHome = await DashboardService.getClientProjectOverview(
+    db,
+    p,
+    "own",
+  );
+  expect(clientHome.billingSummary?.totalPaidMinor).toBe(500);
   expect(
     result.waitingItems.some((i) => i.entityId === "foreign-receipt"),
   ).toBe(false);
