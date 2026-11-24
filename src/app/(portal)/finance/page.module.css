@@ -40,7 +40,7 @@
 .block9 {
   display: flex;
   gap: 1rem;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--ui-divider);
   margin-bottom: 1.5rem;
 }
 .block10 {
@@ -83,9 +83,9 @@
 }
 .block16 {
   padding: 1.25rem;
-  background-color: var(--color-surface);
+  background-color: var(--ui-surface);
   border-radius: 8px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--ui-divider);
 }
 .block17 {
   font-size: 0.8125rem;
@@ -100,9 +100,9 @@
 }
 .block19 {
   padding: 1.25rem;
-  background-color: var(--color-surface);
+  background-color: var(--ui-surface);
   border-radius: 8px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--ui-divider);
 }
 .block20 {
   font-size: 0.8125rem;
@@ -118,9 +118,9 @@
 }
 .block22 {
   padding: 1.25rem;
-  background-color: var(--color-surface);
+  background-color: var(--ui-surface);
   border-radius: 8px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--ui-divider);
 }
 .block23 {
   font-size: 0.8125rem;
@@ -135,9 +135,9 @@
 }
 .block25 {
   padding: 1.25rem;
-  background-color: var(--color-surface);
+  background-color: var(--ui-surface);
   border-radius: 8px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--ui-divider);
 }
 .block26 {
   font-size: 0.8125rem;
@@ -193,9 +193,9 @@
 }
 .block35 {
   padding: 1.25rem;
-  background-color: var(--color-surface);
+  background-color: var(--ui-surface);
   border-radius: 8px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--ui-divider);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -249,9 +249,9 @@
 }
 .block45 {
   padding: 1.25rem;
-  background-color: var(--color-surface);
+  background-color: var(--ui-surface);
   border-radius: 8px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--ui-divider);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -312,9 +312,9 @@
 }
 .block56 {
   padding: 1.25rem;
-  background-color: var(--color-surface);
+  background-color: var(--ui-surface);
   border-radius: 8px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--ui-divider);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -336,4 +336,14 @@
   font-weight: 700;
   font-size: 1.125rem;
   color: var(--ui-text);
+}
+
+/* Keep section filters inside their own scroll area on narrow screens. */
+.block9 {
+  overflow-x: auto;
+  max-width: 100%;
+  min-width: 0;
+}
+.block9 > button {
+  flex-shrink: 0;
 }

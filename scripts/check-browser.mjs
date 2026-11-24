@@ -82,7 +82,8 @@ const waiting = [
 ];
 let mode = "manager",
   fail = false,
-  interrupt = false;
+  interrupt = false,
+  failSettlementOnce = false;
 const page = await browser.newPage();
 async function visit(url) {
   try {
@@ -107,6 +108,16 @@ await page.route("**/api/**", async (route) => {
   if (route.request().method() === "POST") {
     const payload = route.request().postDataJSON();
     actions.push({ path: url.pathname, payload });
+    if (payload.action === "REPORT" && failSettlementOnce) {
+      failSettlementOnce = false;
+      return route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: "The payment could not be recorded. Try again.",
+        }),
+      });
+    }
     return route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
@@ -146,6 +157,25 @@ await page.route("**/api/**", async (route) => {
           },
         ],
         createdAt: 1795521600000,
+        accessHistory: [
+          {
+            id: "audit_fixture",
+            action: "GRANTS_UPDATED",
+            actor_name: "Fictional administrator",
+            reason: "Assigned to the fictional review project",
+            created_at: 1795521600000,
+            new_state: JSON.stringify({
+              roles: [],
+              projects: [
+                {
+                  projectId: project.id,
+                  roles: ["MANAGER"],
+                  financeAccess: true,
+                },
+              ],
+            }),
+          },
+        ],
       },
     ],
     invitations: [],
@@ -181,30 +211,29 @@ await page.route("**/api/**", async (route) => {
     });
   if (url.pathname === "/api/session")
     d = {
-      principal:
-        ["admin","archive-admin"].includes(mode)
+      principal: ["admin", "archive-admin"].includes(mode)
+        ? {
+            ...principal,
+            roles: ["ADMIN"],
+            role: "ADMIN",
+            name: "Review administrator",
+            authenticatedAt: Date.now(),
+          }
+        : mode === "client"
           ? {
               ...principal,
-              roles: ["ADMIN"],
-              role: "ADMIN",
-              name: "Review administrator",
-              authenticatedAt: Date.now(),
+              role: "MAIN_CLIENT",
+              name: "Review client",
+              projectMemberships: [
+                {
+                  projectId: project.id,
+                  projectRole: "MAIN_CLIENT",
+                  roles: ["MAIN_CLIENT"],
+                  contractualAuthority: true,
+                },
+              ],
             }
-          : mode === "client"
-            ? {
-                ...principal,
-                role: "MAIN_CLIENT",
-                name: "Review client",
-                projectMemberships: [
-                  {
-                    projectId: project.id,
-                    projectRole: "MAIN_CLIENT",
-                    roles: ["MAIN_CLIENT"],
-                    contractualAuthority: true,
-                  },
-                ],
-              }
-            : principal,
+          : principal,
     };
   if (url.pathname === "/api/dashboard/overview")
     d = {
@@ -215,11 +244,40 @@ await page.route("**/api/**", async (route) => {
     };
   if (url.pathname === "/api/dashboard/waiting") d = { items: waiting };
   if (url.pathname === "/api/projects/prj_review")
-    d = { project:mode==='archive-admin'?{...project,is_archived:1,status:'ARCHIVED'}:project, stages: [], members: [], events: [] };
-  if(mode==='archive-admin'&&url.pathname.endsWith('/finance/invoices'))d={invoices:[{id:'invoice_existing',invoice_number:'MD-TEST-01',status:'ISSUED',outstanding_minor:250000,allocated_minor:0,total_minor:250000,current_version_number:1,versions:[]}]};
+    d = {
+      project:
+        mode === "archive-admin"
+          ? { ...project, is_archived: 1, status: "ARCHIVED" }
+          : project,
+      stages: [],
+      members: [],
+      events: [],
+    };
+  if (mode === "archive-admin" && url.pathname.endsWith("/finance/invoices"))
+    d = {
+      invoices: [
+        {
+          id: "invoice_existing",
+          invoice_number: "MD-TEST-01",
+          status: "ISSUED",
+          outstanding_minor: 250000,
+          allocated_minor: 0,
+          total_minor: 250000,
+          current_version_number: 1,
+          versions: [],
+        },
+      ],
+    };
   if (url.pathname.endsWith("/client-overview"))
     d = {
-      project: { ...project, currentStageName: "Design development",nextMilestone:{name:'Finish sample review',targetDate:'2026-11-28'} },
+      project: {
+        ...project,
+        currentStageName: "Design development",
+        nextMilestone: {
+          name: "Finish sample review",
+          targetDate: "2026-11-28",
+        },
+      },
       publishedUpdates: [
         {
           id: "update_review",
@@ -349,7 +407,11 @@ for (const size of process.env.BROWSER_SCOPE === "actions"
     "/",
     "/access-denied",
     "/missing-route",
-  ]) {
+  ].filter(
+    (path) =>
+      !process.env.BROWSER_ROUTES ||
+      process.env.BROWSER_ROUTES.split(",").includes(path),
+  )) {
     await visit(base + path);
     await page.waitForTimeout(100);
     console.log(size.width, path);
@@ -436,6 +498,23 @@ for (const size of process.env.BROWSER_SCOPE === "actions"
 }
 await page.setViewportSize({ width: 1440, height: 900 });
 mode = "admin";
+await visit(base + "/people/review_manager");
+await page
+  .getByRole("heading", { name: "Access history", exact: true })
+  .waitFor();
+await page
+  .getByText("Assigned to the fictional review project", { exact: true })
+  .waitFor();
+results.push({
+  case: "administrator access history",
+  visible: await page
+    .getByText("Assigned to the fictional review project", { exact: true })
+    .isVisible(),
+});
+await page.screenshot({
+  path: out + "/access-history-desktop.png",
+  fullPage: true,
+});
 await visit(base + "/people");
 await page.getByRole("button", { name: "Invite person", exact: true }).click();
 await page
@@ -464,19 +543,63 @@ results.push({
     invitation.payload.projects.length === 0 &&
     invitation.payload.confirmElevation === true,
 });
-mode='archive-admin';
-await visit(base+'/projects/prj_review/finance');
-await page.getByRole('button',{name:/Receipts & Payments/}).click();
-await page.getByRole('button',{name:/Record settlement payment/}).click();
-await page.getByLabel('Existing outstanding invoice',{exact:true}).selectOption('invoice_existing');
-await page.getByLabel('Date received',{exact:true}).fill('2026-11-24');
-await page.getByLabel('Amount Paid (₹)',{exact:true}).fill('100.00');
-await page.getByLabel('UTR / Bank Reference Note',{exact:true}).fill('FICTIONAL-TRANSFER-REFERENCE');
-await page.getByRole('button',{name:'Submit Report',exact:true}).click();
-await page.getByRole('dialog').waitFor({state:'hidden'});
-const settlement=actions.find(a=>a.payload.action==='REPORT');
-results.push({case:'archived admin settlement form',visible:!!settlement&&settlement.payload.settlementInvoiceId==='invoice_existing'&&settlement.payload.amountMinor===10000&&settlement.payload.receivedDate==='2026-11-24'&&settlement.payload.paymentMethod==='NEFT'&&!!settlement.payload.idempotencyKey});
-results.push({case:'archived authoring hidden',visible:(await page.getByRole('button',{name:'Prepare quotation',exact:true}).count())===0&&(await page.getByRole('button',{name:'Create or revise schedule',exact:true}).count())===0});
+mode = "archive-admin";
+await visit(base + "/projects/prj_review/finance");
+await page.getByRole("button", { name: /Receipts & Payments/ }).click();
+await page.getByRole("button", { name: /Record settlement payment/ }).click();
+await page
+  .getByLabel("Existing outstanding invoice", { exact: true })
+  .selectOption("invoice_existing");
+await page.getByLabel("Date received", { exact: true }).fill("2026-11-24");
+await page.getByLabel("Amount Paid (₹)", { exact: true }).fill("100.00");
+await page
+  .getByLabel("UTR / Bank Reference Note", { exact: true })
+  .fill("FICTIONAL-TRANSFER-REFERENCE");
+failSettlementOnce = true;
+await page.getByRole("button", { name: "Submit Report", exact: true }).click();
+await page
+  .getByRole("dialog")
+  .getByRole("alert")
+  .getByText("The payment could not be recorded. Try again.", { exact: true })
+  .waitFor();
+results.push({
+  case: "failed settlement stays visible and preserves input",
+  visible:
+    (await page.getByRole("dialog").getByRole("alert").isVisible()) &&
+    (await page.getByLabel("Amount Paid (₹)", { exact: true }).inputValue()) ===
+      "100.00",
+});
+await page.getByRole("button", { name: "Submit Report", exact: true }).click();
+await page.getByRole("dialog").waitFor({ state: "hidden" });
+const settlement = actions.find((a) => a.payload.action === "REPORT");
+const reportAttempts = actions.filter((a) => a.payload.action === "REPORT");
+results.push({
+  case: "settlement retry retains operation key",
+  visible:
+    reportAttempts.length === 2 &&
+    reportAttempts[0].payload.idempotencyKey ===
+      reportAttempts[1].payload.idempotencyKey,
+});
+results.push({
+  case: "archived admin settlement form",
+  visible:
+    !!settlement &&
+    settlement.payload.settlementInvoiceId === "invoice_existing" &&
+    settlement.payload.amountMinor === 10000 &&
+    settlement.payload.receivedDate === "2026-11-24" &&
+    settlement.payload.paymentMethod === "NEFT" &&
+    !!settlement.payload.idempotencyKey,
+});
+results.push({
+  case: "archived authoring hidden",
+  visible:
+    (await page
+      .getByRole("button", { name: "Prepare quotation", exact: true })
+      .count()) === 0 &&
+    (await page
+      .getByRole("button", { name: "Create or revise schedule", exact: true })
+      .count()) === 0,
+});
 mode = "manager";
 await visit(base + "/projects/prj_review/drawings");
 await page.getByRole("button", { name: "Open drawing", exact: true }).click();
@@ -510,7 +633,18 @@ results.push({
   ),
 });
 await page.keyboard.press("Escape");
-await page.waitForTimeout(100);
+await page
+  .waitForFunction(
+    () =>
+      Array.from(document.querySelectorAll("button")).some(
+        (button) =>
+          button.textContent.trim() === "Add drawing" &&
+          button === document.activeElement,
+      ),
+    {},
+    { timeout: 2000 },
+  )
+  .catch(() => {});
 results.push({
   case: "dialog escape",
   closed: (await modal.count()) === 0,

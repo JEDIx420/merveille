@@ -306,3 +306,13 @@
   font-size: 0.8125rem;
   cursor: pointer;
 }
+
+/* Keep section filters inside their own scroll area on narrow screens. */
+.block27 {
+  overflow-x: auto;
+  max-width: 100%;
+  min-width: 0;
+}
+.block27 > button {
+  flex-shrink: 0;
+}

@@ -2,6 +2,7 @@
 import { cx } from "@/components/utilities";
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
+import { formatBusinessTimestamp } from "@/shared/config";
 import { AccessGrants, AccessProject } from "@/components/access-form";
 import {
   PageHeader,
@@ -95,6 +96,55 @@ export default function Person({
       setBusy(false);
     }
   }
+  function describeGrants(raw: unknown) {
+    try {
+      const state = typeof raw === "string" ? JSON.parse(raw) : (raw as any);
+      if (!state || typeof state !== "object") return "";
+      const pieces: string[] = [];
+      if (Array.isArray(state.roles))
+        pieces.push(
+          "Organisation: " +
+            (state.roles.length
+              ? state.roles
+                  .map(
+                    (r: string) =>
+                      (
+                        ({
+                          ADMIN: "Administrator",
+                          OWNER: "Owner",
+                          TEAM_MEMBER: "Enquiry intake",
+                          MANAGER: "Company announcements",
+                        }) as Record<string, string>
+                      )[r] || r.replaceAll("_", " ").toLowerCase(),
+                  )
+                  .join(", ")
+              : "No organisation capabilities"),
+        );
+      if (Array.isArray(state.projects))
+        pieces.push(
+          ...state.projects.map((grant: any) => {
+            const name =
+              options.find(
+                (p) => p.id === (grant.projectId || grant.project_id),
+              )?.name || "Project assignment";
+            const roles = grant.roles || [grant.project_role];
+            const labels = roles
+              .filter(Boolean)
+              .map((r: string) => r.replaceAll("_", " ").toLowerCase());
+            if (grant.financeAccess || grant.finance_access)
+              labels.push("financial view");
+            if (grant.financeAuthor || grant.finance_author)
+              labels.push("finance author");
+            if (grant.invoiceIssue || grant.invoice_issue)
+              labels.push("invoice issue");
+            return name + ": " + labels.join(", ");
+          }),
+        );
+      return pieces.join(" · ");
+    } catch {
+      return "";
+    }
+  }
   if (!person)
     return error ? (
       <ErrorState message={error} retry={load} />
@@ -167,6 +217,54 @@ export default function Person({
           and take effect on subsequent requests.
         </p>
       </form>
+      <section className={ui.panel}>
+        <h2>Access history</h2>
+        {person.accessHistory?.length ? (
+          person.accessHistory.map((event: any, index: number) => (
+            <article
+              className={ui.row}
+              key={event.id || `${event.created_at}-${index}`}
+            >
+              <div>
+                <strong>
+                  {(
+                    {
+                      GRANTS_UPDATED: "Access changed",
+                      USER_DISABLED: "Account disabled",
+                      INVITATION_ACCEPTED: "Invitation accepted",
+                      USER_INVITED: "Invitation created",
+                      MAIN_CLIENT_REASSIGNED: "Main client reassigned",
+                      BOOTSTRAP_ACCEPTED: "Initial administrator activated",
+                    } as Record<string, string>
+                  )[event.action] ||
+                    event.action.replaceAll("_", " ").toLowerCase()}
+                </strong>
+                <p className={ui.meta}>
+                  {event.actor_name || "Account administrator"} ·{" "}
+                  {formatBusinessTimestamp(event.created_at)}
+                </p>
+                {event.reason && <p>{event.reason}</p>}
+                {describeGrants(event.old_state) && (
+                  <p>
+                    <span className={ui.meta}>Before: </span>
+                    {describeGrants(event.old_state)}
+                  </p>
+                )}
+                {describeGrants(event.new_state) && (
+                  <p>
+                    <span className={ui.meta}>After: </span>
+                    {describeGrants(event.new_state)}
+                  </p>
+                )}
+              </div>
+            </article>
+          ))
+        ) : (
+          <p className={ui.meta}>
+            No access changes have been recorded for this account.
+          </p>
+        )}
+      </section>
     </div>
   );
 }

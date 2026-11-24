@@ -231,13 +231,13 @@ export default function FirmFinancePage() {
           style={{
             borderBottom:
               activeTab === "OVERVIEW"
-                ? "2px solid var(--color-primary)"
+                ? "2px solid var(--ui-action)"
                 : "2px solid transparent",
             fontWeight: activeTab === "OVERVIEW" ? 600 : 400,
             color:
               activeTab === "OVERVIEW"
-                ? "var(--color-primary)"
-                : "var(--color-muted)",
+                ? "var(--ui-action)"
+                : "var(--ui-text-muted)",
           }}
           className={cx(layout.block10)}
         >
@@ -248,13 +248,13 @@ export default function FirmFinancePage() {
           style={{
             borderBottom:
               activeTab === "EXPENSES"
-                ? "2px solid var(--color-primary)"
+                ? "2px solid var(--ui-action)"
                 : "2px solid transparent",
             fontWeight: activeTab === "EXPENSES" ? 600 : 400,
             color:
               activeTab === "EXPENSES"
-                ? "var(--color-primary)"
-                : "var(--color-muted)",
+                ? "var(--ui-action)"
+                : "var(--ui-text-muted)",
           }}
           className={cx(layout.block11)}
         >
@@ -265,13 +265,13 @@ export default function FirmFinancePage() {
           style={{
             borderBottom:
               activeTab === "CONSULTANTS"
-                ? "2px solid var(--color-primary)"
+                ? "2px solid var(--ui-action)"
                 : "2px solid transparent",
             fontWeight: activeTab === "CONSULTANTS" ? 600 : 400,
             color:
               activeTab === "CONSULTANTS"
-                ? "var(--color-primary)"
-                : "var(--color-muted)",
+                ? "var(--ui-action)"
+                : "var(--ui-text-muted)",
           }}
           className={cx(layout.block12)}
         >
@@ -283,13 +283,13 @@ export default function FirmFinancePage() {
             style={{
               borderBottom:
                 activeTab === "PAYROLL"
-                  ? "2px solid var(--color-primary)"
+                  ? "2px solid var(--ui-action)"
                   : "2px solid transparent",
               fontWeight: activeTab === "PAYROLL" ? 600 : 400,
               color:
                 activeTab === "PAYROLL"
-                  ? "var(--color-primary)"
-                  : "var(--color-muted)",
+                  ? "var(--ui-action)"
+                  : "var(--ui-text-muted)",
             }}
             className={cx(layout.block13)}
           >

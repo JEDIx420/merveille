@@ -496,6 +496,11 @@ export async function updateGrants(
     "SELECT role FROM role_assignments WHERE user_id=? AND org_id=? AND revoked_at IS NULL",
     [targetId, actor.orgId],
   );
+  const beforeProjects = await query<any>(
+    db,
+    "SELECT project_id,project_role,finance_access,finance_author,invoice_issue FROM project_memberships WHERE user_id=? AND org_id=? AND is_active=1",
+    [targetId, actor.orgId],
+  );
   const now = Date.now();
   await db.batch([
     currentAdminGuard(db, actor),
@@ -529,7 +534,7 @@ export async function updateGrants(
       entityType: "USER",
       entityId: targetId,
       action: "GRANTS_CHANGED",
-      oldState: before,
+      oldState: { roles: before, projects: beforeProjects },
       newState: input,
       reason: input.reason,
     }),
@@ -675,6 +680,11 @@ export async function listPeople(actor: UserPrincipal, db: D1Database) {
           [actor.orgId, u.id],
         )
       ).map((r) => r.role),
+      accessHistory: await query<any>(
+        db,
+        `SELECT a.action,a.reason,a.created_at,a.old_state,a.new_state,COALESCE(u.display_name,'Infrastructure operator') AS actor_name FROM audit_events a LEFT JOIN users u ON u.id=a.actor_id WHERE a.org_id=? AND a.entity_type='USER' AND a.entity_id=? AND a.action IN ('GRANTS_CHANGED','USER_DISABLED','IDENTITY_RECOVERED','MAIN_CLIENT_REASSIGNED') ORDER BY a.created_at DESC LIMIT 50`,
+        [actor.orgId, u.id],
+      ),
       projects: await query<any>(
         db,
         "SELECT m.project_id,m.project_role,m.finance_access,m.finance_author,m.invoice_issue,CASE WHEN p.main_client_user_id=m.user_id AND m.project_role='MAIN_CLIENT' THEN 1 ELSE 0 END AS contractual_authority FROM project_memberships m JOIN projects p ON p.id=m.project_id AND p.org_id=m.org_id WHERE m.user_id=? AND m.org_id=? AND m.is_active=1",

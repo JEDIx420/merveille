@@ -516,6 +516,7 @@ export class ChangesService {
       v.status !== "ACCEPTED" ||
       !r ||
       r.status !== "CONFIRMED" ||
+      !!r.settlement_invoice_id ||
       r.project_id !== cr.project_id ||
       r.currency !== v.currency
     )
@@ -586,7 +587,7 @@ export class ChangesService {
       FinanceService.activeGuard(db, principal),
       atomicGuard(
         db,
-        "EXISTS(SELECT 1 FROM receipts r JOIN change_requests c ON c.project_id=r.project_id AND c.org_id=r.org_id JOIN change_request_versions v ON v.change_request_id=c.id AND v.version_number=c.current_version_number WHERE r.id=? AND v.id=? AND v.status='ACCEPTED' AND r.status='CONFIRMED' AND r.currency=v.currency AND r.unallocated_minor=? AND r.unallocated_minor>=? AND v.allocated_payment_minor=?)",
+        "EXISTS(SELECT 1 FROM receipts r JOIN change_requests c ON c.project_id=r.project_id AND c.org_id=r.org_id JOIN change_request_versions v ON v.change_request_id=c.id AND v.version_number=c.current_version_number WHERE r.id=? AND v.id=? AND v.status='ACCEPTED' AND r.status='CONFIRMED' AND r.settlement_invoice_id IS NULL AND r.currency=v.currency AND r.unallocated_minor=? AND r.unallocated_minor>=? AND v.allocated_payment_minor=?)",
         [r.id, v.id, r.unallocated_minor, amount, v.allocated_payment_minor],
       ),
       db

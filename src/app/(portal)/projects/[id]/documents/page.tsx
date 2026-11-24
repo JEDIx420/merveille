@@ -434,6 +434,7 @@ export default function ProjectDocumentsPage({
           <button
             key={cat}
             onClick={() => setCategory(cat)}
+            aria-pressed={category === cat}
             style={{
               backgroundColor:
                 category === cat ? "var(--ui-surface-subtle)" : "transparent",

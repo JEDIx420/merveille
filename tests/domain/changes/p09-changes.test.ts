@@ -11,7 +11,10 @@ import { UserPrincipal } from "../../../src/server/auth/principal";
 import { MaterialsService } from "../../../src/server/domain/materials/service";
 import { ChangesService } from "../../../src/server/domain/changes/service";
 import { FinanceService } from "../../../src/server/domain/finance/service";
-import { createTask, startTask } from "../../../src/server/domain/tasks/service";
+import {
+  createTask,
+  startTask,
+} from "../../../src/server/domain/tasks/service";
 
 describe("Phase 09: References, Material Selections, and Commercial Change Gates", () => {
   let db: D1Database;
@@ -24,7 +27,8 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     email: "admin@merveilledesigns.com",
     name: "Merveille Admin",
     orgId: testOrgId,
-    role: "ADMIN", roles: ["ADMIN"],
+    role: "ADMIN",
+    roles: ["ADMIN"],
     projectMemberships: [{ projectId: testProjectId, projectRole: "ADMIN" }],
     isSynthetic: true,
   };
@@ -34,7 +38,8 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     email: "manager@merveilledesigns.com",
     name: "Vipin Manager",
     orgId: testOrgId,
-    role: "MANAGER", roles: [],
+    role: "MANAGER",
+    roles: [],
     projectMemberships: [{ projectId: testProjectId, projectRole: "MANAGER" }],
     isSynthetic: true,
   };
@@ -44,8 +49,17 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     email: "staff@merveilledesigns.com",
     name: "Nithya Architect",
     orgId: testOrgId,
-    role: "STAFF", roles: [],
-    projectMemberships: [{ projectId: testProjectId, projectRole: "STAFF", financeAccess:true, financeAuthor:true, invoiceIssue:true }],
+    role: "STAFF",
+    roles: [],
+    projectMemberships: [
+      {
+        projectId: testProjectId,
+        projectRole: "STAFF",
+        financeAccess: true,
+        financeAuthor: true,
+        invoiceIssue: true,
+      },
+    ],
     isSynthetic: true,
   };
 
@@ -54,8 +68,15 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     email: "client@example.com",
     name: "Thomas Client (Main Client)",
     orgId: testOrgId,
-    role: "MAIN_CLIENT", roles: [],
-    projectMemberships: [{ projectId: testProjectId, projectRole: "MAIN_CLIENT", contractualAuthority:true }],
+    role: "MAIN_CLIENT",
+    roles: [],
+    projectMemberships: [
+      {
+        projectId: testProjectId,
+        projectRole: "MAIN_CLIENT",
+        contractualAuthority: true,
+      },
+    ],
     isSynthetic: true,
   };
 
@@ -64,8 +85,11 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     email: "rep@example.com",
     name: "Representative John",
     orgId: testOrgId,
-    role: "CLIENT_REP", roles: [],
-    projectMemberships: [{ projectId: testProjectId, projectRole: "CLIENT_REP" }],
+    role: "CLIENT_REP",
+    roles: [],
+    projectMemberships: [
+      { projectId: testProjectId, projectRole: "CLIENT_REP" },
+    ],
     isSynthetic: true,
   };
 
@@ -74,8 +98,11 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     email: "consultant@example.com",
     name: "Structural Consultant",
     orgId: testOrgId,
-    role: "CONSULTANT", roles: [],
-    projectMemberships: [{ projectId: testProjectId, projectRole: "CONSULTANT" }],
+    role: "CONSULTANT",
+    roles: [],
+    projectMemberships: [
+      { projectId: testProjectId, projectRole: "CONSULTANT" },
+    ],
     isSynthetic: true,
   };
 
@@ -84,17 +111,26 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
 
     // 1. Seed org
     await db
-      .prepare("INSERT OR IGNORE INTO organizations (id, name, created_at) VALUES (?, ?, ?)")
+      .prepare(
+        "INSERT OR IGNORE INTO organizations (id, name, created_at) VALUES (?, ?, ?)",
+      )
       .bind(testOrgId, "Merveille Designs", Date.now())
       .run();
 
     // 2. Seed users and org memberships
-    const allUsers = [adminUser, managerUser, staffUser, clientUser, repUser, consultantUser];
+    const allUsers = [
+      adminUser,
+      managerUser,
+      staffUser,
+      clientUser,
+      repUser,
+      consultantUser,
+    ];
     for (const u of allUsers) {
       await db
         .prepare(
           `INSERT OR IGNORE INTO users (id, email, display_name, status, created_at)
-           VALUES (?, ?, ?, 'ACTIVE', ?)`
+           VALUES (?, ?, ?, 'ACTIVE', ?)`,
         )
         .bind(u.id, u.email, u.name, Date.now())
         .run();
@@ -102,7 +138,7 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
       await db
         .prepare(
           `INSERT OR IGNORE INTO organization_memberships (id, org_id, user_id, is_active, created_at)
-           VALUES (?, ?, ?, 1, ?)`
+           VALUES (?, ?, ?, 1, ?)`,
         )
         .bind(`om_${u.id}`, testOrgId, u.id, Date.now())
         .run();
@@ -113,7 +149,7 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
       .prepare(
         `INSERT INTO projects (
           id, org_id, code, name, main_client_user_id, manager_user_id, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', ?)`
+        ) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', ?)`,
       )
       .bind(
         testProjectId,
@@ -122,7 +158,7 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
         "Villa Change Controls",
         clientUser.id,
         managerUser.id,
-        Date.now()
+        Date.now(),
       )
       .run();
 
@@ -132,7 +168,7 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
       await db
         .prepare(
           `INSERT INTO project_memberships (id, org_id, project_id, user_id, project_role, is_active, assigned_at)
-           VALUES (?, ?, ?, ?, ?, 1, ?)`
+           VALUES (?, ?, ?, ?, ?, 1, ?)`,
         )
         .bind(`pm_${u.id}`, testOrgId, testProjectId, u.id, pRole, Date.now())
         .run();
@@ -171,16 +207,20 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
       ChangesService.acceptEstimate(db, repUser, {
         changeRequestId: cr.id,
         versionNumber: 1,
-      })
-    ).rejects.toThrow("Only the main client has authority to accept additional cost");
+      }),
+    ).rejects.toThrow(
+      "Only the main client has authority to accept additional cost",
+    );
 
     // 4. Consultant attempts to accept estimate -> REJECTED
     await expect(
       ChangesService.acceptEstimate(db, consultantUser, {
         changeRequestId: cr.id,
         versionNumber: 1,
-      })
-    ).rejects.toThrow("Only the main client has authority to accept additional cost");
+      }),
+    ).rejects.toThrow(
+      "Only the main client has authority to accept additional cost",
+    );
 
     // 5. Representative and consultant can add comments
     const repComment = await ChangesService.addComment(db, repUser, {
@@ -191,7 +231,8 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
 
     const consComment = await ChangesService.addComment(db, consultantUser, {
       changeRequestId: cr.id,
-      commentText: "Floor screed level verified and moisture content within 3% tolerance.",
+      commentText:
+        "Floor screed level verified and moisture content within 3% tolerance.",
     });
     expect(consComment.id).toBeDefined();
 
@@ -240,16 +281,20 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
         changeRequestId: cr.id,
         proposedAssigneeId: staffUser.id,
       },
-      db
+      db,
     );
 
     // Gate 1: Attempt authorization / starting task BEFORE client acceptance -> REJECTED
     await expect(
-      ChangesService.authorizeChangeWork(db, managerUser, { changeRequestId: cr.id })
-    ).rejects.toThrow("Change request requires main client estimate acceptance before authorization");
+      ChangesService.authorizeChangeWork(db, managerUser, {
+        changeRequestId: cr.id,
+      }),
+    ).rejects.toThrow(
+      "Change request requires main client estimate acceptance before authorization",
+    );
 
     await expect(startTask(staffUser, task.id, db)).rejects.toThrow(
-      "Cannot start task linked to unauthorized change request"
+      "Cannot start task linked to unauthorized change request",
     );
 
     // 2. Client accepts estimate
@@ -260,11 +305,15 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
 
     // Gate 2: Attempt authorization BEFORE payment confirmation -> REJECTED
     await expect(
-      ChangesService.authorizeChangeWork(db, managerUser, { changeRequestId: cr.id })
-    ).rejects.toThrow("Change request requires administrator-confirmed payment allocation before authorization");
+      ChangesService.authorizeChangeWork(db, managerUser, {
+        changeRequestId: cr.id,
+      }),
+    ).rejects.toThrow(
+      "Change request requires administrator-confirmed payment allocation before authorization",
+    );
 
     await expect(startTask(staffUser, task.id, db)).rejects.toThrow(
-      "Cannot start task linked to unauthorized change request"
+      "Cannot start task linked to unauthorized change request",
     );
 
     // 3. Client reports payment, but not confirmed by admin yet
@@ -281,33 +330,72 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
       ChangesService.confirmChangePayment(db, adminUser, {
         changeRequestId: cr.id,
         receiptId: reportedReceipt.receiptId,
-      })
-    ).rejects.toThrow("Accepted estimate and matching confirmed receipt required");
+      }),
+    ).rejects.toThrow(
+      "Accepted estimate and matching confirmed receipt required",
+    );
 
     // Non-admin cannot confirm receipt (AC-031)
     await expect(
-      FinanceService.confirmReceipt(db, managerUser, { receiptId: reportedReceipt.receiptId })
+      FinanceService.confirmReceipt(db, managerUser, {
+        receiptId: reportedReceipt.receiptId,
+      }),
     ).rejects.toThrow("Only administrators can confirm receipt of real funds");
 
     // Admin confirms receipt
-    await FinanceService.confirmReceipt(db, adminUser, { receiptId: reportedReceipt.receiptId });
+    await FinanceService.confirmReceipt(db, adminUser, {
+      receiptId: reportedReceipt.receiptId,
+    });
+
+    // Funds explicitly reserved for an existing invoice cannot fund additional work.
+    await db
+      .prepare(
+        "INSERT INTO invoices(id,org_id,project_id,currency,status,total_minor,outstanding_minor,created_by_user_id,created_at) VALUES('reserved-obligation',?,?, 'INR','ISSUED',5000000,5000000,?,1)",
+      )
+      .bind(testOrgId, testProjectId, adminUser.id)
+      .run();
+    await db
+      .prepare(
+        "UPDATE receipts SET settlement_invoice_id='reserved-obligation' WHERE id=?",
+      )
+      .bind(reportedReceipt.receiptId)
+      .run();
+    await expect(
+      ChangesService.confirmChangePayment(db, adminUser, {
+        changeRequestId: cr.id,
+        receiptId: reportedReceipt.receiptId,
+        amountMinor: 2000000,
+      }),
+    ).rejects.toThrow("matching confirmed receipt");
+    await db
+      .prepare("UPDATE receipts SET settlement_invoice_id=NULL WHERE id=?")
+      .bind(reportedReceipt.receiptId)
+      .run();
 
     // 4. Test Partial Payment: Allocate ₹20,000 out of ₹50,000 required
-    const partialAlloc = await ChangesService.confirmChangePayment(db, adminUser, {
-      changeRequestId: cr.id,
-      receiptId: reportedReceipt.receiptId,
-      amountMinor: 2000000,
-    });
+    const partialAlloc = await ChangesService.confirmChangePayment(
+      db,
+      adminUser,
+      {
+        changeRequestId: cr.id,
+        receiptId: reportedReceipt.receiptId,
+        amountMinor: 2000000,
+      },
+    );
     expect(partialAlloc.isFullySatisfied).toBe(false);
     expect(partialAlloc.newStatus).toBe("ACCEPTED_AWAITING_PAYMENT");
 
     // Attempting authorization with only partial payment -> REJECTED
     await expect(
-      ChangesService.authorizeChangeWork(db, managerUser, { changeRequestId: cr.id })
-    ).rejects.toThrow("Change request requires administrator-confirmed payment allocation before authorization");
+      ChangesService.authorizeChangeWork(db, managerUser, {
+        changeRequestId: cr.id,
+      }),
+    ).rejects.toThrow(
+      "Change request requires administrator-confirmed payment allocation before authorization",
+    );
 
     await expect(startTask(staffUser, task.id, db)).rejects.toThrow(
-      "Cannot start task linked to unauthorized change request"
+      "Cannot start task linked to unauthorized change request",
     );
 
     // 5. Allocate remaining ₹30,000 to fully satisfy pre-work payment
@@ -321,14 +409,18 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
 
     // Gate 3: Before manager authorization, staff cannot start task
     await expect(startTask(staffUser, task.id, db)).rejects.toThrow(
-      "Cannot start task linked to unauthorized change request"
+      "Cannot start task linked to unauthorized change request",
     );
 
     // 6. Manager authorizes additional change work -> ALL GATES SATISFIED
-    const authResult = await ChangesService.authorizeChangeWork(db, managerUser, {
-      changeRequestId: cr.id,
-      notes: "Fabrication drawings approved and materials ready.",
-    });
+    const authResult = await ChangesService.authorizeChangeWork(
+      db,
+      managerUser,
+      {
+        changeRequestId: cr.id,
+        notes: "Fabrication drawings approved and materials ready.",
+      },
+    );
     expect(authResult.status).toBe("AUTHORIZED");
     expect(authResult.authorizedByUserId).toBe(managerUser.id);
 
@@ -375,7 +467,9 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
       receivedDate: "2026-11-24",
       paymentMethod: "RTGS",
     });
-    await FinanceService.confirmReceipt(db, adminUser, { receiptId: receipt.receiptId });
+    await FinanceService.confirmReceipt(db, adminUser, {
+      receiptId: receipt.receiptId,
+    });
 
     await ChangesService.confirmChangePayment(db, adminUser, {
       changeRequestId: cr.id,
@@ -383,12 +477,15 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
       amountMinor: 6000000,
     });
 
-    await ChangesService.authorizeChangeWork(db, managerUser, { changeRequestId: cr.id });
+    await ChangesService.authorizeChangeWork(db, managerUser, {
+      changeRequestId: cr.id,
+    });
 
     // 2. Manager revises estimate: Scope expands to include side walls and bass traps
     const revision = await ChangesService.reviseEstimate(db, managerUser, {
       changeRequestId: cr.id,
-      scopeSummary: "Rear and side walls acoustic panelling with 4 corner bass traps.",
+      scopeSummary:
+        "Rear and side walls acoustic panelling with 4 corner bass traps.",
       priceMinor: 22000000, // ₹2,20,000
       requiredPreworkPaymentMinor: 11000000, // ₹1,10,000 required
       reason: "Client requested full surround acoustic treatment after demo.",
@@ -400,12 +497,18 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     // 3. Stale consent cannot authorize revised version:
     // Attempting to authorize version 2 without fresh main-client acceptance -> REJECTED
     await expect(
-      ChangesService.authorizeChangeWork(db, managerUser, { changeRequestId: cr.id })
-    ).rejects.toThrow("Change request requires main client estimate acceptance before authorization");
+      ChangesService.authorizeChangeWork(db, managerUser, {
+        changeRequestId: cr.id,
+      }),
+    ).rejects.toThrow(
+      "Change request requires main client estimate acceptance before authorization",
+    );
 
     // Work start also rejected
-    await expect(ChangesService.startChangeWork(db, staffUser, cr.id)).rejects.toThrow(
-      "Cannot start work before change request is fully authorized"
+    await expect(
+      ChangesService.startChangeWork(db, staffUser, cr.id),
+    ).rejects.toThrow(
+      "Cannot start work before change request is fully authorized",
     );
 
     // Verify version 1 is marked SUPERSEDED and version 2 is ISSUED
@@ -425,8 +528,12 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
 
     // Re-evaluate payment: ₹1,10,000 required, currently allocated is 0 for version 2
     await expect(
-      ChangesService.authorizeChangeWork(db, managerUser, { changeRequestId: cr.id })
-    ).rejects.toThrow("Change request requires administrator-confirmed payment allocation before authorization");
+      ChangesService.authorizeChangeWork(db, managerUser, {
+        changeRequestId: cr.id,
+      }),
+    ).rejects.toThrow(
+      "Change request requires administrator-confirmed payment allocation before authorization",
+    );
 
     // Admin allocates ₹1,10,000 from available confirmed receipt funds
     await ChangesService.confirmChangePayment(db, adminUser, {
@@ -436,14 +543,22 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     });
 
     // 5. Manager authorizes revised version 2
-    const finalAuth = await ChangesService.authorizeChangeWork(db, managerUser, {
-      changeRequestId: cr.id,
-    });
+    const finalAuth = await ChangesService.authorizeChangeWork(
+      db,
+      managerUser,
+      {
+        changeRequestId: cr.id,
+      },
+    );
     expect(finalAuth.status).toBe("AUTHORIZED");
     expect(finalAuth.versionNumber).toBe(2);
 
     // Operational work can now start
-    const workStart = await ChangesService.startChangeWork(db, staffUser, cr.id);
+    const workStart = await ChangesService.startChangeWork(
+      db,
+      staffUser,
+      cr.id,
+    );
     expect(workStart.status).toBe("IN_PROGRESS");
   });
 
@@ -472,21 +587,30 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     // Representative adds comment to client's reference
     await MaterialsService.addReferenceComment(db, repUser, {
       referenceId: clientRef.id,
-      commentText: "We should consider lighter oak grain to match the flooring.",
+      commentText:
+        "We should consider lighter oak grain to match the flooring.",
     });
 
-    const retrievedRef = await MaterialsService.getReference(db, clientUser, clientRef.id);
+    const retrievedRef = await MaterialsService.getReference(
+      db,
+      clientUser,
+      clientRef.id,
+    );
     expect(retrievedRef.comments.length).toBe(1);
-    expect(retrievedRef.comments[0].comment_text).toContain("lighter oak grain");
+    expect(retrievedRef.comments[0].comment_text).toContain(
+      "lighter oak grain",
+    );
 
     // 3. Staff frames a material selection item with options and internal notes
     const item = await MaterialsService.createSelectionItem(db, staffUser, {
       projectId: testProjectId,
       title: "Master Bedroom Headboard Cladding",
       location: "Master Bedroom",
-      question: "Please choose between Fabric Upholstery vs Fluted Charcoal Wood.",
+      question:
+        "Please choose between Fabric Upholstery vs Fluted Charcoal Wood.",
       neededByDate: "2026-12-15",
-      internalNotes: "Vendor gives 18% trade discount on fluted panels; fabric takes 2 extra weeks lead time.",
+      internalNotes:
+        "Vendor gives 18% trade discount on fluted panels; fabric takes 2 extra weeks lead time.",
       options: [
         {
           label: "Acoustic Suede Fabric Upholstery",
@@ -496,7 +620,8 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
         },
         {
           label: "Fluted Charcoal Wood Panelling",
-          description: "Solid ash wood with matte charcoal polyurethane finish.",
+          description:
+            "Solid ash wood with matte charcoal polyurethane finish.",
           costImplicationMinor: 3500000, // ₹35,000 extra
           isRecommended: false,
         },
@@ -505,14 +630,26 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     expect(item.status).toBe("AWAITING_MAIN_CLIENT");
 
     // 4. Confidentiality projection: Client and Representative CANNOT see internal sourcing notes (AC-042, SCR-13)
-    const clientView = await MaterialsService.getSelectionItem(db, clientUser, item.id);
+    const clientView = await MaterialsService.getSelectionItem(
+      db,
+      clientUser,
+      item.id,
+    );
     expect(clientView.internal_notes).toBeUndefined();
 
-    const repView = await MaterialsService.getSelectionItem(db, repUser, item.id);
+    const repView = await MaterialsService.getSelectionItem(
+      db,
+      repUser,
+      item.id,
+    );
     expect(repView.internal_notes).toBeUndefined();
 
     // Staff CAN see internal sourcing notes
-    const staffView = await MaterialsService.getSelectionItem(db, staffUser, item.id);
+    const staffView = await MaterialsService.getSelectionItem(
+      db,
+      staffUser,
+      item.id,
+    );
     expect(staffView.internal_notes).toContain("trade discount");
 
     // 5. Representative attempts binding selection -> REJECTED (AC-042)
@@ -523,19 +660,26 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
       MaterialsService.selectOption(db, repUser, {
         selectionItemId: item.id,
         optionId: optionBId,
-      })
-    ).rejects.toThrow("Only the main client has authority to make binding material decisions");
+      }),
+    ).rejects.toThrow(
+      "Only the main client has authority to make binding material decisions",
+    );
 
     // 6. Representative records suggestion -> SUCCEEDS and status remains AWAITING_MAIN_CLIENT
     const suggestion = await MaterialsService.recordSuggestion(db, repUser, {
       selectionItemId: item.id,
       optionId: optionBId,
       suggestionType: "SUGGESTION",
-      commentText: "Representative preference: Fluted charcoal wood looks much more luxurious.",
+      commentText:
+        "Representative preference: Fluted charcoal wood looks much more luxurious.",
     });
     expect(suggestion.suggestionType).toBe("SUGGESTION");
 
-    const itemAfterSuggestion = await MaterialsService.getSelectionItem(db, clientUser, item.id);
+    const itemAfterSuggestion = await MaterialsService.getSelectionItem(
+      db,
+      clientUser,
+      item.id,
+    );
     expect(itemAfterSuggestion.status).toBe("AWAITING_MAIN_CLIENT");
     expect(itemAfterSuggestion.selected_option_id).toBeNull();
     expect(itemAfterSuggestion.suggestions.length).toBe(1);
@@ -548,7 +692,11 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     expect(selection.status).toBe("SELECTED");
     expect(selection.selectedOptionId).toBe(optionAId);
 
-    const finalItem = await MaterialsService.getSelectionItem(db, clientUser, item.id);
+    const finalItem = await MaterialsService.getSelectionItem(
+      db,
+      clientUser,
+      item.id,
+    );
     expect(finalItem.status).toBe("SELECTED");
     expect(finalItem.selected_option_id).toBe(optionAId);
     expect(finalItem.selected_by_user_id).toBe(clientUser.id);
@@ -578,7 +726,11 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
       ],
     });
 
-    const itemDetails = await MaterialsService.getSelectionItem(db, clientUser, item.id);
+    const itemDetails = await MaterialsService.getSelectionItem(
+      db,
+      clientUser,
+      item.id,
+    );
     const standardOptionId = itemDetails.options[0].id;
     const upgradeOptionId = itemDetails.options[1].id;
 
@@ -595,13 +747,17 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
       MaterialsService.selectOption(db, repUser, {
         selectionItemId: item.id,
         optionId: standardOptionId,
-      })
-    ).rejects.toThrow("Only the main client has authority to make binding material decisions");
+      }),
+    ).rejects.toThrow(
+      "Only the main client has authority to make binding material decisions",
+    );
 
     // 4. Manager attempts to mark item ready for execution without change request -> BLOCKED
     await expect(
-      MaterialsService.markReadyForExecution(db, managerUser, item.id)
-    ).rejects.toThrow("Cost-impacting selection requires an authorized change request before execution readiness");
+      MaterialsService.markReadyForExecution(db, managerUser, item.id),
+    ).rejects.toThrow(
+      "Cost-impacting selection requires an authorized change request before execution readiness",
+    );
 
     // 5. Manager creates change request linked to this selection item
     const cr = await ChangesService.createChangeRequest(db, managerUser, {
@@ -627,8 +783,10 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     });
 
     await expect(
-      MaterialsService.markReadyForExecution(db, managerUser, item.id)
-    ).rejects.toThrow("Cannot mark selection ready for execution: linked change request is not authorized");
+      MaterialsService.markReadyForExecution(db, managerUser, item.id),
+    ).rejects.toThrow(
+      "Cannot mark selection ready for execution: linked change request is not authorized",
+    );
 
     // 7. Complete the change request gate: Acceptance + Payment + Manager Authorization
     await ChangesService.acceptEstimate(db, clientUser, {
@@ -643,7 +801,9 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
       paymentMethod: "NEFT",
       referenceNote: "Calacatta Marble Full Advance",
     });
-    await FinanceService.confirmReceipt(db, adminUser, { receiptId: receipt.receiptId });
+    await FinanceService.confirmReceipt(db, adminUser, {
+      receiptId: receipt.receiptId,
+    });
 
     await ChangesService.confirmChangePayment(db, adminUser, {
       changeRequestId: cr.id,
@@ -651,13 +811,23 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
       amountMinor: 12500000,
     });
 
-    await ChangesService.authorizeChangeWork(db, managerUser, { changeRequestId: cr.id });
+    await ChangesService.authorizeChangeWork(db, managerUser, {
+      changeRequestId: cr.id,
+    });
 
     // 8. Now manager marks selection item ready for execution -> SUCCEEDS
-    const readyRes = await MaterialsService.markReadyForExecution(db, managerUser, item.id);
+    const readyRes = await MaterialsService.markReadyForExecution(
+      db,
+      managerUser,
+      item.id,
+    );
     expect(readyRes.status).toBe("READY_FOR_EXECUTION");
 
-    const finalItem = await MaterialsService.getSelectionItem(db, clientUser, item.id);
+    const finalItem = await MaterialsService.getSelectionItem(
+      db,
+      clientUser,
+      item.id,
+    );
     expect(finalItem.status).toBe("READY_FOR_EXECUTION");
   });
 });

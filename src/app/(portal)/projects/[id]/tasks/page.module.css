@@ -412,3 +412,13 @@
   gap: 0.75rem;
   margin-top: 0.5rem;
 }
+
+/* Keep section filters inside their own scroll area on narrow screens. */
+.block10 {
+  overflow-x: auto;
+  max-width: 100%;
+  min-width: 0;
+}
+.block10 > button {
+  flex-shrink: 0;
+}

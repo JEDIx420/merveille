@@ -496,13 +496,13 @@ export default function ProjectFinancePage() {
           style={{
             borderBottom:
               activeTab === "QUOTES"
-                ? "2px solid var(--color-primary)"
+                ? "2px solid var(--ui-action)"
                 : "2px solid transparent",
             fontWeight: activeTab === "QUOTES" ? 600 : 400,
             color:
               activeTab === "QUOTES"
-                ? "var(--color-primary)"
-                : "var(--color-muted)",
+                ? "var(--ui-action)"
+                : "var(--ui-text-muted)",
           }}
           className={cx(layout.block22)}
         >
@@ -513,13 +513,13 @@ export default function ProjectFinancePage() {
           style={{
             borderBottom:
               activeTab === "SCHEDULE"
-                ? "2px solid var(--color-primary)"
+                ? "2px solid var(--ui-action)"
                 : "2px solid transparent",
             fontWeight: activeTab === "SCHEDULE" ? 600 : 400,
             color:
               activeTab === "SCHEDULE"
-                ? "var(--color-primary)"
-                : "var(--color-muted)",
+                ? "var(--ui-action)"
+                : "var(--ui-text-muted)",
           }}
           className={cx(layout.block23)}
         >
@@ -530,13 +530,13 @@ export default function ProjectFinancePage() {
           style={{
             borderBottom:
               activeTab === "INVOICES"
-                ? "2px solid var(--color-primary)"
+                ? "2px solid var(--ui-action)"
                 : "2px solid transparent",
             fontWeight: activeTab === "INVOICES" ? 600 : 400,
             color:
               activeTab === "INVOICES"
-                ? "var(--color-primary)"
-                : "var(--color-muted)",
+                ? "var(--ui-action)"
+                : "var(--ui-text-muted)",
           }}
           className={cx(layout.block24)}
         >
@@ -547,13 +547,13 @@ export default function ProjectFinancePage() {
           style={{
             borderBottom:
               activeTab === "RECEIPTS"
-                ? "2px solid var(--color-primary)"
+                ? "2px solid var(--ui-action)"
                 : "2px solid transparent",
             fontWeight: activeTab === "RECEIPTS" ? 600 : 400,
             color:
               activeTab === "RECEIPTS"
-                ? "var(--color-primary)"
-                : "var(--color-muted)",
+                ? "var(--ui-action)"
+                : "var(--ui-text-muted)",
           }}
           className={cx(layout.block25)}
         >

@@ -79,6 +79,8 @@ export class SnagsService {
     principal: UserPrincipal,
     params: ReportSnagParams,
   ) {
+    const plan: D1PreparedStatement[] = [];
+
     assertProjectAccess(principal, params.projectId);
     await assertProjectOrganisation(db, principal, params.projectId);
     await ArchiveService.assertProjectNotArchived(db, params.projectId);
@@ -113,67 +115,80 @@ export class SnagsService {
     const snagId = generateId("sng");
     const now = Date.now();
 
-    await execute(
-      db,
-      `INSERT INTO snags (
+    plan.push(
+      db
+        .prepare(
+          `INSERT INTO snags (
         id, org_id, project_id, snag_number, title, description,
         location_area, severity, status, reported_by_user_id, reported_at,
         related_drawing_id, is_client_shared, is_charged_work,
         reopen_count, created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'REPORTED', ?, ?, ?, 0, 0, 0, ?, ?)`,
-      [
-        snagId,
-        principal.orgId,
-        params.projectId,
-        snagNumber,
-        params.title.trim(),
-        params.description.trim(),
-        params.locationArea.trim(),
-        params.severity || "MEDIUM",
-        principal.id,
-        now,
-        params.relatedDrawingId || null,
-        now,
-        now,
-      ],
+        )
+        .bind(
+          ...[
+            snagId,
+            principal.orgId,
+            params.projectId,
+            snagNumber,
+            params.title.trim(),
+            params.description.trim(),
+            params.locationArea.trim(),
+            params.severity || "MEDIUM",
+            principal.id,
+            now,
+            params.relatedDrawingId || null,
+            now,
+            now,
+          ],
+        ),
     );
 
     // Attach initial before photos if provided
     if (params.fileIds && params.fileIds.length > 0) {
       for (const fId of params.fileIds) {
-        await execute(
-          db,
-          `INSERT INTO snag_attachments (
+        plan.push(
+          db
+            .prepare(
+              `INSERT INTO snag_attachments (
             id, snag_id, file_id, attachment_type, is_internal_only, caption,
             uploaded_by_user_id, created_at
           ) VALUES (?, ?, ?, 'BEFORE_PHOTO', 0, ?, ?, ?)`,
-          [
-            generateId("sat"),
-            snagId,
-            fId,
-            params.caption || null,
-            principal.id,
-            now,
-          ],
+            )
+            .bind(
+              ...[
+                generateId("sat"),
+                snagId,
+                fId,
+                params.caption || null,
+                principal.id,
+                now,
+              ],
+            ),
         );
       }
     }
 
     // Audit event
-    await execute(
-      db,
-      `INSERT INTO snag_events (
+    plan.push(
+      db
+        .prepare(
+          `INSERT INTO snag_events (
         id, snag_id, actor_id, event_type, from_status, to_status, notes, created_at
       ) VALUES (?, ?, ?, 'SNAG_REPORTED', NULL, 'REPORTED', ?, ?)`,
-      [
-        generateId("sev"),
-        snagId,
-        principal.id,
-        `Reported at ${params.locationArea}`,
-        now,
-      ],
+        )
+        .bind(
+          ...[
+            generateId("sev"),
+            snagId,
+            principal.id,
+            `Reported at ${params.locationArea}`,
+            now,
+          ],
+        ),
     );
 
+    await db.batch(plan);
     return {
       id: snagId,
       snagNumber,
@@ -191,6 +206,8 @@ export class SnagsService {
     principal: UserPrincipal,
     params: TriageSnagParams,
   ) {
+    const plan: D1PreparedStatement[] = [];
+
     const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [
       params.snagId,
     ]);
@@ -222,47 +239,72 @@ export class SnagsService {
     }
 
     const now = Date.now();
-    await execute(
-      db,
-      `UPDATE snags
+    const guardId = crypto.randomUUID();
+    plan.push(
+      db
+        .prepare(
+          `INSERT INTO command_assertions(id,ok) SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM snags s JOIN projects p ON p.id=s.project_id WHERE s.id=? AND s.org_id=? AND s.revision=? AND p.is_archived=0) THEN 1 ELSE 0 END`,
+        )
+        .bind(guardId, snag.id, principal.orgId, snag.revision),
+    );
+    plan.push(
+      db
+        .prepare(
+          `UPDATE snags
        SET status = 'OPEN', severity = COALESCE(?, severity),
            assigned_to_user_id = ?, assigned_by_user_id = ?,
            target_date = ?, is_client_shared = ?, is_charged_work = ?,
            change_request_id = ?, internal_cost_minor = ?, internal_notes = ?,
            updated_at = ?
        WHERE id = ?`,
-      [
-        params.severity || null,
-        params.assignedToUserId,
-        principal.id,
-        params.targetDate || null,
-        params.isClientShared ? 1 : 0,
-        params.isChargedWork ? 1 : 0,
-        params.changeRequestId || null,
-        params.internalCostMinor !== undefined
-          ? params.internalCostMinor
-          : null,
-        params.internalNotes || null,
-        now,
-        params.snagId,
-      ],
+        )
+        .bind(
+          ...[
+            params.severity || null,
+            params.assignedToUserId,
+            principal.id,
+            params.targetDate || null,
+            params.isClientShared ? 1 : 0,
+            params.isChargedWork ? 1 : 0,
+            params.changeRequestId || null,
+            params.internalCostMinor !== undefined
+              ? params.internalCostMinor
+              : null,
+            params.internalNotes || null,
+            now,
+            params.snagId,
+          ],
+        ),
     );
 
-    await execute(
-      db,
-      `INSERT INTO snag_events (
+    plan.push(
+      db
+        .prepare(
+          `INSERT INTO snag_events (
         id, snag_id, actor_id, event_type, from_status, to_status, notes, created_at
       ) VALUES (?, ?, ?, 'SNAG_TRIAGED', ?, 'OPEN', ?, ?)`,
-      [
-        generateId("sev"),
-        params.snagId,
-        principal.id,
-        snag.status,
-        `Assigned to user ${params.assignedToUserId}${params.targetDate ? ` with due date ${params.targetDate}` : ""}`,
-        now,
-      ],
+        )
+        .bind(
+          ...[
+            generateId("sev"),
+            params.snagId,
+            principal.id,
+            snag.status,
+            `Assigned to user ${params.assignedToUserId}${params.targetDate ? ` with due date ${params.targetDate}` : ""}`,
+            now,
+          ],
+        ),
     );
 
+    plan.push(
+      db
+        .prepare("UPDATE snags SET revision=revision+1 WHERE id=?")
+        .bind(snag.id),
+    );
+    plan.push(
+      db.prepare("DELETE FROM command_assertions WHERE id=?").bind(guardId),
+    );
+    await db.batch(plan);
     return {
       id: params.snagId,
       status: "OPEN" as SnagStatus,
@@ -279,6 +321,8 @@ export class SnagsService {
     principal: UserPrincipal,
     snagId: string,
   ) {
+    const plan: D1PreparedStatement[] = [];
+
     const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [
       snagId,
     ]);
@@ -330,20 +374,41 @@ export class SnagsService {
     }
 
     const now = Date.now();
-    await execute(
-      db,
-      "UPDATE snags SET status = 'IN_PROGRESS', updated_at = ? WHERE id = ?",
-      [now, snagId],
+    const guardId = crypto.randomUUID();
+    plan.push(
+      db
+        .prepare(
+          `INSERT INTO command_assertions(id,ok) SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM snags s JOIN projects p ON p.id=s.project_id WHERE s.id=? AND s.org_id=? AND s.revision=? AND p.is_archived=0) THEN 1 ELSE 0 END`,
+        )
+        .bind(guardId, snag.id, principal.orgId, snag.revision),
+    );
+    plan.push(
+      db
+        .prepare(
+          "UPDATE snags SET status = 'IN_PROGRESS', updated_at = ? WHERE id = ?",
+        )
+        .bind(...[now, snagId]),
     );
 
-    await execute(
-      db,
-      `INSERT INTO snag_events (
+    plan.push(
+      db
+        .prepare(
+          `INSERT INTO snag_events (
         id, snag_id, actor_id, event_type, from_status, to_status, notes, created_at
       ) VALUES (?, ?, ?, 'SNAG_STARTED', ?, 'IN_PROGRESS', 'Remediation work started', ?)`,
-      [generateId("sev"), snagId, principal.id, snag.status, now],
+        )
+        .bind(...[generateId("sev"), snagId, principal.id, snag.status, now]),
     );
 
+    plan.push(
+      db
+        .prepare("UPDATE snags SET revision=revision+1 WHERE id=?")
+        .bind(snag.id),
+    );
+    plan.push(
+      db.prepare("DELETE FROM command_assertions WHERE id=?").bind(guardId),
+    );
+    await db.batch(plan);
     return { id: snagId, status: "IN_PROGRESS" as SnagStatus };
   }
 
@@ -357,6 +422,8 @@ export class SnagsService {
     principal: UserPrincipal,
     params: SubmitResolutionParams,
   ) {
+    const plan: D1PreparedStatement[] = [];
+
     const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [
       params.snagId,
     ]);
@@ -391,43 +458,71 @@ export class SnagsService {
 
     const now = Date.now();
 
+    const guardId = crypto.randomUUID();
+    plan.push(
+      db
+        .prepare(
+          `INSERT INTO command_assertions(id,ok) SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM snags s JOIN projects p ON p.id=s.project_id WHERE s.id=? AND s.org_id=? AND s.revision=? AND p.is_archived=0) THEN 1 ELSE 0 END`,
+        )
+        .bind(guardId, snag.id, principal.orgId, snag.revision),
+    );
+
     for (const fileId of params.afterPhotoFileIds ?? [])
       await validateAttachment(db, principal, fileId, snag.project_id, "SNAG");
     // Attach after photos if provided
     if (params.afterPhotoFileIds && params.afterPhotoFileIds.length > 0) {
       for (const fId of params.afterPhotoFileIds) {
-        await execute(
-          db,
-          `INSERT INTO snag_attachments (
+        plan.push(
+          db
+            .prepare(
+              `INSERT INTO snag_attachments (
             id, snag_id, file_id, attachment_type, is_internal_only, caption,
             uploaded_by_user_id, created_at
           ) VALUES (?, ?, ?, 'AFTER_PHOTO', 0, 'Resolution photo', ?, ?)`,
-          [generateId("sat"), params.snagId, fId, principal.id, now],
+            )
+            .bind(
+              ...[generateId("sat"), params.snagId, fId, principal.id, now],
+            ),
         );
       }
     }
 
-    await execute(
-      db,
-      "UPDATE snags SET status = 'READY_FOR_VERIFICATION', updated_at = ? WHERE id = ?",
-      [now, params.snagId],
+    plan.push(
+      db
+        .prepare(
+          "UPDATE snags SET status = 'READY_FOR_VERIFICATION', updated_at = ? WHERE id = ?",
+        )
+        .bind(...[now, params.snagId]),
     );
 
-    await execute(
-      db,
-      `INSERT INTO snag_events (
+    plan.push(
+      db
+        .prepare(
+          `INSERT INTO snag_events (
         id, snag_id, actor_id, event_type, from_status, to_status, notes, resolution_evidence, created_at
       ) VALUES (?, ?, ?, 'SNAG_RESOLUTION_SUBMITTED', ?, 'READY_FOR_VERIFICATION', 'Resolution submitted for manager review', ?, ?)`,
-      [
-        generateId("sev"),
-        params.snagId,
-        principal.id,
-        snag.status,
-        params.resolutionEvidence.trim(),
-        now,
-      ],
+        )
+        .bind(
+          ...[
+            generateId("sev"),
+            params.snagId,
+            principal.id,
+            snag.status,
+            params.resolutionEvidence.trim(),
+            now,
+          ],
+        ),
     );
 
+    plan.push(
+      db
+        .prepare("UPDATE snags SET revision=revision+1 WHERE id=?")
+        .bind(snag.id),
+    );
+    plan.push(
+      db.prepare("DELETE FROM command_assertions WHERE id=?").bind(guardId),
+    );
+    await db.batch(plan);
     return {
       id: params.snagId,
       status: "READY_FOR_VERIFICATION" as SnagStatus,
@@ -443,6 +538,8 @@ export class SnagsService {
     principal: UserPrincipal,
     params: { snagId: string; notes?: string },
   ) {
+    const plan: D1PreparedStatement[] = [];
+
     const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [
       params.snagId,
     ]);
@@ -461,27 +558,50 @@ export class SnagsService {
     }
 
     const now = Date.now();
-    await execute(
-      db,
-      "UPDATE snags SET status = 'CLOSED', updated_at = ? WHERE id = ?",
-      [now, params.snagId],
+    const guardId = crypto.randomUUID();
+    plan.push(
+      db
+        .prepare(
+          `INSERT INTO command_assertions(id,ok) SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM snags s JOIN projects p ON p.id=s.project_id WHERE s.id=? AND s.org_id=? AND s.revision=? AND p.is_archived=0) THEN 1 ELSE 0 END`,
+        )
+        .bind(guardId, snag.id, principal.orgId, snag.revision),
+    );
+    plan.push(
+      db
+        .prepare(
+          "UPDATE snags SET status = 'CLOSED', updated_at = ? WHERE id = ?",
+        )
+        .bind(...[now, params.snagId]),
     );
 
-    await execute(
-      db,
-      `INSERT INTO snag_events (
+    plan.push(
+      db
+        .prepare(
+          `INSERT INTO snag_events (
         id, snag_id, actor_id, event_type, from_status, to_status, notes, created_at
       ) VALUES (?, ?, ?, 'SNAG_VERIFIED_CLOSED', ?, 'CLOSED', ?, ?)`,
-      [
-        generateId("sev"),
-        params.snagId,
-        principal.id,
-        snag.status,
-        params.notes || "Verified resolved following site inspection",
-        now,
-      ],
+        )
+        .bind(
+          ...[
+            generateId("sev"),
+            params.snagId,
+            principal.id,
+            snag.status,
+            params.notes || "Verified resolved following site inspection",
+            now,
+          ],
+        ),
     );
 
+    plan.push(
+      db
+        .prepare("UPDATE snags SET revision=revision+1 WHERE id=?")
+        .bind(snag.id),
+    );
+    plan.push(
+      db.prepare("DELETE FROM command_assertions WHERE id=?").bind(guardId),
+    );
+    await db.batch(plan);
     return {
       id: params.snagId,
       status: "CLOSED" as SnagStatus,
@@ -498,6 +618,8 @@ export class SnagsService {
     principal: UserPrincipal,
     params: ReopenSnagParams,
   ) {
+    const plan: D1PreparedStatement[] = [];
+
     const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [
       params.snagId,
     ]);
@@ -526,30 +648,53 @@ export class SnagsService {
     const effectiveDueDate = params.newTargetDate || snag.target_date;
     const effectiveAssignee = params.newAssigneeId || snag.assigned_to_user_id;
 
-    await execute(
-      db,
-      `UPDATE snags
+    const guardId = crypto.randomUUID();
+    plan.push(
+      db
+        .prepare(
+          `INSERT INTO command_assertions(id,ok) SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM snags s JOIN projects p ON p.id=s.project_id WHERE s.id=? AND s.org_id=? AND s.revision=? AND p.is_archived=0) THEN 1 ELSE 0 END`,
+        )
+        .bind(guardId, snag.id, principal.orgId, snag.revision),
+    );
+    plan.push(
+      db
+        .prepare(
+          `UPDATE snags
        SET status = 'OPEN', reopen_count = reopen_count + 1,
            target_date = ?, assigned_to_user_id = ?, updated_at = ?
        WHERE id = ?`,
-      [effectiveDueDate, effectiveAssignee, now, params.snagId],
+        )
+        .bind(...[effectiveDueDate, effectiveAssignee, now, params.snagId]),
     );
 
-    await execute(
-      db,
-      `INSERT INTO snag_events (
+    plan.push(
+      db
+        .prepare(
+          `INSERT INTO snag_events (
         id, snag_id, actor_id, event_type, from_status, to_status, notes, created_at
       ) VALUES (?, ?, ?, 'SNAG_REOPENED', ?, 'OPEN', ?, ?)`,
-      [
-        generateId("sev"),
-        params.snagId,
-        principal.id,
-        snag.status,
-        `Reopened: ${params.reason.trim()}`,
-        now,
-      ],
+        )
+        .bind(
+          ...[
+            generateId("sev"),
+            params.snagId,
+            principal.id,
+            snag.status,
+            `Reopened: ${params.reason.trim()}`,
+            now,
+          ],
+        ),
     );
 
+    plan.push(
+      db
+        .prepare("UPDATE snags SET revision=revision+1 WHERE id=?")
+        .bind(snag.id),
+    );
+    plan.push(
+      db.prepare("DELETE FROM command_assertions WHERE id=?").bind(guardId),
+    );
+    await db.batch(plan);
     return {
       id: params.snagId,
       status: "OPEN" as SnagStatus,
@@ -565,6 +710,8 @@ export class SnagsService {
     principal: UserPrincipal,
     params: { snagId: string; commentText: string; isInternalOnly?: boolean },
   ) {
+    const plan: D1PreparedStatement[] = [];
+
     const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [
       params.snagId,
     ]);
@@ -585,21 +732,42 @@ export class SnagsService {
     const commentId = generateId("snc");
     const now = Date.now();
 
-    await execute(
-      db,
-      `INSERT INTO snag_comments (
+    const guardId = crypto.randomUUID();
+    plan.push(
+      db
+        .prepare(
+          `INSERT INTO command_assertions(id,ok) SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM snags s JOIN projects p ON p.id=s.project_id WHERE s.id=? AND s.org_id=? AND s.revision=? AND p.is_archived=0) THEN 1 ELSE 0 END`,
+        )
+        .bind(guardId, snag.id, principal.orgId, snag.revision),
+    );
+    plan.push(
+      db
+        .prepare(
+          `INSERT INTO snag_comments (
         id, snag_id, user_id, comment_text, is_internal_only, created_at
       ) VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        commentId,
-        params.snagId,
-        principal.id,
-        params.commentText.trim(),
-        isInternal ? 1 : 0,
-        now,
-      ],
+        )
+        .bind(
+          ...[
+            commentId,
+            params.snagId,
+            principal.id,
+            params.commentText.trim(),
+            isInternal ? 1 : 0,
+            now,
+          ],
+        ),
     );
 
+    plan.push(
+      db
+        .prepare("UPDATE snags SET revision=revision+1 WHERE id=?")
+        .bind(snag.id),
+    );
+    plan.push(
+      db.prepare("DELETE FROM command_assertions WHERE id=?").bind(guardId),
+    );
+    await db.batch(plan);
     return {
       id: commentId,
       snagId: params.snagId,

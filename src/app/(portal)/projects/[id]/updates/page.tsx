@@ -270,13 +270,13 @@ export default function UpdatesPage() {
           style={{
             borderBottom:
               activeTab === "FEED"
-                ? "2px solid var(--color-primary)"
+                ? "2px solid var(--ui-action)"
                 : "2px solid transparent",
             fontWeight: activeTab === "FEED" ? 600 : 400,
             color:
               activeTab === "FEED"
-                ? "var(--color-primary)"
-                : "var(--color-muted)",
+                ? "var(--ui-action)"
+                : "var(--ui-text-muted)",
           }}
           className={cx(layout.block12)}
         >
@@ -288,13 +288,13 @@ export default function UpdatesPage() {
             style={{
               borderBottom:
                 activeTab === "INTERNAL_NOTES"
-                  ? "2px solid var(--color-primary)"
+                  ? "2px solid var(--ui-action)"
                   : "2px solid transparent",
               fontWeight: activeTab === "INTERNAL_NOTES" ? 600 : 400,
               color:
                 activeTab === "INTERNAL_NOTES"
-                  ? "var(--color-primary)"
-                  : "var(--color-muted)",
+                  ? "var(--ui-action)"
+                  : "var(--ui-text-muted)",
             }}
             className={cx(layout.block13)}
           >

@@ -169,12 +169,17 @@ export function Dialog({
   open?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const feedback = useFeedback();
   useEffect(() => {
     const prior = document.activeElement as HTMLElement;
-    if (open && !ref.current?.open) ref.current?.showModal();
+    const dialog = ref.current;
+    if (open && !dialog?.open) dialog?.showModal();
     return () => {
-      ref.current?.close();
-      prior?.focus?.();
+      dialog?.close();
+      feedback.dismissNotice();
+      requestAnimationFrame(() => {
+        if (prior?.isConnected) prior.focus();
+      });
     };
   }, [open]);
   return (
@@ -193,7 +198,17 @@ export function Dialog({
           Close
         </Button>
       </header>
-      <div className={styles.dialogBody}>{children}</div>
+      <div className={styles.dialogBody}>
+        {feedback.notice && (
+          <div role="alert" className={styles.error}>
+            <p>{feedback.notice}</p>
+            <Button secondary type="button" onClick={feedback.dismissNotice}>
+              Dismiss
+            </Button>
+          </div>
+        )}
+        {children}
+      </div>
     </dialog>
   );
 }
@@ -206,6 +221,8 @@ const FeedbackContext = createContext({
   confirm: async (_message: string): Promise<boolean> => false,
   prompt: async (_message: string): Promise<string | null> => null,
   notify: (_message: string) => {},
+  notice: "",
+  dismissNotice: () => {},
 });
 export function FeedbackProvider({ children }: { children: React.ReactNode }) {
   const [question, setQuestion] = useState<Question | null>(null);
@@ -226,6 +243,8 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
             setQuestion({ message, resolve, input: true }),
           ),
         notify: setNotice,
+        notice,
+        dismissNotice: () => setNotice(""),
       }}
     >
       {notice && (

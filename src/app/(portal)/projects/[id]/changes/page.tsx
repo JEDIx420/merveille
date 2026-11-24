@@ -103,6 +103,23 @@ export default function ChangesPage() {
   const [commentText, setCommentText] = useState("");
 
   const [payReceiptId, setPayReceiptId] = useState("");
+  const [paymentReceipts, setPaymentReceipts] = useState<any[]>([]);
+  useEffect(() => {
+    if (!showPaymentModal) return;
+    fetch(`/api/projects/${projectId}/finance/receipts`)
+      .then(readResponse)
+      .then((data) =>
+        setPaymentReceipts(
+          (data.receipts || []).filter(
+            (r: any) =>
+              r.status === "CONFIRMED" &&
+              r.unallocated_minor > 0 &&
+              !r.settlement_invoice_id,
+          ),
+        ),
+      )
+      .catch((e) => setError(e.message));
+  }, [showPaymentModal, projectId]);
   const [payAmount, setPayAmount] = useState("");
 
   const loadChanges = async () => {
@@ -1513,19 +1530,26 @@ export default function ChangesPage() {
                   )}
                   htmlFor="payReceiptId"
                 >
-                  Receipt ID *
+                  Confirmed receipt *
                 </label>
-                <input
-                  type="text"
+                <select
                   required
                   value={payReceiptId}
                   onChange={(e) => setPayReceiptId(e.target.value)}
-                  className={cx(
-                    "w-full px-3 py-2 border border-stone-300 text-sm",
-                  )}
-                  placeholder="rcp_..."
                   id="payReceiptId"
-                />
+                >
+                  <option value="">
+                    Select an available confirmed receipt
+                  </option>
+                  {paymentReceipts.map((receipt) => (
+                    <option key={receipt.id} value={receipt.id}>
+                      {receipt.receipt_number ||
+                        receipt.reference_note ||
+                        "Confirmed payment"}{" "}
+                      — {formatCurrency(receipt.unallocated_minor)} available
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>

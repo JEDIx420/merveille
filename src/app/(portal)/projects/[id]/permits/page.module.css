@@ -10,7 +10,7 @@
   margin-bottom: 2rem;
 }
 .block4 {
-  color: var(--color-primary);
+  color: var(--ui-action);
   text-decoration: none;
   font-size: 0.875rem;
   margin-bottom: 0.5rem;
@@ -49,9 +49,9 @@
   gap: 2rem;
 }
 .block11 {
-  background-color: var(--color-surface);
+  background-color: var(--ui-surface);
   border-radius: 8px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--ui-divider);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -65,7 +65,7 @@
 .block13 {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--ui-action);
   text-transform: none;
   letter-spacing: normal;
 }
@@ -123,7 +123,7 @@
   margin-top: 0.5rem;
 }
 .block24 {
-  color: var(--color-primary);
+  color: var(--ui-action);
 }
 .block25 {
   margin-top: 1rem;
@@ -173,7 +173,7 @@
 .block33 {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-muted);
+  color: var(--ui-text-muted);
   text-transform: none;
 }
 .block34 {

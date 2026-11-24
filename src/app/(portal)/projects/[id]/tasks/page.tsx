@@ -335,6 +335,7 @@ export default function ProjectTasksPage({
           <button
             key={tab}
             onClick={() => setStatusFilter(tab)}
+            aria-pressed={statusFilter === tab}
             style={{
               backgroundColor:
                 statusFilter === tab

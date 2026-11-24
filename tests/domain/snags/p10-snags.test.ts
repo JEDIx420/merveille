@@ -11,7 +11,10 @@ import { UserPrincipal } from "../../../src/server/auth/principal";
 import { SnagsService } from "../../../src/server/domain/snags/service";
 import { ChangesService } from "../../../src/server/domain/changes/service";
 import { FinanceService } from "../../../src/server/domain/finance/service";
-import { createTask, startTask } from "../../../src/server/domain/tasks/service";
+import {
+  createTask,
+  startTask,
+} from "../../../src/server/domain/tasks/service";
 
 describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", () => {
   let db: D1Database;
@@ -25,7 +28,8 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     email: "admin@merveilledesigns.com",
     name: "Merveille Admin",
     orgId: testOrgId,
-    role: "ADMIN", roles: ["ADMIN"],
+    role: "ADMIN",
+    roles: ["ADMIN"],
     projectMemberships: [{ projectId: testProjectId, projectRole: "ADMIN" }],
     isSynthetic: true,
   };
@@ -35,7 +39,8 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     email: "manager@merveilledesigns.com",
     name: "Vipin Manager",
     orgId: testOrgId,
-    role: "MANAGER", roles: [],
+    role: "MANAGER",
+    roles: [],
     projectMemberships: [{ projectId: testProjectId, projectRole: "MANAGER" }],
     isSynthetic: true,
   };
@@ -45,7 +50,8 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     email: "staff@merveilledesigns.com",
     name: "Nithya Architect",
     orgId: testOrgId,
-    role: "STAFF", roles: [],
+    role: "STAFF",
+    roles: [],
     projectMemberships: [{ projectId: testProjectId, projectRole: "STAFF" }],
     isSynthetic: true,
   };
@@ -55,8 +61,15 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     email: "client@example.com",
     name: "Thomas Client (Main Client)",
     orgId: testOrgId,
-    role: "MAIN_CLIENT", roles: [],
-    projectMemberships: [{ projectId: testProjectId, projectRole: "MAIN_CLIENT", contractualAuthority: true }],
+    role: "MAIN_CLIENT",
+    roles: [],
+    projectMemberships: [
+      {
+        projectId: testProjectId,
+        projectRole: "MAIN_CLIENT",
+        contractualAuthority: true,
+      },
+    ],
     isSynthetic: true,
   };
 
@@ -65,8 +78,11 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     email: "consultant@example.com",
     name: "Structural Consultant",
     orgId: testOrgId,
-    role: "CONSULTANT", roles: [],
-    projectMemberships: [{ projectId: testProjectId, projectRole: "CONSULTANT" }],
+    role: "CONSULTANT",
+    roles: [],
+    projectMemberships: [
+      { projectId: testProjectId, projectRole: "CONSULTANT" },
+    ],
     isSynthetic: true,
   };
 
@@ -75,7 +91,8 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     email: "other@merveilledesigns.com",
     name: "Foreign Staff",
     orgId: testOrgId,
-    role: "STAFF", roles: [],
+    role: "STAFF",
+    roles: [],
     projectMemberships: [{ projectId: foreignProjectId, projectRole: "STAFF" }],
     isSynthetic: true,
   };
@@ -85,17 +102,26 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
 
     // 1. Seed org
     await db
-      .prepare("INSERT OR IGNORE INTO organizations (id, name, created_at) VALUES (?, ?, ?)")
+      .prepare(
+        "INSERT OR IGNORE INTO organizations (id, name, created_at) VALUES (?, ?, ?)",
+      )
       .bind(testOrgId, "Merveille Designs", Date.now())
       .run();
 
     // 2. Seed users
-    const allUsers = [adminUser, managerUser, staffUser, clientUser, consultantUser, foreignStaffUser];
+    const allUsers = [
+      adminUser,
+      managerUser,
+      staffUser,
+      clientUser,
+      consultantUser,
+      foreignStaffUser,
+    ];
     for (const u of allUsers) {
       await db
         .prepare(
           `INSERT OR IGNORE INTO users (id, email, display_name, status, created_at)
-           VALUES (?, ?, ?, 'ACTIVE', ?)`
+           VALUES (?, ?, ?, 'ACTIVE', ?)`,
         )
         .bind(u.id, u.email, u.name, Date.now())
         .run();
@@ -103,7 +129,7 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
       await db
         .prepare(
           `INSERT OR IGNORE INTO organization_memberships (id, org_id, user_id, is_active, created_at)
-           VALUES (?, ?, ?, 1, ?)`
+           VALUES (?, ?, ?, 1, ?)`,
         )
         .bind(`om_${u.id}`, testOrgId, u.id, Date.now())
         .run();
@@ -114,7 +140,7 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
       .prepare(
         `INSERT INTO projects (
           id, org_id, code, name, main_client_user_id, manager_user_id, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', ?)`
+        ) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', ?)`,
       )
       .bind(
         testProjectId,
@@ -123,18 +149,24 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
         "Villa Snag Controls",
         clientUser.id,
         managerUser.id,
-        Date.now()
+        Date.now(),
       )
       .run();
 
     // 4. Seed memberships for test project
-    const projectUsers = [adminUser, managerUser, staffUser, clientUser, consultantUser];
+    const projectUsers = [
+      adminUser,
+      managerUser,
+      staffUser,
+      clientUser,
+      consultantUser,
+    ];
     for (const u of projectUsers) {
       const pRole = u.projectMemberships[0].projectRole;
       await db
         .prepare(
           `INSERT INTO project_memberships (id, org_id, project_id, user_id, project_role, is_active, assigned_at)
-           VALUES (?, ?, ?, ?, ?, 1, ?)`
+           VALUES (?, ?, ?, ?, ?, 1, ?)`,
         )
         .bind(`pm_${u.id}`, testOrgId, testProjectId, u.id, pRole, Date.now())
         .run();
@@ -145,17 +177,30 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
       .prepare(
         `INSERT INTO projects (
           id, org_id, code, name, main_client_user_id, manager_user_id, status, created_at
-        ) VALUES (?, ?, 'PRJ-FOR', 'Foreign Site', ?, ?, 'ACTIVE', ?)`
+        ) VALUES (?, ?, 'PRJ-FOR', 'Foreign Site', ?, ?, 'ACTIVE', ?)`,
       )
-      .bind(foreignProjectId, testOrgId, clientUser.id, managerUser.id, Date.now())
+      .bind(
+        foreignProjectId,
+        testOrgId,
+        clientUser.id,
+        managerUser.id,
+        Date.now(),
+      )
       .run();
 
     await db
       .prepare(
         `INSERT INTO project_memberships (id, org_id, project_id, user_id, project_role, is_active, assigned_at)
-         VALUES (?, ?, ?, ?, ?, 1, ?)`
+         VALUES (?, ?, ?, ?, ?, 1, ?)`,
       )
-      .bind("pm_foreign", testOrgId, foreignProjectId, foreignStaffUser.id, "STAFF", Date.now())
+      .bind(
+        "pm_foreign",
+        testOrgId,
+        foreignProjectId,
+        foreignStaffUser.id,
+        "STAFF",
+        Date.now(),
+      )
       .run();
   });
 
@@ -167,7 +212,8 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     const snag = await SnagsService.reportSnag(db, clientUser, {
       projectId: testProjectId,
       title: "Hairline plaster crack near window lintel",
-      description: "Observed vertical crack extending 40cm downward from master bedroom east window.",
+      description:
+        "Observed vertical crack extending 40cm downward from master bedroom east window.",
       locationArea: "Master Bedroom East Wall",
       severity: "HIGH",
     });
@@ -179,7 +225,7 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
       SnagsService.triageSnag(db, managerUser, {
         snagId: snag.id,
         assignedToUserId: foreignStaffUser.id,
-      })
+      }),
     ).rejects.toThrow("Assignee must be an active member of this project");
 
     // Manager assigns to project staff member with official target date
@@ -199,20 +245,22 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     // 4. Staff submits resolution evidence
     const resolution = await SnagsService.submitResolution(db, staffUser, {
       snagId: snag.id,
-      resolutionEvidence: "Chipped out loose plaster, injected epoxy grout, applied mesh and skim coat.",
+      resolutionEvidence:
+        "Chipped out loose plaster, injected epoxy grout, applied mesh and skim coat.",
     });
     // States distinguish resolved from verified closed (AC-044)
     expect(resolution.status).toBe("READY_FOR_VERIFICATION");
 
     // Staff cannot verify or close the snag themselves -> REJECTED
     await expect(
-      SnagsService.verifyCloseSnag(db, staffUser, { snagId: snag.id })
+      SnagsService.verifyCloseSnag(db, staffUser, { snagId: snag.id }),
     ).rejects.toThrow("Only project managers can verify and close site snags");
 
     // 5. Manager reviews on site and reopens due to paint shade mismatch
     const reopenRes = await SnagsService.reopenSnag(db, managerUser, {
       snagId: snag.id,
-      reason: "Paint shade mismatch under raking light. Sand down and apply full-wall finish coat.",
+      reason:
+        "Paint shade mismatch under raking light. Sand down and apply full-wall finish coat.",
       newTargetDate: "2026-12-08",
     });
     expect(reopenRes.status).toBe("OPEN");
@@ -234,20 +282,24 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     // 6. Staff re-submits second resolution
     await SnagsService.submitResolution(db, staffUser, {
       snagId: snag.id,
-      resolutionEvidence: "Full-wall finish coat applied with calibrated shade swatch.",
+      resolutionEvidence:
+        "Full-wall finish coat applied with calibrated shade swatch.",
     });
 
     // 7. Manager inspects on site and marks verified closed
     const verified = await SnagsService.verifyCloseSnag(db, managerUser, {
       snagId: snag.id,
-      notes: "Inspected in person; surface flush and color uniform under morning light.",
+      notes:
+        "Inspected in person; surface flush and color uniform under morning light.",
     });
     expect(verified.status).toBe("CLOSED");
 
     // Final audit inspection
     detail = await SnagsService.getSnag(db, managerUser, snag.id);
     expect(detail.status).toBe("CLOSED");
-    expect(detail.events.map((e: any) => e.event_type)).toContain("SNAG_VERIFIED_CLOSED");
+    expect(detail.events.map((e: any) => e.event_type)).toContain(
+      "SNAG_VERIFIED_CLOSED",
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -267,7 +319,8 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
       assignedToUserId: staffUser.id,
       isClientShared: false,
       internalCostMinor: 1500000, // ₹15,000 backcharge
-      internalNotes: "Contractor negligence; backcharge full amount to tiling team invoice.",
+      internalNotes:
+        "Contractor negligence; backcharge full amount to tiling team invoice.",
     });
 
     // 2. Create a shared snag (is_client_shared = 1) with confidential cost note and internal comments
@@ -283,30 +336,39 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
       assignedToUserId: staffUser.id,
       isClientShared: true, // Approved for broader client/consultant viewing
       internalCostMinor: 350000, // ₹3,500 internal replacement cost
-      internalNotes: "Hardware supplier dispute: replace under warranty or swallow cost internally.",
+      internalNotes:
+        "Hardware supplier dispute: replace under warranty or swallow cost internally.",
     });
 
     // Add internal-only comment
     await SnagsService.addComment(db, managerUser, {
       snagId: sharedSnag.id,
-      commentText: "Internal note: do not discuss supplier warranty dispute with client.",
+      commentText:
+        "Internal note: do not discuss supplier warranty dispute with client.",
       isInternalOnly: true,
     });
 
     // Add client-visible comment
     await SnagsService.addComment(db, staffUser, {
       snagId: sharedSnag.id,
-      commentText: "Technician scheduled for tomorrow 11 AM to adjust latch striker.",
+      commentText:
+        "Technician scheduled for tomorrow 11 AM to adjust latch striker.",
       isInternalOnly: false,
     });
 
     // 3. Client attempts to access internal-only snag (which they did NOT report) -> REJECTED
     await expect(
-      SnagsService.getSnag(db, clientUser, internalSnag.id)
-    ).rejects.toThrow("This site issue has not been approved for client/consultant viewing");
+      SnagsService.getSnag(db, clientUser, internalSnag.id),
+    ).rejects.toThrow(
+      "This site issue has not been approved for client/consultant viewing",
+    );
 
     // 4. Client accesses shared snag:
-    const clientView = await SnagsService.getSnag(db, clientUser, sharedSnag.id);
+    const clientView = await SnagsService.getSnag(
+      db,
+      clientUser,
+      sharedSnag.id,
+    );
     expect(clientView.id).toBe(sharedSnag.id);
     // Confidential cost notes and internal notes are strictly undefined (AC-045)
     expect(clientView.internal_notes).toBeUndefined();
@@ -314,11 +376,19 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
 
     // Internal comment is excluded; only client-visible comment appears
     expect(clientView.comments.length).toBe(1);
-    expect(clientView.comments[0].comment_text).toContain("Technician scheduled");
-    expect(clientView.comments[0].comment_text).not.toContain("warranty dispute");
+    expect(clientView.comments[0].comment_text).toContain(
+      "Technician scheduled",
+    );
+    expect(clientView.comments[0].comment_text).not.toContain(
+      "warranty dispute",
+    );
 
     // 5. Consultant accesses shared snag:
-    const consultantView = await SnagsService.getSnag(db, consultantUser, sharedSnag.id);
+    const consultantView = await SnagsService.getSnag(
+      db,
+      consultantUser,
+      sharedSnag.id,
+    );
     expect(consultantView.internal_notes).toBeUndefined();
     expect(consultantView.internal_cost_minor).toBeUndefined();
     expect(consultantView.comments.length).toBe(1);
@@ -331,7 +401,11 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
 
     // 7. Client queries list of snags:
     // Only shared snag appears; internal-only snag is completely omitted
-    const clientList = await SnagsService.listSnags(db, clientUser, testProjectId);
+    const clientList = await SnagsService.listSnags(
+      db,
+      clientUser,
+      testProjectId,
+    );
     const clientListIds = clientList.map((s: any) => s.id);
     expect(clientListIds).toContain(sharedSnag.id);
     expect(clientListIds).not.toContain(internalSnag.id);
@@ -347,7 +421,8 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     const snag = await SnagsService.reportSnag(db, clientUser, {
       projectId: testProjectId,
       title: "Terrace Waterproofing Membrane Renewal",
-      description: "Client requested addition of comprehensive liquid polyurethane membrane outside agreed base scope.",
+      description:
+        "Client requested addition of comprehensive liquid polyurethane membrane outside agreed base scope.",
       locationArea: "Open Roof Terrace",
       severity: "URGENT",
     });
@@ -361,8 +436,10 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
 
     // 3. Attempt to start snag work before change request exists -> REJECTED (AC-070)
     await expect(
-      SnagsService.startSnagWork(db, staffUser, snag.id)
-    ).rejects.toThrow("Charged snag remediation requires an authorized change request before starting work");
+      SnagsService.startSnagWork(db, staffUser, snag.id),
+    ).rejects.toThrow(
+      "Charged snag remediation requires an authorized change request before starting work",
+    );
 
     // 4. Manager prepares linked task for remediation
     const task = await createTask(
@@ -373,12 +450,12 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
         snagId: snag.id,
         proposedAssigneeId: staffUser.id,
       },
-      db
+      db,
     );
 
     // Starting linked task before change request exists -> REJECTED (AC-070)
     await expect(startTask(staffUser, task.id, db)).rejects.toThrow(
-      "Charged snag remediation requires an authorized change request before starting work"
+      "Charged snag remediation requires an authorized change request before starting work",
     );
 
     // 5. Create and link Change Request
@@ -400,17 +477,20 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     await ChangesService.startEstimating(db, managerUser, cr.id);
     await ChangesService.issueEstimate(db, managerUser, {
       changeRequestId: cr.id,
-      scopeSummary: "Apply 2 coats of elastomeric PU membrane with geotextile reinforcement.",
+      scopeSummary:
+        "Apply 2 coats of elastomeric PU membrane with geotextile reinforcement.",
       priceMinor: 8500000, // ₹85,000
       requiredPreworkPaymentMinor: 4000000, // ₹40,000 required advance
     });
 
     // Attempting work while change request is AWAITING_CLIENT -> REJECTED
-    await expect(SnagsService.startSnagWork(db, staffUser, snag.id)).rejects.toThrow(
-      "Charged snag remediation work remains blocked until change request is authorized and paid"
+    await expect(
+      SnagsService.startSnagWork(db, staffUser, snag.id),
+    ).rejects.toThrow(
+      "Charged snag remediation work remains blocked until change request is authorized and paid",
     );
     await expect(startTask(staffUser, task.id, db)).rejects.toThrow(
-      "Charged snag remediation work remains blocked until change request is authorized and paid"
+      "Charged snag remediation work remains blocked until change request is authorized and paid",
     );
 
     // 7. Main client accepts estimate
@@ -420,8 +500,10 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     });
 
     // Attempting work before payment confirmed -> REJECTED
-    await expect(SnagsService.startSnagWork(db, staffUser, snag.id)).rejects.toThrow(
-      "Charged snag remediation work remains blocked until change request is authorized and paid"
+    await expect(
+      SnagsService.startSnagWork(db, staffUser, snag.id),
+    ).rejects.toThrow(
+      "Charged snag remediation work remains blocked until change request is authorized and paid",
     );
 
     // 8. Admin confirms receipt and allocates advance
@@ -432,7 +514,9 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
       paymentMethod: "NEFT",
       referenceNote: "Terrace Waterproofing Advance",
     });
-    await FinanceService.confirmReceipt(db, adminUser, { receiptId: receipt.receiptId });
+    await FinanceService.confirmReceipt(db, adminUser, {
+      receiptId: receipt.receiptId,
+    });
     await ChangesService.confirmChangePayment(db, adminUser, {
       changeRequestId: cr.id,
       receiptId: receipt.receiptId,
@@ -440,18 +524,55 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     });
 
     // Attempting work before manager authorization -> REJECTED
-    await expect(SnagsService.startSnagWork(db, staffUser, snag.id)).rejects.toThrow(
-      "Charged snag remediation work remains blocked until change request is authorized and paid"
+    await expect(
+      SnagsService.startSnagWork(db, staffUser, snag.id),
+    ).rejects.toThrow(
+      "Charged snag remediation work remains blocked until change request is authorized and paid",
     );
 
     // 9. Manager authorizes change request -> ALL GATES SATISFIED
-    await ChangesService.authorizeChangeWork(db, managerUser, { changeRequestId: cr.id });
+    await ChangesService.authorizeChangeWork(db, managerUser, {
+      changeRequestId: cr.id,
+    });
 
     // 10. Operational work on snag and task can now start -> SUCCEEDS
-    const snagStarted = await SnagsService.startSnagWork(db, staffUser, snag.id);
+    const snagStarted = await SnagsService.startSnagWork(
+      db,
+      staffUser,
+      snag.id,
+    );
     expect(snagStarted.status).toBe("IN_PROGRESS");
 
     const taskStarted = await startTask(staffUser, task.id, db);
     expect(taskStarted.status).toBe("IN_PROGRESS");
+  });
+  it("site issue state and audit roll back together when event persistence fails", async () => {
+    const issue = await SnagsService.reportSnag(db, staffUser, {
+      projectId: testProjectId,
+      title: "Rollback inspection",
+      description: "Fictional site evidence",
+      locationArea: "Courtyard",
+      severity: "MEDIUM",
+    });
+    await SnagsService.triageSnag(db, managerUser, {
+      snagId: issue.id,
+      assignedToUserId: staffUser.id,
+      targetDate: "2026-12-01",
+      isClientShared: true,
+    });
+    await db.exec(
+      "CREATE TRIGGER fail_snag_event BEFORE INSERT ON snag_events BEGIN SELECT RAISE(ABORT,'event injection'); END",
+    );
+    await expect(
+      SnagsService.submitResolution(db, staffUser, {
+        snagId: issue.id,
+        resolutionEvidence: "Fictional fix evidence",
+      }),
+    ).rejects.toThrow();
+    const saved = await db
+      .prepare("SELECT status FROM snags WHERE id=?")
+      .bind(issue.id)
+      .first<any>();
+    expect(saved.status).toBe("OPEN");
   });
 });
