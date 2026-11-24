@@ -9,7 +9,7 @@ Baseline: 24 November 2026. Application implementation has not started. Planning
 - [x] P02 — [Client portfolios, project records and enquiry intake](docs/implementation/phases/02-projects-intake.md) — [Evidence](docs/evidence/phase-02.md)
 - [x] P03 — [Private documents and media](docs/implementation/phases/03-private-files.md) — [Evidence](docs/evidence/phase-03.md)
 - [x] P04 — [Tasks, deadlines and completion history](docs/implementation/phases/04-tasks.md) — [Evidence](docs/evidence/phase-04.md)
-- [ ] P05 — [Drawing register, consultant approval and manager release](docs/implementation/phases/05-drawings.md)
+- [x] P05 — [Drawing register, consultant approval and manager release](docs/implementation/phases/05-drawings.md) — [Evidence](docs/evidence/phase-05.md)
 - [ ] P06 — [Published updates, company notices and manual K-SMART records](docs/implementation/phases/06-updates-permits.md)
 - [ ] P07 — [Quotations, schedules, invoices and receipts](docs/implementation/phases/07-commercial-finance.md)
 - [ ] P08 — [Expenses, consultant fees, payroll and profit](docs/implementation/phases/08-accounting.md)
@@ -22,9 +22,9 @@ Baseline: 24 November 2026. Application implementation has not started. Planning
 
 ## Current checkpoint
 
-- Current phase: P04 complete; commencing P05 (Drawing register, consultant approval and manager release).
-- Next action: Read docs/implementation/phases/05-drawings.md and implement drawings and drawing_versions schema, consultant version-specific approvals, manager final release workflow, superseded version tracking, and SCR-08 drawing register.
-- Completed application tests: AC-064 (P00), AC-001 through AC-008 (P01), AC-009 through AC-012 (P02), AC-056 through AC-060 (P03), AC-013 through AC-015 (P04). Evidence in docs/evidence/phase-00.md, docs/evidence/phase-01.md, docs/evidence/phase-02.md, docs/evidence/phase-03.md, and docs/evidence/phase-04.md.
+- Current phase: P05 complete; commencing P06 (Published updates, company notices and manual K-SMART records).
+- Next action: Read docs/implementation/phases/06-updates-permits.md and implement published updates, manager approval gate for client-visible updates, company notices with targeting, manual K-SMART practice records with explicit practice attribution, SCR-05 updates screen, and SCR-12 permits screen.
+- Completed application tests: AC-064 (P00), AC-001 through AC-008 (P01), AC-009 through AC-012 (P02), AC-056 through AC-060 (P03), AC-013 through AC-015 (P04), AC-016 through AC-021 (P05). Evidence in docs/evidence/phase-00.md through docs/evidence/phase-05.md.
 - Deployed environments: local workerd emulated environment active with local D1 database migrations.
 - Blockers: None for local implementation. External Access IDP and Meta Cloud API credentials not required for local operations.
 
