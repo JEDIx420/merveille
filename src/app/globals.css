@@ -1,0 +1,187 @@
+@import "../../assets/brand/brand.css";
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  background-color: var(--merveille-canvas);
+  color: var(--merveille-ink);
+  font-family: var(--merveille-font-interface);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, .font-serif {
+  font-family: var(--merveille-font-display);
+  font-weight: 500;
+  color: var(--merveille-ink);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Accessible focus outline */
+:focus-visible {
+  outline: 2px solid var(--merveille-gold);
+  outline-offset: 2px;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Typography styles */
+.text-display {
+  font-family: var(--merveille-font-display);
+  font-size: 2.25rem;
+  line-height: 2.625rem;
+}
+
+@media (max-width: 640px) {
+  .text-display {
+    font-size: 1.75rem;
+    line-height: 2.125rem;
+  }
+}
+
+.text-section {
+  font-family: var(--merveille-font-display);
+  font-size: 1.375rem;
+  line-height: 1.875rem;
+}
+
+.text-muted {
+  color: var(--merveille-muted);
+}
+
+.text-gold-accent {
+  color: var(--merveille-gold-text);
+}
+
+.text-money {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* Layout Utilities */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar-rail {
+  width: 240px;
+  background-color: var(--merveille-ink);
+  color: var(--merveille-surface);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1rem;
+  flex-shrink: 0;
+}
+
+.main-content {
+  flex: 1;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2rem;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+  .sidebar-rail {
+    width: 100%;
+    padding: 1rem;
+  }
+  .main-content {
+    padding: 1rem;
+  }
+}
+
+/* Component classes */
+.card {
+  background-color: var(--merveille-surface);
+  border: 1px solid var(--merveille-control-border);
+  border-radius: var(--merveille-radius-panel);
+  padding: 1.5rem;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.5rem 1.25rem;
+  background-color: var(--merveille-ink);
+  color: var(--merveille-surface);
+  border-radius: var(--merveille-radius-control);
+  font-weight: 500;
+  transition: opacity 150ms ease;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.5rem 1.25rem;
+  background-color: var(--merveille-surface);
+  color: var(--merveille-ink);
+  border: 1px solid var(--merveille-control-border);
+  border-radius: var(--merveille-radius-control);
+  font-weight: 500;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.badge-success {
+  background-color: #E8F2E9;
+  color: var(--merveille-success);
+}
+
+.badge-warning {
+  background-color: #FFF2D6;
+  color: var(--merveille-warning);
+}
+
+.badge-danger {
+  background-color: #FBEDEB;
+  color: var(--merveille-danger);
+}

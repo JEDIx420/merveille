@@ -4,7 +4,7 @@ Baseline: 24 November 2026. Application implementation has not started. Planning
 
 ## Delivery phases
 
-- [ ] P00 — [Runtime foundation and compatibility](docs/implementation/phases/00-foundation.md)
+- [x] P00 — [Runtime foundation and compatibility](docs/implementation/phases/00-foundation.md) — [Evidence](docs/evidence/phase-00.md)
 - [ ] P01 — [Identity, invitations and permission foundation](docs/implementation/phases/01-identity-permissions.md)
 - [ ] P02 — [Client portfolios, project records and enquiry intake](docs/implementation/phases/02-projects-intake.md)
 - [ ] P03 — [Private documents and media](docs/implementation/phases/03-private-files.md)
@@ -22,11 +22,11 @@ Baseline: 24 November 2026. Application implementation has not started. Planning
 
 ## Current checkpoint
 
-- Current phase: P00 (not started).
-- Next action: read START_HERE.md, run the handoff checker, inspect the environment, and execute the P00 runtime compatibility spike.
-- Completed application tests: none.
-- Deployed environments: none created by this handoff.
-- Blockers: production operational inputs are listed separately; they do not block local implementation.
+- Current phase: P00 complete; commencing P01 (Identity, invitations and permission foundation).
+- Next action: Read docs/implementation/phases/01-identity-permissions.md and implement D1 schema for users/roles/invitations/sessions, access policy middleware, and auth verification.
+- Completed application tests: AC-064 (runtime compatibility in workerd with D1, R2, SSR, cookies, headers, and synthetic principal). Evidence in docs/evidence/phase-00.md.
+- Deployed environments: local workerd emulated environment active; remote staging/production deferred per instructions.
+- Blockers: None for local implementation. External Access IDP and Meta Cloud API credentials not required for local operations.
 
 ## Update format for the implementation agent
 

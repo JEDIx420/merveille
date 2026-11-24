@@ -1,0 +1,92 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "merveille-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "APP_ENV": "local",
+    "APP_ORIGIN": "http://localhost:8787",
+    "ACCESS_ISSUER": "https://merveille-dev.cloudflareaccess.com",
+    "ACCESS_AUDIENCE": "local-dev-audience",
+    "BUSINESS_TIMEZONE": "Asia/Kolkata",
+    "WHATSAPP_MODE": "fake",
+    "ALLOW_SYNTHETIC_AUTH": "true"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "merveille-data-local",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "PROJECT_FILES",
+      "bucket_name": "merveille-files-local"
+    }
+  ],
+  "env": {
+    "staging": {
+      "name": "merveille-web-staging",
+      "workers_dev": false,
+      "preview_urls": false,
+      "vars": {
+        "APP_ENV": "staging",
+        "APP_ORIGIN": "https://staging.merveilledesigns.com",
+        "ACCESS_ISSUER": "https://merveille.cloudflareaccess.com",
+        "ACCESS_AUDIENCE": "__REPLACE_STAGING_ACCESS_AUDIENCE__",
+        "BUSINESS_TIMEZONE": "Asia/Kolkata",
+        "WHATSAPP_MODE": "fake",
+        "ALLOW_SYNTHETIC_AUTH": "false"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "merveille-data-staging",
+          "database_id": "__REPLACE_STAGING_D1_ID__",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "PROJECT_FILES",
+          "bucket_name": "merveille-files-staging"
+        }
+      ]
+    },
+    "production": {
+      "name": "merveille-web-production",
+      "workers_dev": false,
+      "preview_urls": false,
+      "vars": {
+        "APP_ENV": "production",
+        "APP_ORIGIN": "https://portal.merveilledesigns.com",
+        "ACCESS_ISSUER": "https://merveille.cloudflareaccess.com",
+        "ACCESS_AUDIENCE": "__REPLACE_PRODUCTION_ACCESS_AUDIENCE__",
+        "BUSINESS_TIMEZONE": "Asia/Kolkata",
+        "WHATSAPP_MODE": "fake",
+        "ALLOW_SYNTHETIC_AUTH": "false"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "merveille-data-production",
+          "database_id": "__REPLACE_PRODUCTION_D1_ID__",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "PROJECT_FILES",
+          "bucket_name": "merveille-files-production"
+        }
+      ]
+    }
+  }
+}
