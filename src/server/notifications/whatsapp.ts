@@ -119,7 +119,7 @@ export async function verifyMetaWebhookSignature(
   const signatureBuffer = await crypto.subtle.sign(
     "HMAC",
     cryptoKey,
-    rawBody instanceof Uint8Array ? rawBody : new Uint8Array(rawBody)
+    (rawBody instanceof Uint8Array ? rawBody : new Uint8Array(rawBody)) as any
   );
 
   const actualHex = Array.from(new Uint8Array(signatureBuffer))
