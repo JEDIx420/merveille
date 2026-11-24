@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "product": "Merveille Designs",
   "kind": "active-remediation-plan",
-  "recordedDate": "2026-11-24",
+  "recordedDate": "2026-11-25",
   "applicationBranch": "implement/merveille-portal",
   "auditedSourceCommit": "813ef8b765045b95ff713665a3217e4487491d75",
   "entryPoint": "docs/remediation/README.md",
   "historicalManifest": "docs/implementation/manifest.json",
-  "status": "Independent R05 checks extended: protected staging admin, actual Queue suppression/replay, private backup transport and quarantined restore verified. Native login and policy-only automation credential await security confirmations; real team and remaining provider/recovery gates open.",
+  "status": "Protected email-code staging and policy-scoped invitation sync verified; actual Cron, Queue retry/DLQ and private backup transport verified. Team role UAT, real messaging/webhook and populated remote business recovery remain open.",
   "dependencyPolicy": "Implementation and local-verification contracts unlock independent downstream work. A blocked hosted/provider check remains explicit and blocks real onboarding/release, not unrelated implementation. See stage exit gates.",
   "stages": [
     {
@@ -28,7 +28,7 @@
         "docs/evidence/remediation/r05-operations.json"
       ],
       "blockers": [
-        "Native login switch and policy-only admission credential await action-time confirmation; current Google login remains active. Other real tester emails/roles, second-admin/full-role UAT, real webhook/forced DLQ and populated remote recovery remain outstanding."
+        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding."
       ]
     },
     {
@@ -51,7 +51,7 @@
         "docs/evidence/remediation/r05-operations.json"
       ],
       "blockers": [
-        "Native login switch and policy-only admission credential await action-time confirmation; current Google login remains active. Other real tester emails/roles, second-admin/full-role UAT, real webhook/forced DLQ and populated remote recovery remain outstanding."
+        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding."
       ]
     },
     {
@@ -74,12 +74,12 @@
         "docs/evidence/remediation/r05-operations.json"
       ],
       "blockers": [
-        "Native login switch and policy-only admission credential await action-time confirmation; current Google login remains active. Other real tester emails/roles, second-admin/full-role UAT, real webhook/forced DLQ and populated remote recovery remain outstanding."
+        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding."
       ],
       "parallelWith": [
         "R03"
       ],
-      "integrationGate": "Complete R03 F02–F04 dependencies before declaring corrected drawing/finance reference workflows verified. Continue R03 when these block R02; R03 does not depend on R02."
+      "integrationGate": "Complete R03 F02\u2013F04 dependencies before declaring corrected drawing/finance reference workflows verified. Continue R03 when these block R02; R03 does not depend on R02."
     },
     {
       "id": "R03",
@@ -101,7 +101,7 @@
         "docs/evidence/remediation/r05-operations.json"
       ],
       "blockers": [
-        "Native login switch and policy-only admission credential await action-time confirmation; current Google login remains active. Other real tester emails/roles, second-admin/full-role UAT, real webhook/forced DLQ and populated remote recovery remain outstanding."
+        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding."
       ],
       "parallelWith": [
         "R02"
@@ -128,7 +128,7 @@
         "docs/evidence/remediation/r05-operations.json"
       ],
       "blockers": [
-        "Native login switch and policy-only admission credential await action-time confirmation; current Google login remains active. Other real tester emails/roles, second-admin/full-role UAT, real webhook/forced DLQ and populated remote recovery remain outstanding."
+        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding."
       ]
     },
     {
@@ -154,7 +154,7 @@
         "docs/evidence/remediation/r05-operations.json"
       ],
       "blockers": [
-        "Native login switch and policy-only admission credential await action-time confirmation; current Google login remains active. Other real tester emails/roles, second-admin/full-role UAT, real webhook/forced DLQ and populated remote recovery remain outstanding."
+        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding."
       ]
     }
   ]

@@ -98,3 +98,30 @@ Source checkpoint `8e834b6`; web Worker `601c9003-2621-4d3f-8b06-a357ba93ea1e`; 
 - Remaining gates: native login/policy credential confirmations and real verification, the sister's/company's separate account installation, exact pilot emails/roles and real multi-user scenarios, forced hosted retry/DLQ/webhook/provider delivery, and populated remote business/file recovery. Existing Google/bootstrap checks remain historical evidence for that provider/version. New company installation gets fresh infrastructure, a new exact-email bootstrap and deliberately separate ADMIN/OWNER/project grants; no credentials or identities are copied by cloning Git.
 
 Final bounded schedule observation: the 00:15 IST poll still showed the probe outbox PENDING, with no scheduled event in the private tail. The configured Cron is deployed but execution is NOT marked passed; recheck propagation/dispatch next session. Queue consumer execution remains independently passed. Final source/build is frozen at the versions above; documentation checker passes.
+
+
+## 25 November — native login and remaining independent R05 checks
+
+Source checkpoint `cc47787`, branch `implement/merveille-portal`. User explicitly confirmed switching staging to Cloudflare email-code login and creating a single-policy admission credential. This supersedes earlier pending-confirmation status above. Applied only to isolated staging; no production migration or WhatsApp send.
+
+### Actual provider and browser results
+
+- `wrangler whoami` matched the signed-in dashboard account pinned in configuration. Access app now accepts only One-time PIN, with exact-email admission and no WARP/bypass/domain-wide policy. Selected provider is configured as `ACCESS_IDP_ID` on web/jobs.
+- Created confirmed account-owned Individual Access Policy Admin credential, scoped only to the dedicated staging invitation policy, with the confirmed no-expiry setting. Dedicated-policy GET returned 200; unrelated-policy GET returned 403. Installed `ACCESS_API_TOKEN` using protected stdin to `wrangler secret put` for staging web/jobs. Deleted temporary mode-0600 transfer file; value exists only in platform secret storage, never source or public evidence.
+- User entered their code in Chrome. Actual `/api/session` returned AUTHENTICATED. Existing initial ADMIN identity persisted without automatic email linking, extra OWNER capability or project grants.
+- Actual `/api/dashboard/performance` returned FORBIDDEN for ADMIN. People & access Refresh invitation access completed and displayed “Invitation access is up to date.” This verifies real policy reconciliation with the installed secret.
+- Hosted last-administrator removal was denied. Replaced generic feedback with actionable LAST_ADMIN_CONFLICT while retaining the identical condition inside the atomic mutation for concurrency safety. Retested in the deployed browser: “Keep at least one active administrator. Invite and activate another administrator before removing this access.” Account remained able to use People & access.
+- Private proof: `.private/native-login-admission-ready.jpg`; real identities and setup data excluded from tracked evidence.
+
+### Actual operations results
+
+- `wrangler tail` observed scheduled `*/15 * * * *` events with outcome `ok`, no exceptions; prior suppression outbox became DISPATCHED. Portal consumer suppression/replay remains passed.
+- Separate no-public-ingress Queue probe (`tests/queue-platform/worker.ts`) had no application credentials, identities or business bindings. Real D1 telemetry recorded attempts 1 and 2 for both retry-then-ack and exhausted cases. DLQ pull returned exactly the exhausted fictional case; acknowledgement returned success, ackCount 1. This proves platform retry, dead-letter transfer and pull acknowledgement, not real WhatsApp delivery.
+- Disposed only the probe Worker, two probe Queues and probe D1 after recording evidence. First Worker deletion was refused because it was still a Queue consumer; detached the two probe consumers, then all six deletion operations returned 200/success. Normal staging resources and prior private backup/recovery resources retained. Private result files: `.private/r05-retry-dlq-pull.json`, `.private/r05-retry-dlq-ack.json`, `.private/r05-retry-cleanup.json`.
+- Prior hosted D1/R2 byte transport and quarantined empty-business restore remain passed; full populated remote business recovery remains unverified.
+
+### Commands, deployment and limits
+
+`npm run typecheck`: passed. `npm test`: 106 tests/22 files passed (`.private/r05-final-native-tests.log`). Refined conflict assertions: 10 authorization tests passed (`.private/r05-last-admin-tests.log`). `npm run test:workerd`: 9 checks passed through all 21 migrations, including concurrent last-admin backstop and financial/file recovery (`.private/r05-final-native-workerd.log`). `npm run build:worker`: passed. Final staging web version `250b3d7f-650e-4c22-8aeb-007f1496b94b`, jobs version `de09aa26-c792-41d0-9b21-d91e7d6faa3b`; deploy logs private. `npm run check:handoff`: passed, 420 files, 674 local links, six remediation stages, 70 acceptance cases; this is documentation validation, not application testing.
+
+R05 remains in progress. Next: receive pilot emails and explicit global/project roles privately, invite and test with each person's own account. Second-admin delegation, open-session revocation, real multi-role business/file journeys, real provider/webhook delivery and populated remote business recovery are not passed. Company deployment needs a fresh company-owned Cloudflare installation; cloning source does not transfer resources or secrets. Daily portal use needs no Google Cloud console.

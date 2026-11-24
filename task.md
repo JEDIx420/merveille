@@ -1,6 +1,6 @@
 # Merveille Designs — current task state
 
-Updated 24 November 2026. The application foundation exists on `implement/merveille-portal`. The current assignment is [remediation](docs/remediation/README.md), based on audited source `813ef8b765045b95ff713665a3217e4487491d75`. Remediation is locally verified; isolated staging provisioning is underway and real-account acceptance remains a separate gate.
+Updated 25 November 2026. The application foundation exists on `implement/merveille-portal`. The current assignment is [remediation](docs/remediation/README.md), based on audited source `813ef8b765045b95ff713665a3217e4487491d75`. Remediation is locally verified; isolated staging provisioning is underway and real-account acceptance remains a separate gate.
 
 ## Active stages
 
@@ -17,15 +17,15 @@ Dependencies and exact contracts: [active manifest](docs/remediation/manifest.js
 
 ## Current checkpoint
 
-- Application source commit: `8e834b6` on `implement/merveille-portal`. Existing Next/OpenNext/Cloudflare/Wrangler foundation and logo preserved. Earlier commits contain real identity, money/file/state repair, durable jobs and shared neutral UI.
-- Current work: R05 independent checks extended: real staged Queue delivery/suppression/replay, private D1/R2 backup transport and quarantined restore, account-neutral browser administration and serialized automatic invitation admission. Google-to-Cloudflare-native policy migration and policy-only credential are prepared but await action-time confirmation; Google login remains active.
-- Actual checks: typecheck passed; 106 tests across 22 files passed; optimized Workers build passed; nine isolated workerd identity/concurrency/rollback/recovery checks passed through migration 0021; 11 actual private HTTP/CSRF/diagnostic/cache checks passed; generated binding check and jobs dry run passed; dependency audit reports zero advisories; documentation checker passes. See [session evidence](docs/evidence/remediation/session.md).
-- Browser: final built frontend passed 112 recorded checks covering all 29 pages at 1440×900, 1024×768 and 390×844, pure external-client navigation, 13 focused interactions/failures and setup states; no overflow/JavaScript errors. Reference screenshots were inspected. Tests use fictional browser-only API fixtures; actual Google/hosted business journeys remain unverified.
-- Next exact action: receive the two pending security confirmations (native email-code login and single-policy automation credential), finish provider/policy/secret setup and verify a real login/sync; then onboard the other pilot emails/roles privately. The sister/company will own a separate installation; see company-account-setup.md.
-- Hosted state: protected staging at https://merveille-web-staging.rhelo-bible.workers.dev, Worker version `601c9003-2621-4d3f-8b06-a357ba93ea1e`; actual Google test/login, initial ADMIN acceptance, sign-out/re-entry, used-link rejection and ADMIN-vs-OWNER denial verified. Preview URLs disabled, private bucket, isolated all-21-migration D1; old preview unchanged.
-- Private input: Jay's exact supplied Google email is in ignored protected setup data, absent from public source/evidence. Initial staging ADMIN activation was explicitly confirmed; no extra capability was granted.
-- External gates: native login/policy-token confirmations and hosted sync/login checks, other pilot emails/roles, second-admin/real-role UAT, real provider/webhook/forced retry-DLQ tests and full populated remote business recovery. Queue consumer and private backup transport/quarantine now have hosted evidence; Cron registration is verified but first execution is still under observation. No release acceptance inferred from initial login. Use the [real-account handoff](docs/operations/real-account-handoff.md).
-- Authorized isolated staging resources, migrations, protected deployment, Google IdP/app/policy and initial ADMIN bootstrap completed. No production mutations or WhatsApp sends. Historical P00–P14 release claims remain superseded; complete business acceptance scenarios remain unrun.
+- Current branch: `implement/merveille-portal`. Existing logo, Next/OpenNext and Wrangler foundation preserved. Latest deployed web `250b3d7f-650e-4c22-8aeb-007f1496b94b`; jobs `de09aa26-c792-41d0-9b21-d91e7d6faa3b`.
+- Protected staging: https://merveille-web-staging.rhelo-bible.workers.dev. User completed Cloudflare One-time PIN login. Existing initial ADMIN retained; OWNER endpoint denied. Last-administrator removal denied with clear guidance and unchanged atomic guard. Google Cloud configuration is no longer required for team sign-in.
+- Explicitly approved single-policy Admin credential is installed only in web/jobs platform secrets. Temporary transfer file deleted. Unrelated policy GET denied 403; actual People & access refresh reported “Invitation access is up to date.” No broad/domain admission was added.
+- Actual local checks: typecheck, 106 tests/22 files, nine workerd checks through all 21 migrations, Worker build passed. Typed last-admin assertions passed in 10 authorization tests. Earlier built frontend passed 112 checks across 29 pages/three viewport sizes with fictional API fixtures; this is distinct from real team UAT.
+- Hosted jobs: real scheduled execution outcome ok and outbox dispatched; portal disabled-recipient suppression/replay passed. Isolated no-ingress platform drill observed attempts 1/2, retry success, dead-letter pull and acknowledgement. Real WhatsApp/webhook integration remains unavailable and no message was sent.
+- Private D1/R2 backup transport, byte hash and isolated quarantined restore passed. Current remote snapshot has no populated business history; full populated remote business recovery remains unverified.
+- Next exact action: obtain other team members’ exact sign-in emails and explicit global/project roles privately, invite through People & access, then complete second-admin, role-boundary and business UAT with their own accounts. No demo/impersonation controls exist.
+- Sister/company installation will use a separate Cloudflare account and fresh resources, secrets and bootstrap; cloning source alone does not transfer infrastructure. See [company setup](docs/operations/company-account-setup.md).
+- R05 remains open for team UAT, real provider/webhook tests and populated remote recovery. See [actual evidence](docs/evidence/remediation/session.md) and [handoff](docs/operations/real-account-handoff.md). No production migration or WhatsApp send was performed.
 
 ## Historical P00–P14 implementation records
 

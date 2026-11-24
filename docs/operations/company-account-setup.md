@@ -4,7 +4,7 @@
 
 Jay's account hosts development/staging only. The user will create a separate Cloudflare account owned by the sister/company, clone this repository, and perform the one-time infrastructure setup there. The sister's day-to-day work must use the portal in a browser: invite a person, assign explicit capabilities/projects, copy a private invitation link, and suspend or remove access. She should not need Wrangler, SQL, Google Cloud, or code for those operations.
 
-The latest user instruction supersedes Google-only requirements: use Cloudflare-managed identity. Cloudflare's own identity provider requires a Cloudflare account; email-code login works with an ordinary invited mailbox. The intended simple team option is Cloudflare email codes, with exact-email admission. The staging policy change remains subject to the current session's action-time confirmation and a real login check. No broad domain/everyone policy is authorized. Infrastructure account membership must not silently grant portal ADMIN, OWNER, or project roles.
+The latest user instruction supersedes Google-only requirements: use Cloudflare-managed identity. Cloudflare's own identity provider requires a Cloudflare account; email-code login works with an ordinary invited mailbox. The intended simple team option is Cloudflare email codes, with exact-email admission. Staging now uses verified email-code login with the explicitly approved policy-scoped automation credential in platform secret storage. No broad domain/everyone policy is authorized. Infrastructure account membership must not silently grant portal ADMIN, OWNER, or project roles.
 
 ## One-time setup by the technical operator
 

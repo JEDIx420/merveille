@@ -1,7 +1,7 @@
 {
-  "sourceCommit": "8e834b6",
-  "webVersion": "601c9003-2621-4d3f-8b06-a357ba93ea1e",
-  "jobsVersion": "c2f4b42c-6fb9-4252-b0bd-546f9f4e4c2c",
+  "sourceCommit": "cc47787",
+  "webVersion": "250b3d7f-650e-4c22-8aeb-007f1496b94b",
+  "jobsVersion": "de09aa26-c792-41d0-9b21-d91e7d6faa3b",
   "local": {
     "tests": 106,
     "testFiles": 22,
@@ -14,7 +14,7 @@
   "hosted": {
     "migrationCount": 21,
     "queueConsumer": "passed: disabled-recipient suppression and replay",
-    "cron": "registered; execution not yet observed",
+    "cron": "passed: actual scheduled execution outcome ok; suppression outbox dispatched",
     "backup": {
       "databaseBytes": 55640,
       "fileBytes": 65536,
@@ -28,9 +28,24 @@
       "financialReconciliationErrors": 0,
       "scope": "provider transport and empty-business staging snapshot; populated recovery remains unverified"
     },
-    "nativeLogin": "provider available; policy/app migration not saved pending confirmation",
-    "policyCredential": "reviewed single-policy Admin; not created pending confirmation",
-    "otherApps": "explicit original Cloudflare provider selected to prevent new-provider inheritance"
+    "nativeLogin": "passed: user completed One-time PIN login; existing ADMIN identity retained; OWNER endpoint denied",
+    "policyCredential": "configured in web/jobs platform secrets: single individual policy Admin, no expiry as confirmed; unrelated policy GET denied 403; actual portal refresh succeeded",
+    "otherApps": "explicit original Cloudflare provider selected to prevent new-provider inheritance",
+    "lastAdministrator": "passed: hosted removal denied with actionable LAST_ADMIN_CONFLICT; atomic database guard retained",
+    "retryDlq": {
+      "scope": "isolated platform probe without application bindings or identities",
+      "retryThenAckAttempts": [
+        1,
+        2
+      ],
+      "deadLetterAttempts": [
+        1,
+        2
+      ],
+      "deadLetterPulled": 1,
+      "ackCount": 1,
+      "cleanup": "passed: consumers detached, disposable probe Worker, two Queues and D1 removed; portal resources retained"
+    }
   },
   "team": "remaining account emails/roles and UAT pending"
 }
