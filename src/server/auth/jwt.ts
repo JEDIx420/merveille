@@ -27,7 +27,7 @@ export async function validateAccessJwt(
       env.ACCESS_AUDIENCE.includes("__REPLACE")
     )
       throw new Error("Identity provider setup is incomplete.");
-    if (!jwt) throw new Error("Sign in with your invited Google account.");
+    if (!jwt) throw new Error("Sign in with your invited email account.");
     const keys = createRemoteJWKSet(new URL(`${issuer}/cdn-cgi/access/certs`));
     const { payload } = await jwtVerify(jwt, keys, {
       issuer,
@@ -50,7 +50,7 @@ export async function validateAccessJwt(
       typeof payload.sub !== "string" ||
       !payload.sub.trim()
     )
-      throw new Error("A human Google identity is required.");
+      throw new Error("A human identity is required.");
     return { valid: true, payload: payload as unknown as AccessJwtPayload };
   } catch {
     return {

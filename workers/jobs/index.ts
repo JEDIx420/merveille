@@ -13,6 +13,7 @@ interface Env
       | "ACCESS_APP_ID"
       | "ACCESS_POLICY_ID"
       | "ACCESS_API_TOKEN"
+      | "ACCESS_IDP_ID"
       | "ACCESS_GOOGLE_IDP_ID"
     > {
   DB: D1Database;

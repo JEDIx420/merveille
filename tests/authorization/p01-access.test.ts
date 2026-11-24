@@ -139,7 +139,7 @@ describe("Real identities and independent capabilities", () => {
     expect(stored.token).not.toBe(token);
     await expect(
       acceptInvitation(token, identity("wrong@example.test"), db),
-    ).rejects.toThrow(/Google account/);
+    ).rejects.toMatchObject({ code: "WRONG_ACCOUNT" });
     await expect(
       acceptInvitation(token, identity("invited@example.test"), db),
     ).rejects.toThrow(/awaiting access setup/);

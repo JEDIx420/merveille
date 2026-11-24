@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   const identity = await verifiedIdentity(request, env);
   if (!identity)
     return Response.json(
-      { error: "Sign in with your invited Google account." },
+      { error: "Sign in with your invited email account." },
       { status: 401 },
     );
   try {

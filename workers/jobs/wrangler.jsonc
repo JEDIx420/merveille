@@ -1,6 +1,7 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "merveille-jobs-local",
+  "account_id": "2dbda19c8f37c5d767acfd842321c4a5",
   "main": "index.ts",
   "compatibility_date": "2026-11-24",
   "compatibility_flags": ["nodejs_compat"],
@@ -30,4 +31,23 @@
   },
   "triggers": { "crons": ["*/15 * * * *"] },
   "observability": { "enabled": true, "traces": { "enabled": true } },
+  "env": {
+    "staging": {
+      "name": "merveille-jobs-staging",
+      "workers_dev": false,
+      "preview_urls": false,
+      "vars": { "WHATSAPP_MODE": "disabled" },
+      "d1_databases": [{
+        "binding": "DB",
+        "database_name": "merveille-data-staging",
+        "database_id": "55b52363-a87e-4b4f-a551-607ad26c6b20",
+        "migrations_dir": "../../migrations"
+      }],
+      "queues": {
+        "producers": [{ "binding": "JOB_QUEUE", "queue": "merveille-notifications-staging" }],
+        "consumers": [{ "queue": "merveille-notifications-staging", "max_batch_size": 10, "max_retries": 5, "dead_letter_queue": "merveille-notifications-dead-staging" }]
+      },
+      "triggers": { "crons": ["*/15 * * * *"] }
+    }
+  }
 }

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
 import { disableUser, updateGrants } from "@/server/domain/identity/service";
+import { reconcileAccessAdmission } from "@/server/auth/admission";
 
 export async function POST(
   request: NextRequest,
@@ -44,6 +45,7 @@ export async function POST(
         body.reason || "Administrative removal",
         env.DB,
       );
+      await reconcileAccessAdmission(env, auth.principal.orgId);
       return NextResponse.json({ ok: true, ...result });
     } catch (err: any) {
       return NextResponse.json(

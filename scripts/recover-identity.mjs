@@ -37,7 +37,7 @@ if (
   Number(payload.iat) > Date.now() / 1000 + 30
 )
   throw new Error(
-    "A fresh exact-account verified Google/Access identity is required.",
+    "A fresh exact-account verified Cloudflare Access identity is required.",
   );
 const q = (v) => `'${String(v).replaceAll("'", "''")}'`;
 // The migration trigger updates only an explicitly operator-verified binding, atomically with audit.

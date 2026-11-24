@@ -315,7 +315,7 @@ export async function acceptInvitation(
 ) {
   if (!identity || typeof identity !== "object")
     throw new AuthorizationError(
-      "Verified Google sign-in is required.",
+      "Verified Cloudflare Access sign-in is required.",
       "UNAUTHENTICATED",
     );
   await rateLimit(db, `accept:${identity.sub}`, 30);
@@ -331,7 +331,7 @@ export async function acceptInvitation(
     );
   if (normalize(identity.email) !== normalize(inv.email))
     throw new AuthorizationError(
-      "Sign out and sign in with the Google account invited by your administrator.",
+      "Sign out and sign in with the email account invited by your administrator.",
       "WRONG_ACCOUNT",
     );
   if (inv.admission_status !== "READY")
@@ -720,7 +720,7 @@ export async function manageInvitation(
         entityType: "INVITATION",
         entityId: inv.id,
         action: "EDGE_ADMISSION_CONFIRMED",
-        reason: "Operator confirmed exact-email Google Access admission",
+        reason: "Operator confirmed exact-email Cloudflare Access admission",
       }),
     ]);
     return { status: "READY" };

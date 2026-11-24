@@ -63,6 +63,7 @@ export default function People() {
         }),
       );
       setResult(res);
+      setCopied(false);
       setShow(false);
       setEmail("");
       setName("");
@@ -80,7 +81,7 @@ export default function People() {
     if (
       !(await feedback.confirm(
         action === "READY"
-          ? "Confirm that an operator has added this exact invited email to the dedicated Google Access allowlist?"
+          ? "Confirm that an operator has added this exact invited email to the dedicated Cloudflare Access allowlist?"
           : "Update this invitation? Old invitation links will be invalidated.",
       ))
     )
@@ -94,13 +95,23 @@ export default function People() {
           body: JSON.stringify({ action }),
         }),
       );
-      if (res.invitationUrl) setResult(res);
+      if (res.invitationUrl) { setResult(res); setCopied(false); }
       await load();
     } catch (e: any) {
       setError(e.message);
     } finally {
       setBusy(false);
     }
+  }
+  async function retryAdmission() {
+    setBusy(true);
+    setError("");
+    try {
+      const admission = await readResponse(await fetch("/api/people/admission", { method: "POST" }));
+      await load();
+      if (admission.status !== "READY") setError("Invitation access is not ready yet. Retry shortly, or contact the person who set up this workspace.");
+    } catch (e: any) { setError(e.message); }
+    finally { setBusy(false); }
   }
   return (
     <div className={ui.page}>
@@ -116,12 +127,11 @@ export default function People() {
         <section className={ui.panel}>
           <h2>Invitation created</h2>
           <p>
-            No email has been sent. Complete access setup before sharing the
-            invitation.
+            {result.admissionStatus === "READY" ? "Access is ready. Copy and privately share the invitation link." : "Your invitation is saved. Access is being prepared before the recipient can join."} No invitation email has been sent.
           </p>
           <p className={ui.meta}>
             Copy the invitation link and share it privately with the intended
-            recipient. It can only be accepted by their verified Google account.
+            recipient. It can only be accepted using their invited email address.
           </p>
           <div className={ui.actions}>
             <Button
@@ -202,6 +212,7 @@ export default function People() {
             </div>
             <section className={ui.panel}>
               <h2>Invitations</h2>
+              {data.invitations?.some((inv: any) => inv.status === "PENDING" && inv.admission_status !== "READY") && <Button secondary disabled={busy} onClick={retryAdmission}>Retry invitation access</Button>}
               {data.invitations?.length ? (
                 data.invitations.map((inv: any) => (
                   <div className={ui.row} key={inv.id}>
@@ -273,8 +284,8 @@ export default function People() {
               />
             </Field>
             <Field
-              label="Exact Google email"
-              help="Use their personal Gmail or Google Workspace address. Aliases are not merged."
+              label="Exact email address"
+              help="Use the email address they will sign in with. Company and personal mailboxes are supported; aliases stay separate."
             >
               <input
                 required

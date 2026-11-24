@@ -98,10 +98,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <h1>Sign in to continue</h1>
         <p>
           Your session is unavailable or has expired. Sign in with your invited
-          Google account.
+          email account.
         </p>
         <a className="btn-primary" href="/api/auth/login?returnTo=/overview">
-          Continue with Google
+          Continue securely
         </a>
         {error && !/session|Unauthorized/i.test(error) && <p>{error}</p>}
       </AuthShell>

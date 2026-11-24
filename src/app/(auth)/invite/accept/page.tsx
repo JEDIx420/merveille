@@ -42,7 +42,7 @@ export default function InvitationPage() {
       <p>
         {accepted
           ? "Your invitation has been accepted. You can now open your permitted projects."
-          : "Use the exact Google account your administrator invited. Accepting this invitation activates only the access they assigned."}
+          : "Use the exact email account your administrator invited. Accepting this invitation activates only the access they assigned."}
       </p>
       {error && <ErrorState message={error} />}{" "}
       {accepted ? (
@@ -57,7 +57,7 @@ export default function InvitationPage() {
         <ErrorState message="This invitation link is incomplete. Ask your administrator for a new link." />
       )}
       <p className="auth-help">
-        Wrong Google account? <a href="/api/auth/logout">Sign out</a> and open
+        Wrong email account? <a href="/api/auth/logout">Sign out</a> and open
         your invitation again with the invited account.
       </p>
     </>

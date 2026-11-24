@@ -91,6 +91,7 @@ export async function createRecoveryCheckpoint(
       "bootstrap_state",
       "bootstrap_setup",
       "access_admission_jobs",
+      "access_admission_sync_locks",
       "bootstrap_invitations",
       "bootstrap",
     ]);

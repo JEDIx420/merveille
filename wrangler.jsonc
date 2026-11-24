@@ -61,6 +61,10 @@
         {
           "binding": "PROJECT_FILES",
           "bucket_name": "merveille-files-staging"
+        },
+        {
+          "binding": "BACKUP_FILES",
+          "bucket_name": "merveille-backups-staging"
         }
       ]
     },

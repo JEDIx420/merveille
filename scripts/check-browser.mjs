@@ -494,7 +494,7 @@ for (const size of process.env.BROWSER_SCOPE === "actions"
         width: size.width,
         visible:
           (await page
-            .getByRole("link", { name: "Continue with Google", exact: true })
+            .getByRole("link", { name: "Continue securely", exact: true })
             .count()) === 0,
       });
     }
@@ -530,7 +530,7 @@ await page
   .getByLabel("Full name", { exact: true })
   .fill("Fictional invited person");
 await page
-  .getByLabel("Exact Google email", { exact: true })
+  .getByLabel("Exact email address", { exact: true })
   .fill("newperson@example.invalid");
 await page
   .getByLabel("Administrator — people, receipts, payroll and profit", {

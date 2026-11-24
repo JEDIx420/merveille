@@ -5,6 +5,8 @@ interface CloudflareEnv extends WranglerBindings {
   ACCESS_APP_ID?: string;
   ACCESS_POLICY_ID?: string;
   ACCESS_API_TOKEN?: string;
+  ACCESS_IDP_ID?: string;
+  /** Transitional compatibility with the first staging configuration. */
   ACCESS_GOOGLE_IDP_ID?: string;
   BACKUP_FILES?: R2Bucket;
   WHATSAPP_GRAPH_VERSION?: string;

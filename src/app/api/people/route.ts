@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
 import { listPeople, inviteUser } from "@/server/domain/identity/service";
+import { reconcileAccessAdmission } from "@/server/auth/admission";
 
 export async function GET(request: NextRequest) {
   const { env } = await getCloudflareContext({ async: true });
@@ -62,7 +63,8 @@ export async function POST(request: NextRequest) {
       env.DB,
     );
 
-    return NextResponse.json({ ok: true, ...result }, { status: 201 });
+    const admission = await reconcileAccessAdmission(env, auth.principal.orgId);
+    return NextResponse.json({ ok: true, ...result, admissionStatus: admission.status }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json(
       { error: publicError(err), code: err.code || "FORBIDDEN" },

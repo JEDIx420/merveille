@@ -2,6 +2,7 @@ import { publicError, errorStatus } from "@/server/http/errors";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
 import { manageInvitation } from "@/server/domain/identity/service";
+import { reconcileAccessAdmission } from "@/server/auth/admission";
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -13,9 +14,9 @@ export async function POST(
   try {
     const { id } = await params;
     const body = (await request.json()) as any;
-    return Response.json(
-      await manageInvitation(principal, id, body.action, env.DB),
-    );
+    const result = await manageInvitation(principal, id, body.action, env.DB);
+    const admission = await reconcileAccessAdmission(env, principal.orgId);
+    return Response.json({ ...result, admissionStatus: admission.status });
   } catch (err: any) {
     return Response.json(
       {
