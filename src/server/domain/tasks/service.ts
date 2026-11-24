@@ -21,6 +21,7 @@ export type TaskStatus =
 export interface CreateTaskInput {
   projectId: string;
   stageId?: string;
+  changeRequestId?: string;
   title: string;
   description?: string;
   priority?: TaskPriority;
@@ -114,13 +115,14 @@ export async function createTask(
 
   await execute(
     db,
-    `INSERT INTO tasks (id, org_id, project_id, stage_id, title, description, priority, status, creator_user_id, assignee_user_id, original_due_date, effective_due_date, reopen_count, revision, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, ?)`,
+    `INSERT INTO tasks (id, org_id, project_id, stage_id, change_request_id, title, description, priority, status, creator_user_id, assignee_user_id, original_due_date, effective_due_date, reopen_count, revision, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, ?)`,
     [
       taskId,
       actor.orgId,
       input.projectId,
       input.stageId || null,
+      input.changeRequestId || null,
       input.title.trim(),
       input.description || null,
       input.priority || "MEDIUM",
@@ -256,6 +258,16 @@ export async function startTask(actor: UserPrincipal, taskId: string, db: D1Data
   if (!task) throw new AuthorizationError("Task not found.", "NOT_FOUND");
 
   assertTaskAccess(actor, task.project_id);
+
+  if (task.change_request_id) {
+    const cr = await queryFirst<any>(db, "SELECT status FROM change_requests WHERE id = ?", [task.change_request_id]);
+    if (!cr || (cr.status !== "AUTHORIZED" && cr.status !== "IN_PROGRESS" && cr.status !== "COMPLETED")) {
+      throw new AuthorizationError(
+        "Cannot start task linked to unauthorized change request. Manager authorization and payment confirmation required.",
+        "CHANGE_REQUEST_NOT_AUTHORIZED"
+      );
+    }
+  }
 
   const now = Date.now();
   await execute(db, "UPDATE tasks SET status = 'IN_PROGRESS', revision = revision + 1 WHERE id = ?", [taskId]);
