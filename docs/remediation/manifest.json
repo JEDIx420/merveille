@@ -7,7 +7,7 @@
   "auditedSourceCommit": "813ef8b765045b95ff713665a3217e4487491d75",
   "entryPoint": "docs/remediation/README.md",
   "historicalManifest": "docs/implementation/manifest.json",
-  "status": "R00–R04 implemented and locally verified. R05 isolated staging resources/migrations and Worker upload completed with ingress disabled; Google/Access configuration and real-person acceptance blocked.",
+  "status": "R00–R04 implemented and locally verified. R05 protected staging Google login and initial ADMIN onboarding verified; remaining hosted business/integration and real-team gates in progress.",
   "dependencyPolicy": "Implementation and local-verification contracts unlock independent downstream work. A blocked hosted/provider check remains explicit and blocks real onboarding/release, not unrelated implementation. See stage exit gates.",
   "stages": [
     {
@@ -21,13 +21,13 @@
       ],
       "implementation": "passed",
       "localVerification": "passed",
-      "hostedVerification": "blocked",
+      "hostedVerification": "in-progress",
       "teamAcceptance": "not-started",
       "evidence": [
         "docs/evidence/remediation/session.md"
       ],
       "blockers": [
-        "Staging is uploaded with ingress disabled. Need actual Zero Trust team domain, tested Google provider and private Access-management credential before protection, bootstrap and real-person testing. Hosted jobs/recovery/provider checks remain outstanding."
+        "Other pilot Google emails/roles and individual Google/edge admission pending; second-admin and real-role business UAT, hosted jobs/provider/recovery remain unverified. Automatic Access reconciliation is not configured; operator admission required."
       ]
     },
     {
@@ -43,13 +43,13 @@
       ],
       "implementation": "passed",
       "localVerification": "passed",
-      "hostedVerification": "blocked",
+      "hostedVerification": "in-progress",
       "teamAcceptance": "blocked",
       "evidence": [
         "docs/evidence/remediation/session.md"
       ],
       "blockers": [
-        "Staging is uploaded with ingress disabled. Need actual Zero Trust team domain, tested Google provider and private Access-management credential before protection, bootstrap and real-person testing. Hosted jobs/recovery/provider checks remain outstanding."
+        "Other pilot Google emails/roles and individual Google/edge admission pending; second-admin and real-role business UAT, hosted jobs/provider/recovery remain unverified. Automatic Access reconciliation is not configured; operator admission required."
       ]
     },
     {
@@ -65,13 +65,13 @@
       ],
       "implementation": "passed",
       "localVerification": "passed",
-      "hostedVerification": "blocked",
+      "hostedVerification": "in-progress",
       "teamAcceptance": "blocked",
       "evidence": [
         "docs/evidence/remediation/session.md"
       ],
       "blockers": [
-        "Staging is uploaded with ingress disabled. Need actual Zero Trust team domain, tested Google provider and private Access-management credential before protection, bootstrap and real-person testing. Hosted jobs/recovery/provider checks remain outstanding."
+        "Other pilot Google emails/roles and individual Google/edge admission pending; second-admin and real-role business UAT, hosted jobs/provider/recovery remain unverified. Automatic Access reconciliation is not configured; operator admission required."
       ],
       "parallelWith": [
         "R03"
@@ -91,13 +91,13 @@
       ],
       "implementation": "passed",
       "localVerification": "passed",
-      "hostedVerification": "blocked",
+      "hostedVerification": "in-progress",
       "teamAcceptance": "blocked",
       "evidence": [
         "docs/evidence/remediation/session.md"
       ],
       "blockers": [
-        "Staging is uploaded with ingress disabled. Need actual Zero Trust team domain, tested Google provider and private Access-management credential before protection, bootstrap and real-person testing. Hosted jobs/recovery/provider checks remain outstanding."
+        "Other pilot Google emails/roles and individual Google/edge admission pending; second-admin and real-role business UAT, hosted jobs/provider/recovery remain unverified. Automatic Access reconciliation is not configured; operator admission required."
       ],
       "parallelWith": [
         "R02"
@@ -117,13 +117,13 @@
       ],
       "implementation": "passed",
       "localVerification": "passed",
-      "hostedVerification": "blocked",
+      "hostedVerification": "in-progress",
       "teamAcceptance": "blocked",
       "evidence": [
         "docs/evidence/remediation/session.md"
       ],
       "blockers": [
-        "Staging is uploaded with ingress disabled. Need actual Zero Trust team domain, tested Google provider and private Access-management credential before protection, bootstrap and real-person testing. Hosted jobs/recovery/provider checks remain outstanding."
+        "Other pilot Google emails/roles and individual Google/edge admission pending; second-admin and real-role business UAT, hosted jobs/provider/recovery remain unverified. Automatic Access reconciliation is not configured; operator admission required."
       ]
     },
     {
@@ -142,13 +142,13 @@
       ],
       "implementation": "passed",
       "localVerification": "passed",
-      "hostedVerification": "blocked",
-      "teamAcceptance": "blocked",
+      "hostedVerification": "in-progress",
+      "teamAcceptance": "in-progress",
       "evidence": [
         "docs/evidence/remediation/session.md"
       ],
       "blockers": [
-        "Staging is uploaded with ingress disabled. Need actual Zero Trust team domain, tested Google provider and private Access-management credential before protection, bootstrap and real-person testing. Hosted jobs/recovery/provider checks remain outstanding."
+        "Other pilot Google emails/roles and individual Google/edge admission pending; second-admin and real-role business UAT, hosted jobs/provider/recovery remain unverified. Automatic Access reconciliation is not configured; operator admission required."
       ]
     }
   ]
