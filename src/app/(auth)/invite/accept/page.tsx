@@ -9,9 +9,12 @@ export default function InvitationPage() {
   useEffect(() => {
     const value =
       new URLSearchParams(location.search).get("token") ||
+      new URLSearchParams(location.hash.slice(1)).get("token") ||
       location.hash.slice(1);
-    setToken(value);
-    if (value) history.replaceState(null, "", location.pathname);
+    if (value) {
+      setToken(value);
+      history.replaceState(null, "", location.pathname);
+    }
   }, []);
   async function accept() {
     setBusy(true);

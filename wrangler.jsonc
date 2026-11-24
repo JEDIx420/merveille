@@ -35,15 +35,19 @@
   "env": {
     "staging": {
       "name": "merveille-web-staging",
-      "workers_dev": false,
+      "workers_dev": true,
       "preview_urls": false,
       "vars": {
         "APP_ENV": "staging",
         "APP_ORIGIN": "https://merveille-web-staging.rhelo-bible.workers.dev",
-        "ACCESS_ISSUER": "",
-        "ACCESS_AUDIENCE": "",
+        "ACCESS_ISSUER": "https://plain-dream-04be.cloudflareaccess.com",
+        "ACCESS_AUDIENCE": "d5c2fdd855f563798727eff578e69c9ce3d808cb3fbf476b4477c73ca80caa30",
         "BUSINESS_TIMEZONE": "Asia/Kolkata",
-        "WHATSAPP_MODE": "disabled"
+        "WHATSAPP_MODE": "disabled",
+        "ACCESS_ACCOUNT_ID": "2dbda19c8f37c5d767acfd842321c4a5",
+        "ACCESS_APP_ID": "eb44e1d8-bd9c-437d-8bac-c5a8da71d60c",
+        "ACCESS_POLICY_ID": "66d9b567-8837-42a0-b826-2115aacc5505",
+        "ACCESS_GOOGLE_IDP_ID": "94487aea-8041-48ab-a17c-ec2aff33da29"
       },
       "d1_databases": [
         {
@@ -95,5 +99,6 @@
     "traces": {
       "enabled": true
     }
-  }
+  },
+  "account_id": "2dbda19c8f37c5d767acfd842321c4a5"
 }
