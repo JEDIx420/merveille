@@ -1,3 +1,4 @@
+import { publicError } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -18,7 +19,7 @@ export async function PUT(request: NextRequest) {
   if (!sessionId || !partNumber) {
     return NextResponse.json(
       { error: "Missing sessionId or partNumber" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -32,14 +33,14 @@ export async function PUT(request: NextRequest) {
         chunk,
       },
       env.DB,
-      env.PROJECT_FILES
+      env.PROJECT_FILES,
     );
     return NextResponse.json({ ok: true, ...result });
   } catch (err: any) {
     const status = err.code === "NOT_FOUND" ? 404 : 403;
     return NextResponse.json(
-      { error: err.message, code: err.code || "OPERATION_FAILED" },
-      { status }
+      { error: publicError(err), code: err.code || "OPERATION_FAILED" },
+      { status },
     );
   }
 }

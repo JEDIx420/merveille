@@ -3,19 +3,20 @@
   "name": "merveille-web",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-11-24",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
   "vars": {
-    "APP_ENV": "production",
-    "APP_ORIGIN": "https://merveille-web.workers.dev",
-    "ACCESS_ISSUER": "https://merveille.cloudflareaccess.com",
-    "ACCESS_AUDIENCE": "merveille-portal-audience",
+    "APP_ENV": "local",
+    "APP_ORIGIN": "http://localhost:8787",
+    "ACCESS_ISSUER": "",
+    "ACCESS_AUDIENCE": "",
     "BUSINESS_TIMEZONE": "Asia/Kolkata",
-    "WHATSAPP_MODE": "fake",
-    "ALLOW_SYNTHETIC_AUTH": "true"
+    "WHATSAPP_MODE": "disabled"
   },
   "d1_databases": [
     {
@@ -42,8 +43,7 @@
         "ACCESS_ISSUER": "https://merveille.cloudflareaccess.com",
         "ACCESS_AUDIENCE": "__REPLACE_STAGING_ACCESS_AUDIENCE__",
         "BUSINESS_TIMEZONE": "Asia/Kolkata",
-        "WHATSAPP_MODE": "fake",
-        "ALLOW_SYNTHETIC_AUTH": "false"
+        "WHATSAPP_MODE": "disabled"
       },
       "d1_databases": [
         {
@@ -70,8 +70,7 @@
         "ACCESS_ISSUER": "https://merveille.cloudflareaccess.com",
         "ACCESS_AUDIENCE": "__REPLACE_PRODUCTION_ACCESS_AUDIENCE__",
         "BUSINESS_TIMEZONE": "Asia/Kolkata",
-        "WHATSAPP_MODE": "fake",
-        "ALLOW_SYNTHETIC_AUTH": "false"
+        "WHATSAPP_MODE": "disabled"
       },
       "d1_databases": [
         {
@@ -87,6 +86,14 @@
           "bucket_name": "merveille-files-production"
         }
       ]
+    }
+  },
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": {
+    "enabled": true,
+    "traces": {
+      "enabled": true
     }
   }
 }

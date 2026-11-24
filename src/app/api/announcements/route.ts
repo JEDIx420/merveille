@@ -1,3 +1,4 @@
+import { publicError, errorStatus } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -14,13 +15,13 @@ export async function GET(request: NextRequest) {
   try {
     const announcements = await UpdatesService.listCompanyAnnouncements(
       env.DB,
-      auth.principal
+      auth.principal,
     );
     return NextResponse.json({ ok: true, announcements });
   } catch (err: any) {
     return NextResponse.json(
-      { error: err.message, code: err.code || "BAD_REQUEST" },
-      { status: 400 }
+      { error: publicError(err), code: err.code || "BAD_REQUEST" },
+      { status: errorStatus(err) },
     );
   }
 }
@@ -47,27 +48,27 @@ export async function POST(request: NextRequest) {
           audienceType: body.audienceType,
           targetProjectIds: body.targetProjectIds,
           targetClientUserIds: body.targetClientUserIds,
-        }
+        },
       );
       return NextResponse.json({ ok: true, ...result }, { status: 201 });
     } else if (action === "PUBLISH") {
       const result = await UpdatesService.publishCompanyAnnouncement(
         env.DB,
         auth.principal,
-        body.announcementId
+        body.announcementId,
       );
       return NextResponse.json({ ok: true, ...result });
     } else {
       return NextResponse.json(
         { error: `Unknown action: ${action}` },
-        { status: 400 }
+        { status: 400 },
       );
     }
   } catch (err: any) {
     const status = err.code === "FORBIDDEN" ? 403 : 400;
     return NextResponse.json(
-      { error: err.message, code: err.code || "BAD_REQUEST" },
-      { status }
+      { error: publicError(err), code: err.code || "BAD_REQUEST" },
+      { status },
     );
   }
 }

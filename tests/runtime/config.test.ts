@@ -28,3 +28,5 @@ describe("Brand Configuration & Financial Formatting", () => {
     expect(formatted).toContain("2026");
   });
 });
+
+it('business deadline keys follow Kolkata across UTC date boundaries',async()=>{const {businessDateISO}=await import('@/shared/config');expect(businessDateISO(new Date('2026-11-23T20:00:00Z'))).toBe('2026-11-24');expect(businessDateISO(new Date('2026-11-23T17:00:00Z'))).toBe('2026-11-23');});

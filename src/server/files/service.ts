@@ -4,24 +4,46 @@
  * current-authorization download gates, private non-cacheable responses, and retention integrity.
  */
 
-import { UserPrincipal } from "@/server/auth/principal";
-import { assertProjectAccess, AuthorizationError } from "@/server/auth/policy";
+import { canReadFile } from "./visibility";
+import { UserPrincipal, hasCapability } from "@/server/auth/principal";
+import {
+  assertProjectAccess,
+  AuthorizationError,
+  canReadInternalNotes,
+} from "@/server/auth/policy";
 import { query, queryFirst, execute } from "@/server/db";
 import { recordAuditEvent } from "@/server/domain/identity/service";
 
 export type FileClass = "IMAGE" | "PDF" | "CAD" | "VIDEO" | "DOCUMENT";
 
 export const FILE_CEILINGS: Record<FileClass, number> = {
-  IMAGE: 25 * 1024 * 1024,      // 25 MiB
-  PDF: 100 * 1024 * 1024,       // 100 MiB
-  CAD: 250 * 1024 * 1024,       // 250 MiB
-  VIDEO: 1024 * 1024 * 1024,    // 1 GiB
-  DOCUMENT: 50 * 1024 * 1024,   // 50 MiB
+  IMAGE: 25 * 1024 * 1024, // 25 MiB
+  PDF: 100 * 1024 * 1024, // 100 MiB
+  CAD: 250 * 1024 * 1024, // 250 MiB
+  VIDEO: 1024 * 1024 * 1024, // 1 GiB
+  DOCUMENT: 50 * 1024 * 1024, // 50 MiB
 };
 
 const PROHIBITED_EXTENSIONS = new Set([
-  "exe", "bat", "cmd", "sh", "bin", "html", "htm", "js", "mjs", "ts",
-  "php", "py", "vbs", "ps1", "app", "jar", "msi", "com", "scr"
+  "exe",
+  "bat",
+  "cmd",
+  "sh",
+  "bin",
+  "html",
+  "htm",
+  "js",
+  "mjs",
+  "ts",
+  "php",
+  "py",
+  "vbs",
+  "ps1",
+  "app",
+  "jar",
+  "msi",
+  "com",
+  "scr",
 ]);
 
 export interface InitUploadInput {
@@ -31,7 +53,12 @@ export interface InitUploadInput {
   sizeBytes: number;
   fileClass: FileClass;
   isInternalOnly?: boolean;
-  referenceType?: "SITE_IMAGE" | "FEASIBILITY" | "DRAWING" | "INVOICE" | "GENERAL";
+  referenceType?:
+    | "SITE_IMAGE"
+    | "FEASIBILITY"
+    | "DRAWING"
+    | "INVOICE"
+    | "GENERAL";
   referenceId?: string;
   isSettlementEvidence?: boolean; // For admin upload to archived project
 }
@@ -50,20 +77,36 @@ export interface CompleteUploadInput {
 /**
  * Validate file name, extension, active content restrictions, and size ceilings.
  */
-export function validateUploadParameters(fileName: string, mimeType: string, sizeBytes: number, fileClass: FileClass) {
+export function validateUploadParameters(
+  fileName: string,
+  mimeType: string,
+  sizeBytes: number,
+  fileClass: FileClass,
+) {
   if (sizeBytes <= 0) {
-    throw new AuthorizationError("Upload file cannot be empty (0 bytes).", "INVALID_FILE_SIZE");
+    throw new AuthorizationError(
+      "Upload file cannot be empty (0 bytes).",
+      "INVALID_FILE_SIZE",
+    );
   }
 
+  if (!Number.isSafeInteger(sizeBytes))
+    throw new AuthorizationError(
+      "File size must be a positive whole number.",
+      "INVALID_FILE_SIZE",
+    );
   const ceiling = FILE_CEILINGS[fileClass];
   if (!ceiling) {
-    throw new AuthorizationError(`Unsupported file class: ${fileClass}`, "UNSUPPORTED_CLASS");
+    throw new AuthorizationError(
+      `Unsupported file class: ${fileClass}`,
+      "UNSUPPORTED_CLASS",
+    );
   }
 
   if (sizeBytes > ceiling) {
     throw new AuthorizationError(
       `File size (${Math.round(sizeBytes / (1024 * 1024))} MiB) exceeds the allowed ceiling for ${fileClass} (${Math.round(ceiling / (1024 * 1024))} MiB).`,
-      "FILE_TOO_LARGE"
+      "FILE_TOO_LARGE",
     );
   }
 
@@ -73,15 +116,18 @@ export function validateUploadParameters(fileName: string, mimeType: string, siz
   if (PROHIBITED_EXTENSIONS.has(ext)) {
     throw new AuthorizationError(
       `File extension .${ext} is prohibited due to executable/active content restrictions.`,
-      "PROHIBITED_FILE_TYPE"
+      "PROHIBITED_FILE_TYPE",
     );
   }
 
   // Reject active content HTML MIME
-  if (mimeType.toLowerCase().includes("text/html") || mimeType.toLowerCase().includes("javascript")) {
+  if (
+    mimeType.toLowerCase().includes("text/html") ||
+    mimeType.toLowerCase().includes("javascript")
+  ) {
     throw new AuthorizationError(
       "HTML or script MIME types are prohibited.",
-      "PROHIBITED_MIME_TYPE"
+      "PROHIBITED_MIME_TYPE",
     );
   }
 }
@@ -94,17 +140,19 @@ export async function initUploadSession(
   actor: UserPrincipal,
   input: InitUploadInput,
   db: D1Database,
-  bucket: R2Bucket
+  bucket: R2Bucket,
 ) {
   // 1. Authorization & audience checks (AC-057)
   assertProjectAccess(actor, input.projectId);
 
   // Check project status
-  const project = await queryFirst<{ id: string; org_id: string; is_archived: number }>(
-    db,
-    "SELECT id, org_id, is_archived FROM projects WHERE id = ?",
-    [input.projectId]
-  );
+  const project = await queryFirst<{
+    id: string;
+    org_id: string;
+    is_archived: number;
+  }>(db, "SELECT id, org_id, is_archived FROM projects WHERE id = ?", [
+    input.projectId,
+  ]);
 
   if (!project) {
     throw new AuthorizationError("Project not found.", "NOT_FOUND");
@@ -112,26 +160,42 @@ export async function initUploadSession(
 
   // Archived projects reject new content uploads except ADMIN settlement-evidence (REQ-FIL-001)
   if (project.is_archived === 1) {
-    if (actor.role !== "ADMIN" || !input.isSettlementEvidence) {
+    if (!hasCapability(actor, "ADMIN") || !input.isSettlementEvidence) {
       throw new AuthorizationError(
         "Archived projects reject new file uploads except admin settlement evidence.",
-        "PROJECT_ARCHIVED"
+        "PROJECT_ARCHIVED",
       );
     }
   }
 
   // Unauthorized parent attachment check: Clients cannot attach files to internal notes or financial payroll (AC-057)
-  if (actor.role === "MAIN_CLIENT" || actor.role === "CLIENT_REP") {
+  if (!canReadInternalNotes(actor, input.projectId)) {
     if (input.isInternalOnly) {
-      throw new AuthorizationError("Client cannot create internal practice attachments.", "FORBIDDEN");
+      throw new AuthorizationError(
+        "Client cannot create internal practice attachments.",
+        "FORBIDDEN",
+      );
     }
-    if (input.referenceType === "INVOICE" || input.referenceType === "DRAWING") {
-      throw new AuthorizationError("Clients cannot attach directly to official drawings or invoices.", "FORBIDDEN");
+    if (
+      input.referenceType === "INVOICE" ||
+      input.referenceType === "DRAWING"
+    ) {
+      throw new AuthorizationError(
+        "Clients cannot attach directly to official drawings or invoices.",
+        "FORBIDDEN",
+      );
     }
   }
 
+  if (project.org_id !== actor.orgId)
+    throw new AuthorizationError("Project not found.", "NOT_FOUND");
   // 2. Validate file parameters
-  validateUploadParameters(input.fileName, input.mimeType, input.sizeBytes, input.fileClass);
+  validateUploadParameters(
+    input.fileName,
+    input.mimeType,
+    input.sizeBytes,
+    input.fileClass,
+  );
 
   // 3. Assign server-side immutable storage key
   const fileId = `fil_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -162,7 +226,7 @@ export async function initUploadSession(
       input.referenceType || "GENERAL",
       input.referenceId || null,
       now,
-    ]
+    ],
   );
 
   await execute(
@@ -182,7 +246,7 @@ export async function initUploadSession(
       mp.uploadId,
       now,
       expiresAt,
-    ]
+    ],
   );
 
   return {
@@ -202,7 +266,7 @@ export async function uploadPart(
   actor: UserPrincipal,
   input: UploadPartInput,
   db: D1Database,
-  bucket: R2Bucket
+  bucket: R2Bucket,
 ) {
   const session = await queryFirst<{
     id: string;
@@ -220,21 +284,33 @@ export async function uploadPart(
   }
 
   if (session.status !== "ACTIVE" || Date.now() > session.expires_at) {
-    throw new AuthorizationError("Upload session is no longer active or has expired.", "SESSION_EXPIRED");
+    throw new AuthorizationError(
+      "Upload session is no longer active or has expired.",
+      "SESSION_EXPIRED",
+    );
   }
 
   // Re-verify actor identity & project authorization
-  if (session.user_id !== actor.id && actor.role !== "ADMIN") {
-    throw new AuthorizationError("You do not own this upload session.", "FORBIDDEN");
+  if (session.user_id !== actor.id && !hasCapability(actor, "ADMIN")) {
+    throw new AuthorizationError(
+      "You do not own this upload session.",
+      "FORBIDDEN",
+    );
   }
   assertProjectAccess(actor, session.project_id);
 
   // Resume multipart upload in R2
-  const mp = await bucket.resumeMultipartUpload(session.storage_key, session.upload_id);
+  const mp = await bucket.resumeMultipartUpload(
+    session.storage_key,
+    session.upload_id,
+  );
   const partResult = await mp.uploadPart(input.partNumber, input.chunk);
 
   const now = Date.now();
-  const chunkSize = input.chunk instanceof Uint8Array ? input.chunk.length : input.chunk.byteLength;
+  const chunkSize =
+    input.chunk instanceof Uint8Array
+      ? input.chunk.length
+      : input.chunk.byteLength;
 
   // Record/upsert part in upload_parts table
   const partId = `part_${session.id}_${input.partNumber}`;
@@ -246,7 +322,7 @@ export async function uploadPart(
        etag = excluded.etag,
        size_bytes = excluded.size_bytes,
        uploaded_at = excluded.uploaded_at`,
-    [partId, session.id, input.partNumber, partResult.etag, chunkSize, now]
+    [partId, session.id, input.partNumber, partResult.etag, chunkSize, now],
   );
 
   return {
@@ -262,7 +338,7 @@ export async function completeUploadSession(
   actor: UserPrincipal,
   input: CompleteUploadInput,
   db: D1Database,
-  bucket: R2Bucket
+  bucket: R2Bucket,
 ) {
   const session = await queryFirst<{
     id: string;
@@ -280,17 +356,26 @@ export async function completeUploadSession(
   }
 
   if (session.status !== "ACTIVE") {
-    throw new AuthorizationError("Upload session is not active.", "INVALID_SESSION_STATE");
+    throw new AuthorizationError(
+      "Upload session is not active.",
+      "INVALID_SESSION_STATE",
+    );
   }
 
   // Re-verify authorization
-  if (session.user_id !== actor.id && actor.role !== "ADMIN") {
-    throw new AuthorizationError("You do not own this upload session.", "FORBIDDEN");
+  if (session.user_id !== actor.id && !hasCapability(actor, "ADMIN")) {
+    throw new AuthorizationError(
+      "You do not own this upload session.",
+      "FORBIDDEN",
+    );
   }
   assertProjectAccess(actor, session.project_id);
 
   // Resume and complete multipart upload
-  const mp = await bucket.resumeMultipartUpload(session.storage_key, session.upload_id);
+  const mp = await bucket.resumeMultipartUpload(
+    session.storage_key,
+    session.upload_id,
+  );
   const completeResult = await mp.complete(input.parts);
 
   // Verify finalized object size
@@ -298,7 +383,7 @@ export async function completeUploadSession(
   if (!r2Head || r2Head.size !== session.expected_size_bytes) {
     throw new AuthorizationError(
       `Finalized object size mismatch. Expected ${session.expected_size_bytes} bytes, received ${r2Head?.size || 0} bytes.`,
-      "SIZE_MISMATCH"
+      "SIZE_MISMATCH",
     );
   }
 
@@ -308,21 +393,23 @@ export async function completeUploadSession(
   await execute(
     db,
     "UPDATE upload_sessions SET status = 'COMPLETED', parts_count = ? WHERE id = ?",
-    [input.parts.length, session.id]
+    [input.parts.length, session.id],
   );
 
   // Transition files to READY
   await execute(
     db,
     "UPDATE files SET status = 'READY', finalized_at = ? WHERE storage_key = ?",
-    [now, session.storage_key]
+    [now, session.storage_key],
   );
 
-  const file = await queryFirst<{ id: string; file_name: string; storage_key: string }>(
-    db,
-    "SELECT id, file_name, storage_key FROM files WHERE storage_key = ?",
-    [session.storage_key]
-  );
+  const file = await queryFirst<{
+    id: string;
+    file_name: string;
+    storage_key: string;
+  }>(db, "SELECT id, file_name, storage_key FROM files WHERE storage_key = ?", [
+    session.storage_key,
+  ]);
 
   await recordAuditEvent(db, {
     orgId: session.org_id,
@@ -348,7 +435,7 @@ export async function abortUploadSession(
   actor: UserPrincipal,
   sessionId: string,
   db: D1Database,
-  bucket: R2Bucket
+  bucket: R2Bucket,
 ) {
   const session = await queryFirst<{
     id: string;
@@ -361,12 +448,18 @@ export async function abortUploadSession(
 
   if (!session) return { success: true };
 
-  if (session.user_id !== actor.id && actor.role !== "ADMIN") {
-    throw new AuthorizationError("You do not own this upload session.", "FORBIDDEN");
+  if (session.user_id !== actor.id && !hasCapability(actor, "ADMIN")) {
+    throw new AuthorizationError(
+      "You do not own this upload session.",
+      "FORBIDDEN",
+    );
   }
 
   try {
-    const mp = await bucket.resumeMultipartUpload(session.storage_key, session.upload_id);
+    const mp = await bucket.resumeMultipartUpload(
+      session.storage_key,
+      session.upload_id,
+    );
     await mp.abort();
   } catch {
     // Ignore already aborted or missing
@@ -375,13 +468,13 @@ export async function abortUploadSession(
   await execute(
     db,
     "UPDATE upload_sessions SET status = 'ABORTED' WHERE id = ?",
-    [sessionId]
+    [sessionId],
   );
 
   await execute(
     db,
     "UPDATE files SET status = 'DELETED' WHERE storage_key = ? AND status = 'PENDING'",
-    [session.storage_key]
+    [session.storage_key],
   );
 
   return { success: true };
@@ -395,7 +488,8 @@ export async function getFileForDownload(
   fileId: string,
   db: D1Database,
   bucket: R2Bucket,
-  rangeHeader?: string | null
+  rangeHeader?: string | null,
+  preview = false,
 ) {
   const file = await queryFirst<{
     id: string;
@@ -412,16 +506,20 @@ export async function getFileForDownload(
   }>(db, "SELECT * FROM files WHERE id = ?", [fileId]);
 
   if (!file || file.status !== "READY") {
-    throw new AuthorizationError("File not found or not ready for download.", "NOT_FOUND");
+    throw new AuthorizationError(
+      "File not found or not ready for download.",
+      "NOT_FOUND",
+    );
   }
 
   // Current authorization check on every request (AC-059)
   assertProjectAccess(actor, file.project_id);
 
-  // Internal practice protection: Clients/consultants cannot access internal attachments
-  if ((actor.role === "MAIN_CLIENT" || actor.role === "CLIENT_REP" || actor.role === "CONSULTANT") && file.is_internal_only === 1) {
-    throw new AuthorizationError("Access denied: File is classified as internal practice only.", "FORBIDDEN");
-  }
+  if (!(await canReadFile(db, actor, file)))
+    throw new AuthorizationError(
+      "This file is not available to your account.",
+      "FORBIDDEN",
+    );
 
   // Handle Range request if present
   let r2Range: R2Range | undefined = undefined;
@@ -429,23 +527,51 @@ export async function getFileForDownload(
   let rangeStart = 0;
   let rangeEnd = file.size_bytes - 1;
 
-  if (rangeHeader && rangeHeader.startsWith("bytes=")) {
-    const parts = rangeHeader.replace("bytes=", "").split("-");
-    rangeStart = parseInt(parts[0], 10) || 0;
-    rangeEnd = parts[1] ? parseInt(parts[1], 10) : file.size_bytes - 1;
-    if (rangeEnd >= file.size_bytes) rangeEnd = file.size_bytes - 1;
-
-    if (rangeStart <= rangeEnd) {
-      isRange = true;
-      r2Range = { offset: rangeStart, length: rangeEnd - rangeStart + 1 };
+  if (rangeHeader) {
+    const match = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader);
+    if (!match || (!match[1] && !match[2]))
+      throw new AuthorizationError(
+        "The requested file range is invalid.",
+        "RANGE_NOT_SATISFIABLE",
+      );
+    if (!match[1]) {
+      const suffix = Number(match[2]);
+      if (!Number.isSafeInteger(suffix) || suffix <= 0)
+        throw new AuthorizationError(
+          "The requested file range is invalid.",
+          "RANGE_NOT_SATISFIABLE",
+        );
+      rangeStart = Math.max(0, file.size_bytes - suffix);
+      rangeEnd = file.size_bytes - 1;
+    } else {
+      rangeStart = Number(match[1]);
+      rangeEnd = match[2]
+        ? Math.min(Number(match[2]), file.size_bytes - 1)
+        : file.size_bytes - 1;
     }
+    if (
+      !Number.isSafeInteger(rangeStart) ||
+      !Number.isSafeInteger(rangeEnd) ||
+      rangeStart < 0 ||
+      rangeStart >= file.size_bytes ||
+      rangeEnd < rangeStart
+    )
+      throw new AuthorizationError(
+        "The requested file range is invalid.",
+        "RANGE_NOT_SATISFIABLE",
+      );
+    isRange = true;
+    r2Range = { offset: rangeStart, length: rangeEnd - rangeStart + 1 };
   }
 
   const obj = r2Range
     ? await bucket.get(file.storage_key, { range: r2Range })
     : await bucket.get(file.storage_key);
   if (!obj) {
-    throw new AuthorizationError("Object content not found in storage.", "STORAGE_OBJECT_MISSING");
+    throw new AuthorizationError(
+      "Object content not found in storage.",
+      "STORAGE_OBJECT_MISSING",
+    );
   }
 
   // Build safe headers (AC-059)
@@ -457,11 +583,34 @@ export async function getFileForDownload(
 
   // Sanitize filename for Content-Disposition
   const safeFilename = file.file_name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const isInline = file.file_class === "IMAGE" || file.file_class === "PDF" || file.file_class === "VIDEO";
-  headers.set("Content-Disposition", `${isInline ? "inline" : "attachment"}; filename="${safeFilename}"`);
+  const safePreviewTypes = new Set([
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+    "image/gif",
+    "image/avif",
+    "application/pdf",
+    "video/mp4",
+    "video/webm",
+    "video/ogg",
+  ]);
+  const isInline =
+    preview && safePreviewTypes.has(file.mime_type.toLowerCase());
+  headers.set(
+    "Content-Security-Policy",
+    "sandbox; default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'unsafe-inline'",
+  );
+  headers.set("Referrer-Policy", "no-referrer");
+  headers.set(
+    "Content-Disposition",
+    `${isInline ? "inline" : "attachment"}; filename="${safeFilename}"`,
+  );
 
   if (isRange) {
-    headers.set("Content-Range", `bytes ${rangeStart}-${rangeEnd}/${file.size_bytes}`);
+    headers.set(
+      "Content-Range",
+      `bytes ${rangeStart}-${rangeEnd}/${file.size_bytes}`,
+    );
     headers.set("Content-Length", `${rangeEnd - rangeStart + 1}`);
     return {
       status: 206,
@@ -485,7 +634,7 @@ export async function listProjectFiles(
   actor: UserPrincipal,
   projectId: string,
   db: D1Database,
-  categoryFilter?: string
+  categoryFilter?: string,
 ) {
   assertProjectAccess(actor, projectId);
 
@@ -498,7 +647,11 @@ export async function listProjectFiles(
   const params: any[] = [projectId];
 
   // Internal files hidden from clients and consultants
-  if (actor.role === "MAIN_CLIENT" || actor.role === "CLIENT_REP" || actor.role === "CONSULTANT") {
+  if (
+    actor.role === "MAIN_CLIENT" ||
+    actor.role === "CLIENT_REP" ||
+    actor.role === "CONSULTANT"
+  ) {
     sql += " AND f.is_internal_only = 0";
   }
 
@@ -509,7 +662,13 @@ export async function listProjectFiles(
 
   sql += " ORDER BY f.created_at DESC";
 
-  return await query(db, sql, params);
+  const rows = await query<any>(db, sql, params);
+  const allowed = await Promise.all(
+    rows.map(async (file) =>
+      (await canReadFile(db, actor, file)) ? file : null,
+    ),
+  );
+  return allowed.filter(Boolean);
 }
 
 /**
@@ -517,7 +676,10 @@ export async function listProjectFiles(
  * Cleans abandoned/expired upload sessions and temporary chunks.
  * Retained files (referenced by drawings, invoices, or with is_referenced = 1) CANNOT be purged.
  */
-export async function cleanupOrphanedUploadSessions(db: D1Database, bucket: R2Bucket) {
+export async function cleanupOrphanedUploadSessions(
+  db: D1Database,
+  bucket: R2Bucket,
+) {
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
 
   // Find expired or aborted upload sessions
@@ -528,7 +690,7 @@ export async function cleanupOrphanedUploadSessions(db: D1Database, bucket: R2Bu
   }>(
     db,
     "SELECT id, storage_key, upload_id FROM upload_sessions WHERE (status = 'ABORTED' OR (status = 'ACTIVE' AND expires_at < ?))",
-    [cutoff]
+    [cutoff],
   );
 
   let purgedCount = 0;
@@ -548,7 +710,7 @@ export async function cleanupOrphanedUploadSessions(db: D1Database, bucket: R2Bu
     await execute(
       db,
       "DELETE FROM files WHERE storage_key = ? AND status = 'PENDING' AND is_referenced = 0",
-      [s.storage_key]
+      [s.storage_key],
     );
 
     purgedCount++;
@@ -564,7 +726,7 @@ export async function deleteFile(
   actor: UserPrincipal,
   fileId: string,
   db: D1Database,
-  bucket: R2Bucket
+  bucket: R2Bucket,
 ) {
   const file = await queryFirst<{
     id: string;
@@ -579,20 +741,32 @@ export async function deleteFile(
   assertProjectAccess(actor, file.project_id);
 
   // Retained files cannot be deleted (AC-060)
-  if (file.is_referenced === 1 || file.reference_type === "DRAWING" || file.reference_type === "INVOICE") {
+  if (
+    file.is_referenced === 1 ||
+    file.reference_type === "DRAWING" ||
+    file.reference_type === "INVOICE"
+  ) {
     throw new AuthorizationError(
       "Cannot delete file: This file is a retained legal/contractual record or released drawing.",
-      "FILE_RETAINED_PROTECTED"
+      "FILE_RETAINED_PROTECTED",
     );
   }
 
   // Only manager or admin can delete files
-  if (actor.role !== "MANAGER" && actor.role !== "ADMIN" && actor.role !== "OWNER") {
-    throw new AuthorizationError("Only managers or administrators can remove project files.", "FORBIDDEN");
+  if (
+    !hasCapability(actor, "MANAGER", file.project_id) &&
+    !hasCapability(actor, "ADMIN")
+  ) {
+    throw new AuthorizationError(
+      "Only managers or administrators can remove project files.",
+      "FORBIDDEN",
+    );
   }
 
   await bucket.delete(file.storage_key);
-  await execute(db, "UPDATE files SET status = 'DELETED' WHERE id = ?", [fileId]);
+  await execute(db, "UPDATE files SET status = 'DELETED' WHERE id = ?", [
+    fileId,
+  ]);
 
   return { success: true };
 }

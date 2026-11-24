@@ -1,3 +1,6 @@
+import { assertProjectOrganisation } from "@/server/auth/policy";
+import { ArchiveService } from "../archive/service";
+import { validateAttachment } from "@/server/files/visibility";
 /**
  * Domain service for manual K-SMART practice records and permit milestones.
  * Enforces manual practice tracking with explicit dates and selective client sharing (AC-025, AC-026).
@@ -49,7 +52,7 @@ export class PermitsService {
   static async ensureMilestones(
     db: D1Database,
     orgId: string,
-    projectId: string
+    projectId: string,
   ) {
     const types: MilestoneType[] = ["SANCTION", "COMPLETION"];
     for (const t of types) {
@@ -58,7 +61,7 @@ export class PermitsService {
           `INSERT OR IGNORE INTO ksmart_milestones (
             id, org_id, project_id, milestone_type, tracking_label,
             current_published_observation_id, created_at
-          ) VALUES (?, ?, ?, ?, 'NOT_STARTED', NULL, ?)`
+          ) VALUES (?, ?, ?, ?, 'NOT_STARTED', NULL, ?)`,
         )
         .bind(generateId("ksm"), orgId, projectId, t, Date.now())
         .run();
@@ -75,7 +78,7 @@ export class PermitsService {
       milestoneId: string;
       applicationReference?: string;
       trackingLabel?: TrackingLabel;
-    }
+    },
   ) {
     const milestone = (await db
       .prepare(`SELECT * FROM ksmart_milestones WHERE id = ?`)
@@ -84,18 +87,19 @@ export class PermitsService {
 
     if (!milestone) throw new Error("Milestone not found");
     assertProjectAccess(principal, milestone.project_id);
+    await assertProjectOrganisation(db, principal, milestone.project_id);
 
     if (!canReadInternalNotes(principal, milestone.project_id)) {
       throw new AuthorizationError(
         "Clients and consultants cannot edit permit milestones",
-        "FORBIDDEN"
+        "FORBIDDEN",
       );
     }
 
     if (params.applicationReference !== undefined) {
       await db
         .prepare(
-          `UPDATE ksmart_milestones SET application_reference = ? WHERE id = ?`
+          `UPDATE ksmart_milestones SET application_reference = ? WHERE id = ?`,
         )
         .bind(params.applicationReference, params.milestoneId)
         .run();
@@ -103,9 +107,7 @@ export class PermitsService {
 
     if (params.trackingLabel !== undefined) {
       await db
-        .prepare(
-          `UPDATE ksmart_milestones SET tracking_label = ? WHERE id = ?`
-        )
+        .prepare(`UPDATE ksmart_milestones SET tracking_label = ? WHERE id = ?`)
         .bind(params.trackingLabel, params.milestoneId)
         .run();
     }
@@ -120,7 +122,7 @@ export class PermitsService {
   static async recordObservation(
     db: D1Database,
     principal: UserPrincipal,
-    params: RecordObservationParams
+    params: RecordObservationParams,
   ) {
     const milestone = (await db
       .prepare(`SELECT * FROM ksmart_milestones WHERE id = ?`)
@@ -129,15 +131,24 @@ export class PermitsService {
 
     if (!milestone) throw new Error("Milestone not found");
     assertProjectAccess(principal, milestone.project_id);
+    await assertProjectOrganisation(db, principal, milestone.project_id);
 
     if (!canReadInternalNotes(principal, milestone.project_id)) {
       throw new AuthorizationError(
         "Clients and consultants cannot record permit observations",
-        "FORBIDDEN"
+        "FORBIDDEN",
       );
     }
 
     const now = Date.now();
+    for (const f of params.files ?? [])
+      await validateAttachment(
+        db,
+        principal,
+        f.fileId,
+        milestone.project_id,
+        "PERMIT",
+      );
     const observationId = generateId("kso");
 
     await db
@@ -146,7 +157,7 @@ export class PermitsService {
           id, milestone_id, observed_status_text, decision_date,
           last_checked_date, source_description, reference_url,
           staff_notes, recorded_by_user_id, sharing_status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'INTERNAL', ?)`
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'INTERNAL', ?)`,
       )
       .bind(
         observationId,
@@ -158,7 +169,7 @@ export class PermitsService {
         params.referenceUrl || null,
         params.staffNotes || null,
         principal.id,
-        now
+        now,
       )
       .run();
 
@@ -168,14 +179,14 @@ export class PermitsService {
           .prepare(
             `INSERT INTO ksmart_observation_files (
               id, observation_id, file_id, is_client_shared, created_at
-            ) VALUES (?, ?, ?, ?, ?)`
+            ) VALUES (?, ?, ?, ?, ?)`,
           )
           .bind(
             generateId("ksof"),
             observationId,
             f.fileId,
             f.isClientShared ? 1 : 0,
-            now
+            now,
           )
           .run();
 
@@ -186,7 +197,11 @@ export class PermitsService {
       }
     }
 
-    return { observationId, milestoneId: params.milestoneId, status: "INTERNAL" };
+    return {
+      observationId,
+      milestoneId: params.milestoneId,
+      status: "INTERNAL",
+    };
   }
 
   /**
@@ -195,25 +210,26 @@ export class PermitsService {
   static async submitObservationForSharing(
     db: D1Database,
     principal: UserPrincipal,
-    observationId: string
+    observationId: string,
   ) {
     const obs = (await db
       .prepare(
         `SELECT ko.*, km.project_id
          FROM ksmart_observations ko
          JOIN ksmart_milestones km ON ko.milestone_id = km.id
-         WHERE ko.id = ?`
+         WHERE ko.id = ?`,
       )
       .bind(observationId)
       .first()) as any;
 
     if (!obs) throw new Error("Observation not found");
     assertProjectAccess(principal, obs.project_id);
+    await assertProjectOrganisation(db, principal, obs.project_id);
 
     if (!canReadInternalNotes(principal, obs.project_id)) {
       throw new AuthorizationError(
         "Clients and consultants cannot submit observations for sharing",
-        "FORBIDDEN"
+        "FORBIDDEN",
       );
     }
 
@@ -221,7 +237,7 @@ export class PermitsService {
       .prepare(
         `UPDATE ksmart_observations
          SET sharing_status = 'SUBMITTED_FOR_SHARING'
-         WHERE id = ?`
+         WHERE id = ?`,
       )
       .bind(observationId)
       .run();
@@ -235,14 +251,14 @@ export class PermitsService {
   static async reviewObservationSharing(
     db: D1Database,
     principal: UserPrincipal,
-    params: ReviewSharingParams
+    params: ReviewSharingParams,
   ) {
     const obs = (await db
       .prepare(
         `SELECT ko.*, km.project_id, km.id as milestone_id
          FROM ksmart_observations ko
          JOIN ksmart_milestones km ON ko.milestone_id = km.id
-         WHERE ko.id = ?`
+         WHERE ko.id = ?`,
       )
       .bind(params.observationId)
       .first()) as any;
@@ -252,10 +268,16 @@ export class PermitsService {
     if (!canPublishProjectUpdates(principal, obs.project_id)) {
       throw new AuthorizationError(
         "Only managers can review and share permit observations",
-        "FORBIDDEN"
+        "FORBIDDEN",
       );
     }
 
+    await ArchiveService.assertProjectNotArchived(db, obs.project_id);
+    if (obs.sharing_status !== "SUBMITTED_FOR_SHARING")
+      throw new AuthorizationError(
+        "Submit this record for sharing review first.",
+        "INVALID_STATE",
+      );
     const now = Date.now();
 
     if (params.decision === "APPROVE") {
@@ -263,7 +285,7 @@ export class PermitsService {
         .prepare(
           `UPDATE ksmart_observations
            SET sharing_status = 'SHARED', shared_at = ?, shared_by_user_id = ?
-           WHERE id = ?`
+           WHERE id = ?`,
         )
         .bind(now, principal.id, params.observationId)
         .run();
@@ -272,7 +294,7 @@ export class PermitsService {
         .prepare(
           `UPDATE ksmart_milestones
            SET current_published_observation_id = ?
-           WHERE id = ?`
+           WHERE id = ?`,
         )
         .bind(params.observationId, obs.milestone_id)
         .run();
@@ -283,7 +305,7 @@ export class PermitsService {
         .prepare(
           `UPDATE ksmart_observations
            SET sharing_status = 'RETURNED', manager_feedback = ?
-           WHERE id = ?`
+           WHERE id = ?`,
         )
         .bind(params.feedback || null, params.observationId)
         .run();
@@ -300,16 +322,16 @@ export class PermitsService {
   static async getProjectPermits(
     db: D1Database,
     principal: UserPrincipal,
-    projectId: string
+    projectId: string,
   ) {
     assertProjectAccess(principal, projectId);
-    await this.ensureMilestones(db, principal.orgId, projectId);
+    await assertProjectOrganisation(db, principal, projectId);
 
     const isInternal = canReadInternalNotes(principal, projectId);
 
     const milestoneRows = (await db
       .prepare(
-        `SELECT * FROM ksmart_milestones WHERE project_id = ? ORDER BY milestone_type ASC`
+        `SELECT * FROM ksmart_milestones WHERE project_id = ? ORDER BY milestone_type ASC`,
       )
       .bind(projectId)
       .all()) as any;
@@ -326,7 +348,8 @@ export class PermitsService {
             milestoneType: m.milestone_type,
             applicationReference: m.application_reference,
             hasPublishedRecord: false,
-            trackingNotice: "No published permit status yet for this milestone.",
+            trackingNotice:
+              "No published permit status yet for this milestone.",
           });
           continue;
         }
@@ -338,7 +361,7 @@ export class PermitsService {
                     ko.shared_at, u.display_name as recorded_by_name
              FROM ksmart_observations ko
              JOIN users u ON ko.recorded_by_user_id = u.id
-             WHERE ko.id = ?`
+             WHERE ko.id = ?`,
           )
           .bind(m.current_published_observation_id)
           .first()) as any;
@@ -349,7 +372,8 @@ export class PermitsService {
             milestoneType: m.milestone_type,
             applicationReference: m.application_reference,
             hasPublishedRecord: false,
-            trackingNotice: "No published permit status yet for this milestone.",
+            trackingNotice:
+              "No published permit status yet for this milestone.",
           });
           continue;
         }
@@ -360,7 +384,7 @@ export class PermitsService {
             `SELECT f.id, f.file_name, f.size_bytes, f.mime_type
              FROM ksmart_observation_files kof
              JOIN files f ON kof.file_id = f.id
-             WHERE kof.observation_id = ? AND kof.is_client_shared = 1`
+             WHERE kof.observation_id = ? AND kof.is_client_shared = 1`,
           )
           .bind(pubObs.id)
           .all()) as any;
@@ -396,7 +420,7 @@ export class PermitsService {
            JOIN users u ON ko.recorded_by_user_id = u.id
            LEFT JOIN users sm ON ko.shared_by_user_id = sm.id
            WHERE ko.milestone_id = ?
-           ORDER BY ko.created_at DESC`
+           ORDER BY ko.created_at DESC`,
         )
         .bind(m.id)
         .all()) as any;
@@ -408,7 +432,7 @@ export class PermitsService {
             `SELECT f.id, f.file_name, f.size_bytes, f.mime_type, kof.is_client_shared
              FROM ksmart_observation_files kof
              JOIN files f ON kof.file_id = f.id
-             WHERE kof.observation_id = ?`
+             WHERE kof.observation_id = ?`,
           )
           .bind(obs.id)
           .all()) as any;

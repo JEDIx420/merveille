@@ -1,3 +1,4 @@
+import { publicError } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -6,7 +7,7 @@ import { assertProjectAccess } from "@/server/auth/policy";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -18,20 +19,27 @@ export async function GET(
 
   try {
     assertProjectAccess(auth.principal, projectId);
-    const snags = await SnagsService.listSnags(env.DB, auth.principal, projectId);
+    const snags = await SnagsService.listSnags(
+      env.DB,
+      auth.principal,
+      projectId,
+    );
     return NextResponse.json({ ok: true, snags });
   } catch (err: any) {
-    const status = err.code === "CROSS_PROJECT_DENIED" || err.code === "FORBIDDEN" ? 403 : 400;
+    const status =
+      err.code === "CROSS_PROJECT_DENIED" || err.code === "FORBIDDEN"
+        ? 403
+        : 400;
     return NextResponse.json(
-      { error: err.message, code: err.code || "BAD_REQUEST" },
-      { status }
+      { error: publicError(err), code: err.code || "BAD_REQUEST" },
+      { status },
     );
   }
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -80,25 +88,33 @@ export async function POST(
         const result = await SnagsService.startSnagWork(
           env.DB,
           auth.principal,
-          body.snagId
+          body.snagId,
         );
         return NextResponse.json({ ok: true, result });
       }
 
       case "submit_resolution": {
-        const result = await SnagsService.submitResolution(env.DB, auth.principal, {
-          snagId: body.snagId,
-          resolutionEvidence: body.resolutionEvidence,
-          afterPhotoFileIds: body.afterPhotoFileIds,
-        });
+        const result = await SnagsService.submitResolution(
+          env.DB,
+          auth.principal,
+          {
+            snagId: body.snagId,
+            resolutionEvidence: body.resolutionEvidence,
+            afterPhotoFileIds: body.afterPhotoFileIds,
+          },
+        );
         return NextResponse.json({ ok: true, result });
       }
 
       case "verify_close": {
-        const result = await SnagsService.verifyCloseSnag(env.DB, auth.principal, {
-          snagId: body.snagId,
-          notes: body.notes,
-        });
+        const result = await SnagsService.verifyCloseSnag(
+          env.DB,
+          auth.principal,
+          {
+            snagId: body.snagId,
+            notes: body.notes,
+          },
+        );
         return NextResponse.json({ ok: true, result });
       }
 
@@ -122,7 +138,10 @@ export async function POST(
       }
 
       default:
-        return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
+        return NextResponse.json(
+          { error: `Unknown action: ${action}` },
+          { status: 400 },
+        );
     }
   } catch (err: any) {
     const status =
@@ -132,8 +151,8 @@ export async function POST(
         ? 403
         : 400;
     return NextResponse.json(
-      { error: err.message, code: err.code || "BAD_REQUEST" },
-      { status }
+      { error: publicError(err), code: err.code || "BAD_REQUEST" },
+      { status },
     );
   }
 }

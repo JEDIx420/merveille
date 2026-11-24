@@ -1,74 +1,71 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
+import {
+  isWhatsAppConfigured,
+  type WhatsAppSettings,
+} from "@/server/notifications/whatsapp";
 import { NotificationService } from "@/server/notifications/service";
-import { SyntheticWhatsAppAdapter } from "@/server/notifications/whatsapp";
-
 export async function GET(request: NextRequest) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
-
-  if (!auth.principal) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  try {
-    const notifications = await NotificationService.listUserNotifications(env.DB, auth.principal);
-    return NextResponse.json({ ok: true, notifications });
-  } catch (err: any) {
+  if (!auth.principal)
     return NextResponse.json(
-      { error: err.message, code: err.code || "BAD_REQUEST" },
-      { status: 400 }
+      { error: "Sign in to continue." },
+      { status: 401 },
     );
-  }
+  const [notifications, preferences] = await Promise.all([
+    NotificationService.listUserNotifications(env.DB, auth.principal),
+    NotificationService.getPreferences(env.DB, auth.principal),
+  ]);
+  return NextResponse.json({
+    ok: true,
+    notifications,
+    preferences,
+    deliveryMode: isWhatsAppConfigured(env as WhatsAppSettings)
+      ? env.WHATSAPP_MODE
+      : "unavailable",
+  });
 }
-
 export async function POST(request: NextRequest) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
-
-  if (!auth.principal) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+  if (!auth.principal)
+    return NextResponse.json(
+      { error: "Sign in to continue." },
+      { status: 401 },
+    );
   try {
     const body = (await request.json()) as any;
-    const action = body.action;
-
-    switch (action) {
-      case "mark_read": {
-        const result = await NotificationService.markNotificationRead(
+    if (body.action === "mark_read")
+      return NextResponse.json({
+        ok: true,
+        result: await NotificationService.markNotificationRead(
           env.DB,
           auth.principal,
-          body.notificationId
-        );
-        return NextResponse.json({ ok: true, result });
-      }
-
-      case "scan": {
-        if (auth.principal.role !== "ADMIN" && auth.principal.role !== "OWNER") {
-          return NextResponse.json({ error: "Admin only" }, { status: 403 });
-        }
-        const result = await NotificationService.scanDueAndOverdueItems(env.DB, auth.principal.orgId);
-        return NextResponse.json({ ok: true, result });
-      }
-
-      case "dispatch": {
-        if (auth.principal.role !== "ADMIN" && auth.principal.role !== "OWNER") {
-          return NextResponse.json({ error: "Admin only" }, { status: 403 });
-        }
-        const adapter = new SyntheticWhatsAppAdapter();
-        const result = await NotificationService.dispatchQueuedNotifications(env.DB, adapter);
-        return NextResponse.json({ ok: true, result });
-      }
-
-      default:
-        return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
-    }
-  } catch (err: any) {
+          body.notificationId,
+        ),
+      });
+    if (
+      body.action === "preferences" &&
+      typeof body.whatsappEnabled === "boolean"
+    )
+      return NextResponse.json({
+        ok: true,
+        preferences: await NotificationService.setPreferences(
+          env.DB,
+          auth.principal,
+          body.whatsappEnabled,
+        ),
+      });
     return NextResponse.json(
-      { error: err.message, code: err.code || "BAD_REQUEST" },
-      { status: 400 }
+      { error: "This action is unavailable." },
+      { status: 400 },
+    );
+  } catch {
+    return NextResponse.json(
+      { error: "The notification could not be updated." },
+      { status: 400 },
     );
   }
 }

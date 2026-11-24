@@ -38,7 +38,10 @@ export function formatRupees(minorUnits: number | bigint): string {
  * Format date in business timezone (Asia/Kolkata) with consistent human readability.
  */
 export function formatBusinessDate(date: Date | string | number): string {
-  const d = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
+  const d =
+    typeof date === "string" || typeof date === "number"
+      ? new Date(date)
+      : date;
   return new Intl.DateTimeFormat(BRAND_CONFIG.currency.locale, {
     timeZone: BRAND_CONFIG.timezone,
     year: "numeric",
@@ -51,7 +54,10 @@ export function formatBusinessDate(date: Date | string | number): string {
  * Format timestamp in business timezone (Asia/Kolkata) with hours and minutes.
  */
 export function formatBusinessTimestamp(date: Date | string | number): string {
-  const d = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
+  const d =
+    typeof date === "string" || typeof date === "number"
+      ? new Date(date)
+      : date;
   return new Intl.DateTimeFormat(BRAND_CONFIG.currency.locale, {
     timeZone: BRAND_CONFIG.timezone,
     year: "numeric",
@@ -60,4 +66,11 @@ export function formatBusinessTimestamp(date: Date | string | number): string {
     hour: "2-digit",
     minute: "2-digit",
   }).format(d);
+}
+
+/** Calendar key for due dates; UTC midnight must not change the practice's day. */
+export function businessDateISO(date:Date=new Date()):string {
+ const parts=new Intl.DateTimeFormat('en',{timeZone:BRAND_CONFIG.timezone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
+ const value=(type:string)=>parts.find(p=>p.type===type)?.value;
+ return `${value('year')}-${value('month')}-${value('day')}`;
 }

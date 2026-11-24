@@ -1,16 +1,8 @@
-/**
- * Notification, Scheduler, Escalation, and Outbox Domain Service.
- * Enforces transactional outbox, Asia/Kolkata due reminders, admin escalation (AC-046),
- * dispatch-time suppression of resolved/revoked destinations (AC-047), idempotent delivery
- * without blind double-sending (AC-048), safe WhatsApp context (AC-049), and secure
- * webhook event reconciliation (AC-050).
- */
-
-import { UserPrincipal } from "@/server/auth/principal";
-import { assertProjectAccess, AuthorizationError } from "@/server/auth/policy";
+import type { UserPrincipal } from "@/server/auth/principal";
+import { hasCapability } from "@/server/auth/principal";
+import { AuthorizationError } from "@/server/auth/policy";
 import { query, queryFirst, execute } from "@/server/db";
-import { WhatsAppAdapter, SyntheticWhatsAppAdapter } from "./whatsapp";
-
+import type { WhatsAppAdapter } from "./whatsapp";
 export type NotificationChannel = "PORTAL" | "WHATSAPP";
 export type NotificationStatus =
   | "QUEUED"
@@ -19,462 +11,483 @@ export type NotificationStatus =
   | "READ"
   | "FAILED"
   | "SUPPRESSED"
-  | "UNKNOWN";
-
-function generateId(prefix: string): string {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+  | "UNKNOWN"
+  | "UNAVAILABLE"
+  | "PROCESSING";
+const uid = (prefix: string) => `${prefix}_${crypto.randomUUID()}`;
+interface Candidate {
+  orgId: string;
+  projectId: string;
+  userId: string;
+  type: string;
+  entityId: string;
+  title: string;
+  body: string;
+  path: string;
+  window: string;
+  escalation?: boolean;
 }
-
 export class NotificationService {
-  /**
-   * Scan due items, overdue tasks, drawing reviews, and invoices in Asia/Kolkata timezone.
-   * Creates portal and WhatsApp candidates and escalates unresolved overdue items to ADMIN (AC-046).
-   */
+  /** Scan results are durable logical obligations. Queue redelivery never creates another row. */
   static async scanDueAndOverdueItems(
     db: D1Database,
     orgId: string,
-    simulatedNow?: Date
+    simulatedNow?: Date,
   ) {
     const now = simulatedNow || new Date();
-    // Convert to Asia/Kolkata calendar date
-    const kolkataDateStr = new Intl.DateTimeFormat("en-CA", {
+    const date = new Intl.DateTimeFormat("en-CA", {
       timeZone: "Asia/Kolkata",
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
     }).format(now);
-
-    const createdNotifications: string[] = [];
-    const escalations: string[] = [];
-
-    // 1. Locate Practice Admin for escalation
-    const adminUser = await queryFirst<any>(
+    const admins = await query<{ id: string }>(
       db,
-      `SELECT u.id, u.email FROM users u
-       JOIN role_assignments r ON u.id = r.user_id
-       WHERE r.org_id = ? AND r.role = 'ADMIN' AND u.status = 'ACTIVE' LIMIT 1`,
-      [orgId]
+      `SELECT DISTINCT u.id FROM users u JOIN organization_memberships om ON om.user_id=u.id AND om.is_active=1 JOIN role_assignments r ON r.user_id=u.id AND r.org_id=om.org_id WHERE om.org_id=? AND u.status='ACTIVE' AND r.role='ADMIN' AND r.revoked_at IS NULL`,
+      [orgId],
     );
-
-    // -------------------------------------------------------------------------
-    // A. Overdue Tasks
-    // -------------------------------------------------------------------------
-    const overdueTasks = await query<any>(
+    const candidates: Candidate[] = [];
+    const add = (
+      projectId: string,
+      userId: string,
+      type: string,
+      entityId: string,
+      title: string,
+      body: string,
+      path: string,
+      overdue: boolean,
+    ) => {
+      if (userId)
+        candidates.push({
+          orgId,
+          projectId,
+          userId,
+          type,
+          entityId,
+          title,
+          body,
+          path,
+          window: date,
+        });
+      if (overdue)
+        for (const admin of admins)
+          if (admin.id !== userId)
+            candidates.push({
+              orgId,
+              projectId,
+              userId: admin.id,
+              type,
+              entityId,
+              title: "Overdue work needs attention",
+              body: "An unresolved item requires administrative follow-up.",
+              path,
+              window: date,
+              escalation: true,
+            });
+    };
+    const tasks = await query<any>(
       db,
-      `SELECT t.*, p.name as project_name
-       FROM tasks t
-       JOIN projects p ON t.project_id = p.id
-       WHERE t.org_id = ? AND t.status IN ('TODO', 'IN_PROGRESS')
-         AND t.effective_due_date IS NOT NULL
-         AND t.effective_due_date < ?`,
-      [orgId, kolkataDateStr]
+      `SELECT t.* FROM tasks t JOIN projects p ON p.id=t.project_id WHERE t.org_id=? AND p.is_archived=0 AND t.status IN ('TODO','IN_PROGRESS','BLOCKED') AND t.effective_due_date<=?`,
+      [orgId, date],
     );
-
-    for (const t of overdueTasks) {
-      if (!t.assignee_user_id) continue;
-
-      const dedupeWindow = kolkataDateStr;
-      const dedupePortal = `${orgId}:TASK:${t.id}:${t.assignee_user_id}:${dedupeWindow}:PORTAL`;
-      const dedupeWa = `${orgId}:TASK:${t.id}:${t.assignee_user_id}:${dedupeWindow}:WHATSAPP`;
-
-      // Portal reminder
-      const portalId = generateId("not");
-      const insertedPortal = await execute(
-        db,
-        `INSERT OR IGNORE INTO notifications (
-          id, org_id, user_id, project_id, source_entity_type, source_entity_id,
-          dedupe_key, channel, title, body_text, target_url, status, created_at
-        ) VALUES (?, ?, ?, ?, 'TASK', ?, ?, 'PORTAL', ?, ?, ?, 'QUEUED', ?)`,
-        [
-          portalId,
-          orgId,
-          t.assignee_user_id,
-          t.project_id,
-          t.id,
-          dedupePortal,
-          `Task Overdue: ${t.title}`,
-          `Your assigned task '${t.title}' in ${t.project_name} was due on ${t.effective_due_date}.`,
-          `/projects/${t.project_id}/tasks`,
-          now.getTime(),
-        ]
+    for (const t of tasks)
+      add(
+        t.project_id,
+        t.assignee_user_id,
+        "TASK",
+        t.id,
+        t.effective_due_date < date ? "Task overdue" : "Task due today",
+        `Review your assigned task: ${t.title}`,
+        `/projects/${t.project_id}/tasks`,
+        t.effective_due_date < date,
       );
-      if (insertedPortal.meta.changes > 0) createdNotifications.push(portalId);
-
-      // WhatsApp candidate
-      const waId = generateId("not");
-      const insertedWa = await execute(
-        db,
-        `INSERT OR IGNORE INTO notifications (
-          id, org_id, user_id, project_id, source_entity_type, source_entity_id,
-          dedupe_key, channel, title, body_text, target_url, status, created_at
-        ) VALUES (?, ?, ?, ?, 'TASK', ?, ?, 'WHATSAPP', ?, ?, ?, 'QUEUED', ?)`,
-        [
-          waId,
-          orgId,
-          t.assignee_user_id,
-          t.project_id,
-          t.id,
-          dedupeWa,
-          "Task Overdue",
-          `Task '${t.title}' is overdue in Merveille Designs portal.`,
-          `/projects/${t.project_id}/tasks`,
-          now.getTime(),
-        ]
+    const invoices = await query<any>(
+      db,
+      `SELECT i.*,p.main_client_user_id FROM invoices i JOIN projects p ON p.id=i.project_id WHERE i.org_id=? AND i.status='ISSUED' AND i.outstanding_minor>0 AND i.due_date<=?`,
+      [orgId, date],
+    );
+    for (const i of invoices)
+      add(
+        i.project_id,
+        i.main_client_user_id,
+        "INVOICE",
+        i.id,
+        i.due_date < date ? "Payment overdue" : "Payment due today",
+        "Review the outstanding payment in your project.",
+        `/projects/${i.project_id}/finance`,
+        i.due_date < date,
       );
-      if (insertedWa.meta.changes > 0) createdNotifications.push(waId);
-
-      // Admin escalation if overdue by at least 1 day (AC-046)
-      if (adminUser && adminUser.id !== t.assignee_user_id) {
-        const escId = generateId("nesc");
-        await execute(
-          db,
-          `INSERT INTO notification_escalations (
-            id, notification_id, escalated_to_user_id, source_entity_type,
-            source_entity_id, overdue_days, escalation_status, created_at
-          ) VALUES (?, ?, ?, 'TASK', ?, 1, 'ESCALATED', ?)`,
-          [escId, portalId, adminUser.id, t.id, now.getTime()]
-        );
-        escalations.push(escId);
+    const reviews = await query<any>(
+      db,
+      `SELECT r.*,d.project_id,v.created_at FROM drawing_reviews r JOIN drawing_versions v ON v.id=r.version_id JOIN drawings d ON d.id=v.drawing_id JOIN projects p ON p.id=d.project_id WHERE d.org_id=? AND p.is_archived=0 AND r.status='PENDING' AND v.status='IN_REVIEW'`,
+      [orgId],
+    );
+    for (const r of reviews)
+      add(
+        r.project_id,
+        r.consultant_user_id,
+        "DRAWING",
+        r.version_id,
+        "Drawing review requested",
+        "Review the assigned drawing version in your project.",
+        `/projects/${r.project_id}/drawings`,
+        now.getTime() - r.created_at > 86400000,
+      );
+    let createdCount = 0,
+      escalationCount = 0;
+    for (const c of candidates)
+      for (const channel of c.escalation
+        ? ["PORTAL"]
+        : ["PORTAL", "WHATSAPP"]) {
+        const id = uid("not");
+        const dedupe = [
+          orgId,
+          c.type,
+          c.entityId,
+          c.userId,
+          c.window,
+          channel,
+          c.escalation ? "ESCALATION" : "REMINDER",
+        ].join(":");
+        const statements = [
+          db
+            .prepare(
+              `INSERT OR IGNORE INTO notifications(id,org_id,user_id,project_id,source_entity_type,source_entity_id,dedupe_key,channel,title,body_text,target_url,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,'QUEUED',?)`,
+            )
+            .bind(
+              id,
+              orgId,
+              c.userId,
+              c.projectId,
+              c.type,
+              c.entityId,
+              dedupe,
+              channel,
+              c.title,
+              c.body,
+              c.path,
+              now.getTime(),
+            ),
+          db
+            .prepare(
+              `INSERT OR IGNORE INTO outbox_events(id,org_id,event_type,entity_type,entity_id,payload_json,status,created_at) SELECT ?,?,'NOTIFICATION_READY','NOTIFICATION',id,'{}','PENDING',? FROM notifications WHERE id=?`,
+            )
+            .bind(`out_${id}`, orgId, now.getTime(), id),
+        ];
+        if (c.escalation)
+          statements.push(
+            db
+              .prepare(
+                `INSERT INTO notification_escalations(id,notification_id,escalated_to_user_id,source_entity_type,source_entity_id,overdue_days,escalation_status,created_at) SELECT ?,id,?,?,?,1,'ESCALATED',? FROM notifications WHERE id=?`,
+              )
+              .bind(
+                uid("esc"),
+                c.userId,
+                c.type,
+                c.entityId,
+                now.getTime(),
+                id,
+              ),
+          );
+        const result = await db.batch(statements);
+        if (result[0].meta.changes) {
+          createdCount++;
+          if (c.escalation) escalationCount++;
+        }
       }
-    }
-
-    // -------------------------------------------------------------------------
-    // B. Overdue Invoices (Remaining outstanding balance, AC-046)
-    // -------------------------------------------------------------------------
-    const overdueInvoices = await query<any>(
-      db,
-      `SELECT i.*, p.main_client_user_id, p.name as project_name
-       FROM invoices i
-       JOIN projects p ON i.project_id = p.id
-       WHERE i.org_id = ? AND i.status = 'ISSUED' AND i.outstanding_minor > 0
-         AND i.due_date < ?`,
-      [orgId, kolkataDateStr]
-    );
-
-    for (const inv of overdueInvoices) {
-      if (!inv.main_client_user_id) continue;
-
-      const dedupeWindow = kolkataDateStr;
-      const dedupePortal = `${orgId}:INVOICE:${inv.id}:${inv.main_client_user_id}:${dedupeWindow}:PORTAL`;
-      const dedupeWa = `${orgId}:INVOICE:${inv.id}:${inv.main_client_user_id}:${dedupeWindow}:WHATSAPP`;
-      const amountStr = `₹${(inv.outstanding_minor / 100).toLocaleString("en-IN")}`;
-
-      const portalId = generateId("not");
-      const insertedPortal = await execute(
-        db,
-        `INSERT OR IGNORE INTO notifications (
-          id, org_id, user_id, project_id, source_entity_type, source_entity_id,
-          dedupe_key, channel, title, body_text, target_url, status, created_at
-        ) VALUES (?, ?, ?, ?, 'INVOICE', ?, ?, 'PORTAL', ?, ?, ?, 'QUEUED', ?)`,
-        [
-          portalId,
-          orgId,
-          inv.main_client_user_id,
-          inv.project_id,
-          inv.id,
-          dedupePortal,
-          `Invoice Overdue: ${inv.invoice_number || "Payment Required"}`,
-          `Outstanding balance of ${amountStr} for ${inv.project_name} was due on ${inv.due_date}.`,
-          `/projects/${inv.project_id}/finance`,
-          now.getTime(),
-        ]
-      );
-      if (insertedPortal.meta.changes > 0) createdNotifications.push(portalId);
-
-      const waId = generateId("not");
-      const insertedWa = await execute(
-        db,
-        `INSERT OR IGNORE INTO notifications (
-          id, org_id, user_id, project_id, source_entity_type, source_entity_id,
-          dedupe_key, channel, title, body_text, target_url, status, created_at
-        ) VALUES (?, ?, ?, ?, 'INVOICE', ?, ?, 'WHATSAPP', ?, ?, ?, 'QUEUED', ?)`,
-        [
-          waId,
-          orgId,
-          inv.main_client_user_id,
-          inv.project_id,
-          inv.id,
-          dedupeWa,
-          "Payment Due Reminder",
-          `Payment is outstanding for ${inv.project_name} in Merveille Designs portal.`,
-          `/projects/${inv.project_id}/finance`,
-          now.getTime(),
-        ]
-      );
-      if (insertedWa.meta.changes > 0) createdNotifications.push(waId);
-
-      // Escalate unresolved invoice debt to admin
-      if (adminUser) {
-        const escId = generateId("nesc");
-        await execute(
-          db,
-          `INSERT INTO notification_escalations (
-            id, notification_id, escalated_to_user_id, source_entity_type,
-            source_entity_id, overdue_days, escalation_status, created_at
-          ) VALUES (?, ?, ?, 'INVOICE', ?, 1, 'ESCALATED', ?)`,
-          [escId, portalId, adminUser.id, inv.id, now.getTime()]
-        );
-        escalations.push(escId);
-      }
-    }
-
-    return { createdCount: createdNotifications.length, escalationCount: escalations.length };
+    return { createdCount, escalationCount };
   }
-
-  /**
-   * Dispatch queued notifications with DISPATCH-TIME ELIGIBILITY CHECKS (AC-047).
-   * Suppresses messages if recipient has been deactivated/revoked or if the underlying
-   * task/invoice/drawing is already resolved.
-   */
+  static async eligible(db: D1Database, n: any) {
+    const user = await queryFirst<any>(
+      db,
+      `SELECT u.id FROM users u JOIN organization_memberships m ON m.user_id=u.id WHERE u.id=? AND u.status='ACTIVE' AND m.org_id=? AND m.is_active=1`,
+      [n.user_id, n.org_id],
+    );
+    if (!user) return false;
+    const admin = await queryFirst<any>(
+      db,
+      `SELECT id FROM role_assignments WHERE user_id=? AND org_id=? AND role='ADMIN' AND revoked_at IS NULL`,
+      [n.user_id, n.org_id],
+    );
+    const mem = await queryFirst<any>(
+      db,
+      `SELECT id,project_role FROM project_memberships WHERE user_id=? AND org_id=? AND project_id=? AND is_active=1`,
+      [n.user_id, n.org_id, n.project_id],
+    );
+    if (!mem && !admin) return false;
+    const project = await queryFirst<any>(
+      db,
+      `SELECT is_archived FROM projects WHERE id=? AND org_id=?`,
+      [n.project_id, n.org_id],
+    );
+    if (!project) return false;
+    if (project.is_archived && n.source_entity_type !== "INVOICE") return false;
+    if (n.source_entity_type === "TASK") {
+      const t = await queryFirst<any>(
+        db,
+        `SELECT status,assignee_user_id FROM tasks WHERE id=? AND project_id=?`,
+        [n.source_entity_id, n.project_id],
+      );
+      return (
+        !!t &&
+        !["COMPLETED", "CANCELLED"].includes(t.status) &&
+        ((t.assignee_user_id === n.user_id &&
+          ["MANAGER", "TEAM_MEMBER", "STAFF"].includes(mem?.project_role)) ||
+          !!admin)
+      );
+    }
+    if (n.source_entity_type === "INVOICE") {
+      const i = await queryFirst<any>(
+        db,
+        `SELECT i.status,i.outstanding_minor,p.main_client_user_id FROM invoices i JOIN projects p ON p.id=i.project_id WHERE i.id=? AND i.project_id=?`,
+        [n.source_entity_id, n.project_id],
+      );
+      return (
+        !!i &&
+        i.status === "ISSUED" &&
+        i.outstanding_minor > 0 &&
+        ((i.main_client_user_id === n.user_id &&
+          mem?.project_role === "MAIN_CLIENT") ||
+          !!admin)
+      );
+    }
+    if (n.source_entity_type === "DRAWING") {
+      const r = await queryFirst<any>(
+        db,
+        `SELECT v.status,r.status AS review_status FROM drawing_versions v JOIN drawings d ON d.id=v.drawing_id LEFT JOIN drawing_reviews r ON r.version_id=v.id AND r.consultant_user_id=? WHERE v.id=? AND d.project_id=?`,
+        [n.user_id, n.source_entity_id, n.project_id],
+      );
+      return (
+        !!r &&
+        r.status === "IN_REVIEW" &&
+        ((r.review_status === "PENDING" &&
+          mem?.project_role === "CONSULTANT") ||
+          !!admin)
+      );
+    }
+    return false;
+  }
   static async dispatchQueuedNotifications(
     db: D1Database,
-    whatsappAdapter: WhatsAppAdapter
+    adapter: WhatsAppAdapter,
+    notificationId?: string,
   ) {
-    const queued = await query<any>(
+    const now = Date.now();
+    // A crashed in-flight provider call has an uncertain outcome; never blindly send it again.
+    await execute(
       db,
-      "SELECT * FROM notifications WHERE status = 'QUEUED' ORDER BY created_at ASC"
+      `UPDATE notifications SET status='UNKNOWN',delivery_error='Interrupted delivery requires provider reconciliation.' WHERE status='PROCESSING' AND claimed_at<?`,
+      [now - 600000],
     );
-
+    const rows = await query<any>(
+      db,
+      `SELECT * FROM notifications WHERE (status='QUEUED' OR (status='FAILED' AND next_attempt_at IS NOT NULL)) AND attempt_count<5 AND (next_attempt_at IS NULL OR next_attempt_at<=?) ${notificationId ? "AND id=?" : ""} ORDER BY created_at LIMIT 100`,
+      notificationId ? [now, notificationId] : [now],
+    );
     const results = {
       delivered: 0,
       suppressed: 0,
       failed: 0,
       unknown: 0,
+      sent: 0,
+      unavailable: 0,
     };
-
-    const now = Date.now();
-
-    for (const notif of queued) {
-      // -----------------------------------------------------------------------
-      // Gate 1: Check if recipient is still active and permitted (AC-047)
-      // -----------------------------------------------------------------------
-      const activeUser = await queryFirst<any>(
+    for (const n of rows) {
+      const token = uid("claim");
+      const claim = await execute(
         db,
-        `SELECT u.id, u.status, m.is_active
-         FROM users u
-         JOIN organization_memberships m ON u.id = m.user_id
-         WHERE u.id = ? AND m.org_id = ?`,
-        [notif.user_id, notif.org_id]
+        `UPDATE notifications SET status='PROCESSING',claim_token=?,claimed_at=? WHERE id=? AND (status='QUEUED' OR (status='FAILED' AND next_attempt_at IS NOT NULL)) AND attempt_count<5 AND (next_attempt_at IS NULL OR next_attempt_at<=?)`,
+        [token, now, n.id, now],
       );
-
-      if (!activeUser || activeUser.status !== "ACTIVE" || activeUser.is_active !== 1) {
+      if (!claim.meta.changes) continue;
+      if (!(await this.eligible(db, n))) {
         await execute(
           db,
-          "UPDATE notifications SET status = 'SUPPRESSED', suppression_reason = 'USER_ACCESS_REVOKED' WHERE id = ?",
-          [notif.id]
+          `UPDATE notifications SET status='SUPPRESSED',suppression_reason='ACCESS_OR_OBLIGATION_CHANGED',claim_token=NULL WHERE id=? AND claim_token=?`,
+          [n.id, token],
         );
         results.suppressed++;
         continue;
       }
-
-      // -----------------------------------------------------------------------
-      // Gate 2: Check if underlying source entity is now resolved (AC-047)
-      // -----------------------------------------------------------------------
-      let isResolved = false;
-
-      if (notif.source_entity_type === "TASK") {
-        const task = await queryFirst<any>(db, "SELECT status FROM tasks WHERE id = ?", [
-          notif.source_entity_id,
-        ]);
-        if (!task || task.status === "COMPLETED" || task.status === "CANCELLED") {
-          isResolved = true;
-        }
-      } else if (notif.source_entity_type === "INVOICE") {
-        const inv = await queryFirst<any>(
-          db,
-          "SELECT outstanding_minor, status FROM invoices WHERE id = ?",
-          [notif.source_entity_id]
-        );
-        if (!inv || inv.outstanding_minor === 0 || inv.status === "PAID") {
-          isResolved = true;
-        }
-      } else if (notif.source_entity_type === "DRAWING") {
-        const dv = await queryFirst<any>(
-          db,
-          "SELECT status FROM drawing_versions WHERE id = ?",
-          [notif.source_entity_id]
-        );
-        if (!dv || dv.status === "APPROVED" || dv.status === "RELEASED" || dv.status === "WITHDRAWN") {
-          isResolved = true;
-        }
-      }
-
-      if (isResolved) {
+      if (n.channel === "PORTAL") {
         await execute(
           db,
-          "UPDATE notifications SET status = 'SUPPRESSED', suppression_reason = 'ENTITY_ALREADY_RESOLVED' WHERE id = ?",
-          [notif.id]
-        );
-        results.suppressed++;
-        continue;
-      }
-
-      // -----------------------------------------------------------------------
-      // Gate 3: Channel Dispatch
-      // -----------------------------------------------------------------------
-      if (notif.channel === "PORTAL") {
-        await execute(
-          db,
-          "UPDATE notifications SET status = 'DELIVERED', delivered_at = ? WHERE id = ?",
-          [now, notif.id]
+          `UPDATE notifications SET status='DELIVERED',delivered_at=?,claim_token=NULL WHERE id=? AND claim_token=?`,
+          [now, n.id, token],
         );
         results.delivered++;
-      } else if (notif.channel === "WHATSAPP") {
-        try {
-          // Minimal safe context without documents or salaries (AC-049)
-          const sendRes = await whatsappAdapter.sendTemplate({
-            notificationId: notif.id,
-            recipientPhone: "+919876543210", // configured recipient phone
-            templateName: "task_overdue",
-            templateParameters: {
-              title: notif.title,
-            },
-            deepLinkPath: notif.target_url || "/",
-          });
-
-          if (sendRes.status === "UNKNOWN") {
-            // Ambiguous timeout (AC-048) - do not blindly repeat immediately
-            await execute(
-              db,
-              "UPDATE notifications SET status = 'UNKNOWN', delivery_error = ? WHERE id = ?",
-              [sendRes.error || "Timeout", notif.id]
-            );
-            await execute(
-              db,
-              `INSERT INTO whatsapp_messages (
-                id, notification_id, recipient_phone, template_name, payload_safe_context,
-                status, error_message, attempt_count, created_at, updated_at
-              ) VALUES (?, ?, '+919876543210', 'task_overdue', ?, 'UNKNOWN', ?, 1, ?, ?)`,
-              [generateId("wam"), notif.id, notif.title, sendRes.error || "Timeout", now, now]
-            );
-            results.unknown++;
-          } else if (sendRes.status === "DELIVERED") {
-            await execute(
-              db,
-              "UPDATE notifications SET status = 'DELIVERED', provider_message_id = ?, delivered_at = ? WHERE id = ?",
-              [sendRes.providerMessageId, now, notif.id]
-            );
-            await execute(
-              db,
-              `INSERT INTO whatsapp_messages (
-                id, notification_id, recipient_phone, template_name, payload_safe_context,
-                status, provider_message_id, attempt_count, created_at, updated_at
-              ) VALUES (?, ?, '+919876543210', 'task_overdue', ?, 'DELIVERED', ?, 1, ?, ?)`,
-              [generateId("wam"), notif.id, notif.title, sendRes.providerMessageId, now, now]
-            );
-            results.delivered++;
-          } else {
-            await execute(
-              db,
-              "UPDATE notifications SET status = 'FAILED', delivery_error = ? WHERE id = ?",
-              [sendRes.error || "Delivery failed", notif.id]
-            );
-            results.failed++;
-          }
-        } catch (err: any) {
-          await execute(
-            db,
-            "UPDATE notifications SET status = 'FAILED', delivery_error = ? WHERE id = ?",
-            [err.message, notif.id]
-          );
-          results.failed++;
-        }
+        continue;
       }
+      const pref = await queryFirst<any>(
+        db,
+        `SELECT * FROM notification_preferences WHERE org_id=? AND user_id=? AND whatsapp_enabled=1 AND whatsapp_verified_at IS NOT NULL AND whatsapp_consent_at IS NOT NULL`,
+        [n.org_id, n.user_id],
+      );
+      if (!pref?.whatsapp_phone) {
+        await execute(
+          db,
+          `UPDATE notifications SET status='UNAVAILABLE',delivery_error='A verified destination and consent are required.',claim_token=NULL WHERE id=? AND claim_token=?`,
+          [n.id, token],
+        );
+        results.unavailable++;
+        continue;
+      }
+      const template =
+        n.source_entity_type === "TASK"
+          ? "task_due"
+          : n.source_entity_type === "DRAWING"
+            ? "drawing_review_due"
+            : "payment_due";
+      let res;
+      try {
+        res = await adapter.sendTemplate({
+          notificationId: n.id,
+          recipientPhone: pref.whatsapp_phone,
+          templateName: template,
+          templateParameters: {
+            context: "An action is waiting in Merveille Designs.",
+          },
+          deepLinkPath: n.target_url || "/waiting",
+        });
+      } catch {
+        res = {
+          success: false,
+          status: "UNKNOWN" as const,
+          error: "Delivery outcome is uncertain.",
+        };
+      }
+      const retry =
+        res.status === "FAILED" && res.retryable && n.attempt_count + 1 < 5;
+      const next = retry
+        ? now + Math.min(3600000, 30000 * 2 ** n.attempt_count)
+        : null;
+      await db.batch([
+        db
+          .prepare(
+            `UPDATE notifications SET status=?,provider_message_id=?,delivery_error=?,attempt_count=attempt_count+1,next_attempt_at=?,claim_token=NULL WHERE id=? AND claim_token=?`,
+          )
+          .bind(
+            res.status,
+            res.providerMessageId || null,
+            res.error || null,
+            next,
+            n.id,
+            token,
+          ),
+        db
+          .prepare(
+            `INSERT INTO whatsapp_messages(id,notification_id,recipient_phone,template_name,payload_safe_context,status,provider_message_id,error_message,attempt_count,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
+          )
+          .bind(
+            uid("wam"),
+            n.id,
+            pref.whatsapp_phone,
+            template,
+            "Portal action reminder",
+            res.status,
+            res.providerMessageId || null,
+            res.error || null,
+            n.attempt_count + 1,
+            now,
+            now,
+          ),
+      ]);
+      if (res.status === "DELIVERED") results.delivered++;
+      else if (res.status === "SENT") results.sent++;
+      else if (res.status === "UNKNOWN") results.unknown++;
+      else if (res.status === "UNAVAILABLE") results.unavailable++;
+      else results.failed++;
     }
-
     return results;
   }
-
-  /**
-   * Mark notification as read (AC-047).
-   * Invariant: Reading a notification NEVER marks the underlying task complete,
-   * never approves a drawing, and never confirms payment.
-   */
   static async markNotificationRead(
     db: D1Database,
-    principal: UserPrincipal,
-    notificationId: string
+    p: UserPrincipal,
+    id: string,
   ) {
-    const notif = await queryFirst<any>(db, "SELECT * FROM notifications WHERE id = ?", [
-      notificationId,
-    ]);
-    if (!notif) throw new AuthorizationError("Notification not found", "NOT_FOUND");
-
-    if (notif.user_id !== principal.id) {
-      throw new AuthorizationError("Cannot read another user's notifications", "FORBIDDEN");
-    }
-
+    const n = await queryFirst<any>(
+      db,
+      "SELECT * FROM notifications WHERE id=? AND user_id=? AND org_id=?",
+      [id, p.id, p.orgId],
+    );
+    if (!n || !(await this.eligible(db, n)))
+      throw new AuthorizationError("Notification is no longer available.");
     const now = Date.now();
     await execute(
       db,
-      "UPDATE notifications SET is_read = 1, read_at = ? WHERE id = ?",
-      [now, notificationId]
+      "UPDATE notifications SET is_read=1,read_at=? WHERE id=?",
+      [now, id],
     );
-
-    return { id: notificationId, isRead: true, readAt: now };
+    return { id, isRead: true, readAt: now };
   }
-
-  /**
-   * List in-portal notifications for an authenticated principal.
-   */
-  static async listUserNotifications(
-    db: D1Database,
-    principal: UserPrincipal
-  ) {
-    return await query<any>(
+  static async listUserNotifications(db: D1Database, p: UserPrincipal) {
+    const rows = await query<any>(
       db,
-      `SELECT n.* FROM notifications n
-       WHERE n.user_id = ? AND n.channel = 'PORTAL' AND n.status != 'SUPPRESSED'
-       ORDER BY n.created_at DESC`,
-      [principal.id]
+      `SELECT * FROM notifications WHERE user_id=? AND org_id=? AND channel='PORTAL' AND status!='SUPPRESSED' ORDER BY created_at DESC LIMIT 100`,
+      [p.id, p.orgId],
     );
+    const permitted = [];
+    for (const n of rows) if (await this.eligible(db, n)) permitted.push(n);
+    return permitted;
   }
-
-  /**
-   * Reconcile incoming webhook delivery status events (AC-048, AC-050).
-   * Deduplicates by event ID; reconciles provider IDs; incoming payloads
-   * NEVER mutate business/financial/drawing states.
-   */
   static async reconcileWebhookStatus(
     db: D1Database,
     eventId: string,
     providerMessageId: string,
-    status: "DELIVERED" | "READ" | "FAILED"
+    status: "SENT" | "DELIVERED" | "READ" | "FAILED",
   ) {
-    // 1. Deduplication check (AC-048, AC-050)
-    const existing = await queryFirst<any>(
-      db,
-      "SELECT id, processed FROM webhook_events WHERE event_id = ?",
-      [eventId]
-    );
-
-    if (existing) {
-      return { duplicate: true, eventId, processed: true };
-    }
-
+    // CASE ordering makes delayed status webhooks monotonic; duplicate insertion gates effects.
+    const rank = `CASE status WHEN 'READ' THEN 3 WHEN 'DELIVERED' THEN 2 WHEN 'SENT' THEN 1 ELSE 0 END`;
+    const incoming = { SENT: 1, DELIVERED: 2, READ: 3, FAILED: 0 }[status];
+    const marker = uid("whe");
     const now = Date.now();
-
-    // 2. Record webhook event
+    const results = await db.batch([
+      db
+        .prepare(
+          `INSERT OR IGNORE INTO webhook_events(id,provider,event_id,event_type,payload_json,processed,created_at) VALUES(?,'WHATSAPP_META',?,'status_update',?,1,?)`,
+        )
+        .bind(
+          marker,
+          eventId,
+          JSON.stringify({ providerMessageId, status }),
+          now,
+        ),
+      db
+        .prepare(
+          `UPDATE whatsapp_messages SET status=?,updated_at=? WHERE provider_message_id=? AND ${rank}<=? AND EXISTS(SELECT 1 FROM webhook_events WHERE id=?)`,
+        )
+        .bind(status, now, providerMessageId, incoming, marker),
+      db
+        .prepare(
+          `UPDATE notifications SET status=?,delivered_at=CASE WHEN ? IN ('DELIVERED','READ') THEN COALESCE(delivered_at,?) ELSE delivered_at END WHERE provider_message_id=? AND ${rank}<=? AND EXISTS(SELECT 1 FROM webhook_events WHERE id=?)`,
+        )
+        .bind(status, status, now, providerMessageId, incoming, marker),
+    ]);
+    return {
+      duplicate: !results[0].meta.changes,
+      eventId,
+      status,
+      processed: true,
+    };
+  }
+  static async getPreferences(db: D1Database, p: UserPrincipal) {
+    return queryFirst(
+      db,
+      `SELECT whatsapp_phone,whatsapp_enabled,whatsapp_verified_at,whatsapp_consent_at FROM notification_preferences WHERE org_id=? AND user_id=?`,
+      [p.orgId, p.id],
+    );
+  }
+  static async setPreferences(
+    db: D1Database,
+    p: UserPrincipal,
+    enabled: boolean,
+  ) {
+    // Verification and consent are operator/provider-confirmed, never browser asserted.
     await execute(
       db,
-      `INSERT INTO webhook_events (id, provider, event_id, event_type, payload_json, processed, created_at)
-       VALUES (?, 'WHATSAPP_META', ?, 'status_update', ?, 1, ?)`,
-      [generateId("whe"), eventId, JSON.stringify({ providerMessageId, status }), now]
+      `UPDATE notification_preferences SET whatsapp_enabled=?,updated_at=? WHERE org_id=? AND user_id=? AND whatsapp_verified_at IS NOT NULL AND whatsapp_consent_at IS NOT NULL`,
+      [enabled ? 1 : 0, Date.now(), p.orgId, p.id],
     );
-
-    // 3. Reconcile matching message and notification
-    await execute(
-      db,
-      "UPDATE whatsapp_messages SET status = ?, updated_at = ? WHERE provider_message_id = ?",
-      [status, now, providerMessageId]
-    );
-
-    await execute(
-      db,
-      "UPDATE notifications SET status = ?, delivered_at = COALESCE(delivered_at, ?) WHERE provider_message_id = ?",
-      [status, now, providerMessageId]
-    );
-
-    return { duplicate: false, eventId, status, reconciled: true };
+    return this.getPreferences(db, p);
   }
 }

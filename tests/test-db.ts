@@ -11,6 +11,7 @@ import { executeMigration } from "@/server/db";
 
 export function createTestD1Database(): D1Database {
   const sqlite = new DatabaseSync(":memory:");
+  sqlite.exec("PRAGMA foreign_keys = ON");
 
   const adapter: D1Database = {
     // @ts-ignore
@@ -21,9 +22,11 @@ export function createTestD1Database(): D1Database {
     prepare: (sql: string) => {
       let boundParams: any[] = [];
       return {
+        _sql: sql,
         bind: (...params: any[]) => {
           boundParams = params.map((p) => (p === undefined ? null : p));
           return {
+            _sql: sql,
             first: async <T = any>() => {
               const stmt = sqlite.prepare(sql);
               const row = stmt.get(...boundParams);
@@ -67,7 +70,7 @@ export function createTestD1Database(): D1Database {
       sqlite.exec("BEGIN TRANSACTION");
       try {
         for (const s of statements) {
-          const res = await s.run();
+          const res = /^\s*(SELECT|PRAGMA|WITH)\b/i.test(s._sql || "") || /\bRETURNING\b/i.test(s._sql || "") ? await s.all() : await s.run();
           results.push(res);
         }
         sqlite.exec("COMMIT");
@@ -319,19 +322,7 @@ export function createTestR2Bucket(): R2Bucket {
 export async function setupMigratedTestDb(): Promise<D1Database> {
   const db = createTestD1Database();
   const migrationsDir = path.resolve(__dirname, "../migrations");
-  const files = [
-    "0001_identity_and_permissions.sql",
-    "0002_projects_and_enquiries.sql",
-    "0003_files_and_media.sql",
-    "0004_tasks_and_deadlines.sql",
-    "0005_drawing_register.sql",
-    "0006_updates_and_permits.sql",
-    "0007_commercial_finance.sql",
-    "0008_accounting_and_ledger.sql",
-    "0009_client_decisions_and_changes.sql",
-    "0010_site_issues_and_snags.sql",
-    "0011_notifications_and_outbox.sql",
-  ];
+  const files = fs.readdirSync(migrationsDir).filter(file=>file.endsWith('.sql')).sort();
 
   for (const file of files) {
     const migrationPath = path.join(migrationsDir, file);
@@ -340,5 +331,7 @@ export async function setupMigratedTestDb(): Promise<D1Database> {
       await executeMigration(db, sql);
     }
   }
+  // Isolated historical fixture only; production migration quarantines the old seeded account.
+  await db.prepare("UPDATE users SET status='ACTIVE',disabled_at=NULL WHERE id='usr_admin_001'").run();
   return db;
 }

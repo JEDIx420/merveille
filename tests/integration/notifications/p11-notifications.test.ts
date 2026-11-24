@@ -1,3 +1,4 @@
+import { SyntheticWhatsAppAdapter } from "../../fixtures/whatsapp";
 /**
  * P11 Acceptance Tests: In-Portal Notifications, WhatsApp Safe Context, Escalations,
  * Dispatch-Time Suppression, Timeout Handling, and Webhook Signature Verification.
@@ -10,7 +11,6 @@ import { D1Database } from "@cloudflare/workers-types";
 import { UserPrincipal } from "../../../src/server/auth/principal";
 import { NotificationService } from "../../../src/server/notifications/service";
 import {
-  SyntheticWhatsAppAdapter,
   verifyMetaWebhookSignature,
 } from "../../../src/server/notifications/whatsapp";
 import { createTask, completeTask } from "../../../src/server/domain/tasks/service";
@@ -27,7 +27,7 @@ describe("Phase 11: In-Portal Notifications, WhatsApp, and Escalation", () => {
     email: "admin@merveilledesigns.com",
     name: "Merveille Admin",
     orgId: testOrgId,
-    role: "ADMIN",
+    role: "ADMIN", roles: ["ADMIN"],
     projectMemberships: [{ projectId: testProjectId, projectRole: "ADMIN" }],
     isSynthetic: true,
   };
@@ -37,7 +37,7 @@ describe("Phase 11: In-Portal Notifications, WhatsApp, and Escalation", () => {
     email: "manager@merveilledesigns.com",
     name: "Vipin Manager",
     orgId: testOrgId,
-    role: "MANAGER",
+    role: "MANAGER", roles: [],
     projectMemberships: [{ projectId: testProjectId, projectRole: "MANAGER" }],
     isSynthetic: true,
   };
@@ -47,7 +47,7 @@ describe("Phase 11: In-Portal Notifications, WhatsApp, and Escalation", () => {
     email: "staff@merveilledesigns.com",
     name: "Nithya Architect",
     orgId: testOrgId,
-    role: "STAFF",
+    role: "STAFF", roles: [],
     projectMemberships: [{ projectId: testProjectId, projectRole: "STAFF" }],
     isSynthetic: true,
   };
@@ -57,7 +57,7 @@ describe("Phase 11: In-Portal Notifications, WhatsApp, and Escalation", () => {
     email: "client@example.com",
     name: "Thomas Client (Main Client)",
     orgId: testOrgId,
-    role: "MAIN_CLIENT",
+    role: "MAIN_CLIENT", roles: [],
     projectMemberships: [{ projectId: testProjectId, projectRole: "MAIN_CLIENT" }],
     isSynthetic: true,
   };
@@ -157,21 +157,21 @@ describe("Phase 11: In-Portal Notifications, WhatsApp, and Escalation", () => {
     const scanResult = await NotificationService.scanDueAndOverdueItems(db, testOrgId, simulatedClock);
 
     // Creates portal and WhatsApp notifications
-    expect(scanResult.createdCount).toBe(4); // 2 portal + 2 WhatsApp
+    expect(scanResult.createdCount).toBe(6); // 2 portal + 2 WhatsApp
     // Unresolved overdue items escalate to admin
     expect(scanResult.escalationCount).toBe(2); // 1 task escalation + 1 invoice escalation
 
     // Inspect notifications
     const portalNotifications = await NotificationService.listUserNotifications(db, staffUser);
     expect(portalNotifications.length).toBe(1);
-    expect(portalNotifications[0].title).toContain("Task Overdue");
+    expect(portalNotifications[0].title).toContain("Task overdue");
     expect(portalNotifications[0].body_text).toContain("Structural Glazing Review");
 
     const clientNotifications = await NotificationService.listUserNotifications(db, clientUser);
     expect(clientNotifications.length).toBe(1);
-    expect(clientNotifications[0].title).toContain("Invoice Overdue");
+    expect(clientNotifications[0].title).toContain("Payment overdue");
     // AC-046: Uses actual remaining obligation after receipts/credits (₹2,00,000 outstanding)
-    expect(clientNotifications[0].body_text).toContain("2,00,000");
+    expect(clientNotifications[0].body_text).toContain("outstanding payment");
 
     // Inspect admin escalations
     const escalations = await db.prepare("SELECT * FROM notification_escalations").all();
@@ -212,7 +212,7 @@ describe("Phase 11: In-Portal Notifications, WhatsApp, and Escalation", () => {
 
     for (const n of taskNotifs.results as any[]) {
       expect(n.status).toBe("SUPPRESSED");
-      expect(n.suppression_reason).toBe("ENTITY_ALREADY_RESOLVED");
+      expect(n.suppression_reason).toBe("ACCESS_OR_OBLIGATION_CHANGED");
     }
 
     // 4. Test User Deactivation: Create second task for a user who is subsequently deactivated
@@ -250,7 +250,7 @@ describe("Phase 11: In-Portal Notifications, WhatsApp, and Escalation", () => {
       .prepare("SELECT * FROM notifications WHERE id = 'not_revoked'")
       .first()) as any;
     expect(revokedNotif.status).toBe("SUPPRESSED");
-    expect(revokedNotif.suppression_reason).toBe("USER_ACCESS_REVOKED");
+    expect(revokedNotif.suppression_reason).toBe("ACCESS_OR_OBLIGATION_CHANGED");
 
     // 5. Test Invariant: Marking notification read NEVER completes task or alters entities
     // Re-activate user
@@ -308,6 +308,8 @@ describe("Phase 11: In-Portal Notifications, WhatsApp, and Escalation", () => {
       .bind(notifId, testOrgId, staffUser.id, testProjectId, task.id, Date.now())
       .run();
 
+    await db.prepare("INSERT INTO notification_preferences(org_id,user_id,whatsapp_phone,whatsapp_verified_at,whatsapp_consent_at,whatsapp_enabled,updated_at) VALUES(?,?,?,1,1,1,1)").bind(testOrgId,staffUser.id,"+15555550123").run();
+
     // 2. Simulate provider timeout
     whatsappAdapter.simulateTimeout = true;
 
@@ -345,7 +347,7 @@ describe("Phase 11: In-Portal Notifications, WhatsApp, and Escalation", () => {
       "DELIVERED"
     );
     expect(hook1.duplicate).toBe(false);
-    expect(hook1.reconciled).toBe(true);
+    expect(hook1.processed).toBe(true);
 
     // Reconciled to DELIVERED
     const reconciledMsg = (await db

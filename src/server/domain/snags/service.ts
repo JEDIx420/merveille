@@ -1,3 +1,4 @@
+import { assertProjectOrganisation } from "@/server/auth/policy";
 /**
  * Site Issues and Snag Tracking Domain Service.
  * Enforces issue capture, manager triage/assignment, staff resolution vs manager
@@ -5,8 +6,13 @@
  * remediation cost isolation (AC-045), and change gate compliance for charged remediation (AC-070).
  */
 
-import { UserPrincipal } from "@/server/auth/principal";
-import { assertProjectAccess, AuthorizationError, canReadInternalNotes } from "@/server/auth/policy";
+import { validateAttachment } from "@/server/files/visibility";
+import { UserPrincipal, hasCapability } from "@/server/auth/principal";
+import {
+  assertProjectAccess,
+  AuthorizationError,
+  canReadInternalNotes,
+} from "@/server/auth/policy";
 import { query, queryFirst, execute } from "@/server/db";
 import { ArchiveService } from "../archive/service";
 
@@ -71,26 +77,35 @@ export class SnagsService {
   static async reportSnag(
     db: D1Database,
     principal: UserPrincipal,
-    params: ReportSnagParams
+    params: ReportSnagParams,
   ) {
     assertProjectAccess(principal, params.projectId);
+    await assertProjectOrganisation(db, principal, params.projectId);
     await ArchiveService.assertProjectNotArchived(db, params.projectId);
 
     if (!params.title || params.title.trim().length === 0) {
       throw new AuthorizationError("Snag title is required", "INVALID_INPUT");
     }
     if (!params.description || params.description.trim().length === 0) {
-      throw new AuthorizationError("Snag description is required", "INVALID_INPUT");
+      throw new AuthorizationError(
+        "Snag description is required",
+        "INVALID_INPUT",
+      );
     }
     if (!params.locationArea || params.locationArea.trim().length === 0) {
-      throw new AuthorizationError("Location/area is required", "INVALID_INPUT");
+      throw new AuthorizationError(
+        "Location/area is required",
+        "INVALID_INPUT",
+      );
     }
 
+    for (const fileId of params.fileIds ?? [])
+      await validateAttachment(db, principal, fileId, params.projectId, "SNAG");
     // Allocate sequential snag number
     const countRow = await queryFirst<any>(
       db,
       "SELECT COUNT(*) as c FROM snags WHERE project_id = ?",
-      [params.projectId]
+      [params.projectId],
     );
     const seq = (countRow?.c || 0) + 1;
     const snagNumber = `SNG-${String(seq).padStart(3, "0")}`;
@@ -120,7 +135,7 @@ export class SnagsService {
         params.relatedDrawingId || null,
         now,
         now,
-      ]
+      ],
     );
 
     // Attach initial before photos if provided
@@ -132,7 +147,14 @@ export class SnagsService {
             id, snag_id, file_id, attachment_type, is_internal_only, caption,
             uploaded_by_user_id, created_at
           ) VALUES (?, ?, ?, 'BEFORE_PHOTO', 0, ?, ?, ?)`,
-          [generateId("sat"), snagId, fId, params.caption || null, principal.id, now]
+          [
+            generateId("sat"),
+            snagId,
+            fId,
+            params.caption || null,
+            principal.id,
+            now,
+          ],
         );
       }
     }
@@ -143,7 +165,13 @@ export class SnagsService {
       `INSERT INTO snag_events (
         id, snag_id, actor_id, event_type, from_status, to_status, notes, created_at
       ) VALUES (?, ?, ?, 'SNAG_REPORTED', NULL, 'REPORTED', ?, ?)`,
-      [generateId("sev"), snagId, principal.id, `Reported at ${params.locationArea}`, now]
+      [
+        generateId("sev"),
+        snagId,
+        principal.id,
+        `Reported at ${params.locationArea}`,
+        now,
+      ],
     );
 
     return {
@@ -161,26 +189,35 @@ export class SnagsService {
   static async triageSnag(
     db: D1Database,
     principal: UserPrincipal,
-    params: TriageSnagParams
+    params: TriageSnagParams,
   ) {
-    const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [params.snagId]);
+    const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [
+      params.snagId,
+    ]);
     if (!snag) throw new AuthorizationError("Snag not found", "NOT_FOUND");
     assertProjectAccess(principal, snag.project_id);
+    await assertProjectOrganisation(db, principal, snag.project_id);
+    await ArchiveService.assertProjectNotArchived(db, snag.project_id);
+    if (snag.org_id !== principal.orgId)
+      throw new AuthorizationError("Site issue not found.", "NOT_FOUND");
 
-    if (!["MANAGER", "ADMIN", "OWNER"].includes(principal.role)) {
-      throw new AuthorizationError("Only project managers can triage and assign site issues", "FORBIDDEN");
+    if (!hasCapability(principal, "MANAGER", snag.project_id)) {
+      throw new AuthorizationError(
+        "Only project managers can triage and assign site issues",
+        "FORBIDDEN",
+      );
     }
 
     // Verify assignee belongs to this project (SCR-17)
     const assigneeMembership = await queryFirst<any>(
       db,
-      "SELECT id FROM project_memberships WHERE project_id = ? AND user_id = ? AND is_active = 1",
-      [snag.project_id, params.assignedToUserId]
+      "SELECT m.id FROM project_memberships m JOIN users u ON u.id=m.user_id JOIN organization_memberships o ON o.user_id=u.id AND o.org_id=m.org_id WHERE m.project_id=? AND m.user_id=? AND m.is_active=1 AND m.project_role IN ('STAFF','TEAM_MEMBER','MANAGER') AND u.status='ACTIVE' AND o.is_active=1",
+      [snag.project_id, params.assignedToUserId],
     );
     if (!assigneeMembership) {
       throw new AuthorizationError(
         "Assignee must be an active member of this project",
-        "INVALID_ASSIGNEE"
+        "INVALID_ASSIGNEE",
       );
     }
 
@@ -202,11 +239,13 @@ export class SnagsService {
         params.isClientShared ? 1 : 0,
         params.isChargedWork ? 1 : 0,
         params.changeRequestId || null,
-        params.internalCostMinor !== undefined ? params.internalCostMinor : null,
+        params.internalCostMinor !== undefined
+          ? params.internalCostMinor
+          : null,
         params.internalNotes || null,
         now,
         params.snagId,
-      ]
+      ],
     );
 
     await execute(
@@ -221,40 +260,71 @@ export class SnagsService {
         snag.status,
         `Assigned to user ${params.assignedToUserId}${params.targetDate ? ` with due date ${params.targetDate}` : ""}`,
         now,
-      ]
+      ],
     );
 
-    return { id: params.snagId, status: "OPEN" as SnagStatus, assignedToUserId: params.assignedToUserId };
+    return {
+      id: params.snagId,
+      status: "OPEN" as SnagStatus,
+      assignedToUserId: params.assignedToUserId,
+    };
   }
 
   /**
    * Start operational remediation work on a snag.
    * If charged work (AC-070), MUST verify linked change request is authorized.
    */
-  static async startSnagWork(db: D1Database, principal: UserPrincipal, snagId: string) {
-    const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [snagId]);
+  static async startSnagWork(
+    db: D1Database,
+    principal: UserPrincipal,
+    snagId: string,
+  ) {
+    const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [
+      snagId,
+    ]);
     if (!snag) throw new AuthorizationError("Snag not found", "NOT_FOUND");
     assertProjectAccess(principal, snag.project_id);
+    await assertProjectOrganisation(db, principal, snag.project_id);
+    if (
+      snag.assigned_to_user_id !== principal.id &&
+      !hasCapability(principal, "MANAGER", snag.project_id)
+    )
+      throw new AuthorizationError(
+        "Only the assignee or manager may resolve this issue.",
+      );
+    if (!["OPEN", "REOPENED", "IN_PROGRESS", "BLOCKED"].includes(snag.status))
+      throw new AuthorizationError(
+        "This site issue cannot be updated in its current state.",
+        "INVALID_STATE",
+      );
+    await ArchiveService.assertProjectNotArchived(db, snag.project_id);
+    if (snag.org_id !== principal.orgId)
+      throw new AuthorizationError("Site issue not found.", "NOT_FOUND");
 
     // Enforce AC-070: Charged snag remediation obeys the change gate
     if (snag.is_charged_work) {
       if (!snag.change_request_id) {
         throw new AuthorizationError(
           "Charged snag remediation requires an authorized change request before starting work",
-          "CHANGE_REQUEST_REQUIRED"
+          "CHANGE_REQUEST_REQUIRED",
         );
       }
 
       const cr = await queryFirst<any>(
         db,
         "SELECT status FROM change_requests WHERE id = ?",
-        [snag.change_request_id]
+        [snag.change_request_id],
       );
 
-      if (!cr || (cr.status !== "AUTHORIZED" && cr.status !== "IN_PROGRESS" && cr.status !== "COMPLETED")) {
+      if (
+        !cr ||
+        (cr.status !== "AUTHORIZED" &&
+          cr.status !== "IN_PROGRESS" &&
+          cr.status !== "COMPLETED")
+      ) {
         throw new AuthorizationError(
           "Charged snag remediation work remains blocked until change request is authorized and paid",
-          "CHANGE_REQUEST_NOT_AUTHORIZED"
+          "CHANGE_REQUEST_NOT_AUTHORIZED",
         );
       }
     }
@@ -263,7 +333,7 @@ export class SnagsService {
     await execute(
       db,
       "UPDATE snags SET status = 'IN_PROGRESS', updated_at = ? WHERE id = ?",
-      [now, snagId]
+      [now, snagId],
     );
 
     await execute(
@@ -271,7 +341,7 @@ export class SnagsService {
       `INSERT INTO snag_events (
         id, snag_id, actor_id, event_type, from_status, to_status, notes, created_at
       ) VALUES (?, ?, ?, 'SNAG_STARTED', ?, 'IN_PROGRESS', 'Remediation work started', ?)`,
-      [generateId("sev"), snagId, principal.id, snag.status, now]
+      [generateId("sev"), snagId, principal.id, snag.status, now],
     );
 
     return { id: snagId, status: "IN_PROGRESS" as SnagStatus };
@@ -285,18 +355,44 @@ export class SnagsService {
   static async submitResolution(
     db: D1Database,
     principal: UserPrincipal,
-    params: SubmitResolutionParams
+    params: SubmitResolutionParams,
   ) {
-    const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [params.snagId]);
+    const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [
+      params.snagId,
+    ]);
     if (!snag) throw new AuthorizationError("Snag not found", "NOT_FOUND");
     assertProjectAccess(principal, snag.project_id);
+    await assertProjectOrganisation(db, principal, snag.project_id);
+    if (
+      snag.assigned_to_user_id !== principal.id &&
+      !hasCapability(principal, "MANAGER", snag.project_id)
+    )
+      throw new AuthorizationError(
+        "Only the assignee or manager may resolve this issue.",
+      );
+    if (!["OPEN", "REOPENED", "IN_PROGRESS", "BLOCKED"].includes(snag.status))
+      throw new AuthorizationError(
+        "This site issue cannot be updated in its current state.",
+        "INVALID_STATE",
+      );
+    await ArchiveService.assertProjectNotArchived(db, snag.project_id);
+    if (snag.org_id !== principal.orgId)
+      throw new AuthorizationError("Site issue not found.", "NOT_FOUND");
 
-    if (!params.resolutionEvidence || params.resolutionEvidence.trim().length === 0) {
-      throw new AuthorizationError("Resolution evidence note is required", "INVALID_INPUT");
+    if (
+      !params.resolutionEvidence ||
+      params.resolutionEvidence.trim().length === 0
+    ) {
+      throw new AuthorizationError(
+        "Resolution evidence note is required",
+        "INVALID_INPUT",
+      );
     }
 
     const now = Date.now();
 
+    for (const fileId of params.afterPhotoFileIds ?? [])
+      await validateAttachment(db, principal, fileId, snag.project_id, "SNAG");
     // Attach after photos if provided
     if (params.afterPhotoFileIds && params.afterPhotoFileIds.length > 0) {
       for (const fId of params.afterPhotoFileIds) {
@@ -306,7 +402,7 @@ export class SnagsService {
             id, snag_id, file_id, attachment_type, is_internal_only, caption,
             uploaded_by_user_id, created_at
           ) VALUES (?, ?, ?, 'AFTER_PHOTO', 0, 'Resolution photo', ?, ?)`,
-          [generateId("sat"), params.snagId, fId, principal.id, now]
+          [generateId("sat"), params.snagId, fId, principal.id, now],
         );
       }
     }
@@ -314,7 +410,7 @@ export class SnagsService {
     await execute(
       db,
       "UPDATE snags SET status = 'READY_FOR_VERIFICATION', updated_at = ? WHERE id = ?",
-      [now, params.snagId]
+      [now, params.snagId],
     );
 
     await execute(
@@ -322,10 +418,20 @@ export class SnagsService {
       `INSERT INTO snag_events (
         id, snag_id, actor_id, event_type, from_status, to_status, notes, resolution_evidence, created_at
       ) VALUES (?, ?, ?, 'SNAG_RESOLUTION_SUBMITTED', ?, 'READY_FOR_VERIFICATION', 'Resolution submitted for manager review', ?, ?)`,
-      [generateId("sev"), params.snagId, principal.id, snag.status, params.resolutionEvidence.trim(), now]
+      [
+        generateId("sev"),
+        params.snagId,
+        principal.id,
+        snag.status,
+        params.resolutionEvidence.trim(),
+        now,
+      ],
     );
 
-    return { id: params.snagId, status: "READY_FOR_VERIFICATION" as SnagStatus };
+    return {
+      id: params.snagId,
+      status: "READY_FOR_VERIFICATION" as SnagStatus,
+    };
   }
 
   /**
@@ -335,21 +441,30 @@ export class SnagsService {
   static async verifyCloseSnag(
     db: D1Database,
     principal: UserPrincipal,
-    params: { snagId: string; notes?: string }
+    params: { snagId: string; notes?: string },
   ) {
-    const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [params.snagId]);
+    const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [
+      params.snagId,
+    ]);
     if (!snag) throw new AuthorizationError("Snag not found", "NOT_FOUND");
     assertProjectAccess(principal, snag.project_id);
+    await assertProjectOrganisation(db, principal, snag.project_id);
+    await ArchiveService.assertProjectNotArchived(db, snag.project_id);
+    if (snag.org_id !== principal.orgId)
+      throw new AuthorizationError("Site issue not found.", "NOT_FOUND");
 
-    if (!["MANAGER", "ADMIN", "OWNER"].includes(principal.role)) {
-      throw new AuthorizationError("Only project managers can verify and close site snags", "FORBIDDEN");
+    if (!hasCapability(principal, "MANAGER", snag.project_id)) {
+      throw new AuthorizationError(
+        "Only project managers can verify and close site snags",
+        "FORBIDDEN",
+      );
     }
 
     const now = Date.now();
     await execute(
       db,
       "UPDATE snags SET status = 'CLOSED', updated_at = ? WHERE id = ?",
-      [now, params.snagId]
+      [now, params.snagId],
     );
 
     await execute(
@@ -364,10 +479,14 @@ export class SnagsService {
         snag.status,
         params.notes || "Verified resolved following site inspection",
         now,
-      ]
+      ],
     );
 
-    return { id: params.snagId, status: "CLOSED" as SnagStatus, verifiedByUserId: principal.id };
+    return {
+      id: params.snagId,
+      status: "CLOSED" as SnagStatus,
+      verifiedByUserId: principal.id,
+    };
   }
 
   /**
@@ -377,18 +496,30 @@ export class SnagsService {
   static async reopenSnag(
     db: D1Database,
     principal: UserPrincipal,
-    params: ReopenSnagParams
+    params: ReopenSnagParams,
   ) {
-    const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [params.snagId]);
+    const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [
+      params.snagId,
+    ]);
     if (!snag) throw new AuthorizationError("Snag not found", "NOT_FOUND");
     assertProjectAccess(principal, snag.project_id);
+    await assertProjectOrganisation(db, principal, snag.project_id);
+    await ArchiveService.assertProjectNotArchived(db, snag.project_id);
+    if (snag.org_id !== principal.orgId)
+      throw new AuthorizationError("Site issue not found.", "NOT_FOUND");
 
-    if (!["MANAGER", "ADMIN", "OWNER"].includes(principal.role)) {
-      throw new AuthorizationError("Only project managers can reopen site snags", "FORBIDDEN");
+    if (!hasCapability(principal, "MANAGER", snag.project_id)) {
+      throw new AuthorizationError(
+        "Only project managers can reopen site snags",
+        "FORBIDDEN",
+      );
     }
 
     if (!params.reason || params.reason.trim().length === 0) {
-      throw new AuthorizationError("Reopen reason is mandatory", "INVALID_INPUT");
+      throw new AuthorizationError(
+        "Reopen reason is mandatory",
+        "INVALID_INPUT",
+      );
     }
 
     const now = Date.now();
@@ -401,7 +532,7 @@ export class SnagsService {
        SET status = 'OPEN', reopen_count = reopen_count + 1,
            target_date = ?, assigned_to_user_id = ?, updated_at = ?
        WHERE id = ?`,
-      [effectiveDueDate, effectiveAssignee, now, params.snagId]
+      [effectiveDueDate, effectiveAssignee, now, params.snagId],
     );
 
     await execute(
@@ -416,7 +547,7 @@ export class SnagsService {
         snag.status,
         `Reopened: ${params.reason.trim()}`,
         now,
-      ]
+      ],
     );
 
     return {
@@ -432,11 +563,17 @@ export class SnagsService {
   static async addComment(
     db: D1Database,
     principal: UserPrincipal,
-    params: { snagId: string; commentText: string; isInternalOnly?: boolean }
+    params: { snagId: string; commentText: string; isInternalOnly?: boolean },
   ) {
-    const snag = await queryFirst<any>(db, "SELECT project_id FROM snags WHERE id = ?", [params.snagId]);
+    const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [
+      params.snagId,
+    ]);
     if (!snag) throw new AuthorizationError("Snag not found", "NOT_FOUND");
     assertProjectAccess(principal, snag.project_id);
+    await assertProjectOrganisation(db, principal, snag.project_id);
+    await ArchiveService.assertProjectNotArchived(db, snag.project_id);
+    if (snag.org_id !== principal.orgId)
+      throw new AuthorizationError("Site issue not found.", "NOT_FOUND");
 
     if (!params.commentText || params.commentText.trim().length === 0) {
       throw new AuthorizationError("Comment text is required", "INVALID_INPUT");
@@ -453,10 +590,22 @@ export class SnagsService {
       `INSERT INTO snag_comments (
         id, snag_id, user_id, comment_text, is_internal_only, created_at
       ) VALUES (?, ?, ?, ?, ?, ?)`,
-      [commentId, params.snagId, principal.id, params.commentText.trim(), isInternal ? 1 : 0, now]
+      [
+        commentId,
+        params.snagId,
+        principal.id,
+        params.commentText.trim(),
+        isInternal ? 1 : 0,
+        now,
+      ],
     );
 
-    return { id: commentId, snagId: params.snagId, isInternalOnly: isInternal, createdAt: now };
+    return {
+      id: commentId,
+      snagId: params.snagId,
+      isInternalOnly: isInternal,
+      createdAt: now,
+    };
   }
 
   /**
@@ -464,7 +613,11 @@ export class SnagsService {
    * External clients and consultants cannot see internal remediation notes,
    * internal costs, or internal-only attachments.
    */
-  static async getSnag(db: D1Database, principal: UserPrincipal, snagId: string) {
+  static async getSnag(
+    db: D1Database,
+    principal: UserPrincipal,
+    snagId: string,
+  ) {
     const snag = await queryFirst<any>(
       db,
       `SELECT s.*, r.display_name as reporter_name, a.display_name as assignee_name, m.display_name as manager_name
@@ -473,10 +626,14 @@ export class SnagsService {
        LEFT JOIN users a ON s.assigned_to_user_id = a.id
        LEFT JOIN users m ON s.assigned_by_user_id = m.id
        WHERE s.id = ?`,
-      [snagId]
+      [snagId],
     );
     if (!snag) throw new AuthorizationError("Snag not found", "NOT_FOUND");
     assertProjectAccess(principal, snag.project_id);
+    await assertProjectOrganisation(db, principal, snag.project_id);
+    await ArchiveService.assertProjectNotArchived(db, snag.project_id);
+    if (snag.org_id !== principal.orgId)
+      throw new AuthorizationError("Site issue not found.", "NOT_FOUND");
 
     const canSeeInternal = canReadInternalNotes(principal, snag.project_id);
 
@@ -486,7 +643,7 @@ export class SnagsService {
       if (!isReporter && !snag.is_client_shared) {
         throw new AuthorizationError(
           "This site issue has not been approved for client/consultant viewing",
-          "FORBIDDEN"
+          "FORBIDDEN",
         );
       }
     }
@@ -500,7 +657,7 @@ export class SnagsService {
        JOIN users u ON sa.uploaded_by_user_id = u.id
        WHERE sa.snag_id = ? ${canSeeInternal ? "" : "AND sa.is_internal_only = 0"}
        ORDER BY sa.created_at ASC`,
-      [snagId]
+      [snagId],
     );
 
     // Comments with internal isolation (AC-045)
@@ -511,7 +668,7 @@ export class SnagsService {
        JOIN users u ON sc.user_id = u.id
        WHERE sc.snag_id = ? ${canSeeInternal ? "" : "AND sc.is_internal_only = 0"}
        ORDER BY sc.created_at ASC`,
-      [snagId]
+      [snagId],
     );
 
     // Audit history
@@ -522,13 +679,15 @@ export class SnagsService {
        JOIN users u ON se.actor_id = u.id
        WHERE se.snag_id = ?
        ORDER BY se.created_at ASC`,
-      [snagId]
+      [snagId],
     );
 
     return {
       ...snag,
       internal_notes: canSeeInternal ? snag.internal_notes : undefined,
-      internal_cost_minor: canSeeInternal ? snag.internal_cost_minor : undefined,
+      internal_cost_minor: canSeeInternal
+        ? snag.internal_cost_minor
+        : undefined,
       attachments,
       comments,
       events,
@@ -538,8 +697,13 @@ export class SnagsService {
   /**
    * List snags for a project with permission-scoped visibility.
    */
-  static async listSnags(db: D1Database, principal: UserPrincipal, projectId: string) {
+  static async listSnags(
+    db: D1Database,
+    principal: UserPrincipal,
+    projectId: string,
+  ) {
     assertProjectAccess(principal, projectId);
+    await assertProjectOrganisation(db, principal, projectId);
     const canSeeInternal = canReadInternalNotes(principal, projectId);
 
     let rows: any[];
@@ -552,7 +716,7 @@ export class SnagsService {
          LEFT JOIN users a ON s.assigned_to_user_id = a.id
          WHERE s.project_id = ?
          ORDER BY s.created_at DESC`,
-        [projectId]
+        [projectId],
       );
     } else {
       // Clients/consultants see only client-shared snags OR snags they reported (AC-045)
@@ -564,7 +728,7 @@ export class SnagsService {
          LEFT JOIN users a ON s.assigned_to_user_id = a.id
          WHERE s.project_id = ? AND (s.is_client_shared = 1 OR s.reported_by_user_id = ?)
          ORDER BY s.created_at DESC`,
-        [projectId, principal.id]
+        [projectId, principal.id],
       );
     }
 

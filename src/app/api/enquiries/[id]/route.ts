@@ -1,3 +1,4 @@
+import { publicError } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -10,7 +11,7 @@ import {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -25,13 +26,16 @@ export async function GET(
     return NextResponse.json({ ok: true, ...data });
   } catch (err: any) {
     const status = err.code === "NOT_FOUND" ? 404 : 403;
-    return NextResponse.json({ error: err.message, code: err.code }, { status });
+    return NextResponse.json(
+      { error: publicError(err), code: err.code },
+      { status },
+    );
   }
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -42,7 +46,7 @@ export async function POST(
   }
 
   try {
-    const body = await request.json() as any;
+    const body = (await request.json()) as any;
     const action = body.action;
 
     switch (action) {
@@ -55,7 +59,7 @@ export async function POST(
             siteConstraints: body.siteConstraints,
             recommendations: body.recommendations,
           },
-          env.DB
+          env.DB,
         );
         return NextResponse.json({ ok: true, ...result });
       }
@@ -67,7 +71,7 @@ export async function POST(
             status: body.status, // "LOST" | "DECLINED"
             reason: body.reason,
           },
-          env.DB
+          env.DB,
         );
         return NextResponse.json({ ok: true, ...result });
       }
@@ -81,21 +85,21 @@ export async function POST(
             mainClientUserId: body.mainClientUserId,
             managerUserId: body.managerUserId,
           },
-          env.DB
+          env.DB,
         );
         return NextResponse.json({ ok: true, ...result });
       }
       default:
         return NextResponse.json(
           { error: `Unknown enquiry action: ${action}` },
-          { status: 400 }
+          { status: 400 },
         );
     }
   } catch (err: any) {
     const status = err.code === "NOT_FOUND" ? 404 : 400;
     return NextResponse.json(
-      { error: err.message, code: err.code || "OPERATION_FAILED" },
-      { status }
+      { error: publicError(err), code: err.code || "OPERATION_FAILED" },
+      { status },
     );
   }
 }

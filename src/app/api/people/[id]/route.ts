@@ -1,11 +1,12 @@
+import { publicError, errorStatus } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
-import { disableUser } from "@/server/domain/identity/service";
+import { disableUser, updateGrants } from "@/server/domain/identity/service";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -18,19 +19,36 @@ export async function POST(
   const body: any = await request.json().catch(() => ({}));
   const action = body.action || "DISABLE";
 
+  if (action === "GRANTS") {
+    try {
+      return NextResponse.json(
+        await updateGrants(auth.principal, id, body, env.DB),
+      );
+    } catch (err: any) {
+      return NextResponse.json(
+        {
+          error: err.code
+            ? publicError(err)
+            : "Access change failed. Refresh and retry.",
+          code: err.code,
+        },
+        { status: errorStatus(err) },
+      );
+    }
+  }
   if (action === "DISABLE") {
     try {
       const result = await disableUser(
         auth.principal,
         id,
         body.reason || "Administrative removal",
-        env.DB
+        env.DB,
       );
       return NextResponse.json({ ok: true, ...result });
     } catch (err: any) {
       return NextResponse.json(
-        { error: err.message, code: err.code || "FORBIDDEN" },
-        { status: err.code === "ADMIN_REQUIRED" ? 403 : 400 }
+        { error: publicError(err), code: err.code || "FORBIDDEN" },
+        { status: errorStatus(err) },
       );
     }
   }

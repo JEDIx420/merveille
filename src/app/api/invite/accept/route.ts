@@ -1,24 +1,32 @@
-import { NextRequest, NextResponse } from "next/server";
+import { publicError, errorStatus } from "@/server/http/errors";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { verifiedIdentity } from "@/server/auth/session";
 import { acceptInvitation } from "@/server/domain/identity/service";
-
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   const { env } = await getCloudflareContext({ async: true });
-  const body: any = await request.json().catch(() => ({}));
-  const token = body.token;
-  const subjectId = body.subjectId || `sub_${Date.now()}`;
-
-  if (!token) {
-    return NextResponse.json({ error: "Missing invitation token" }, { status: 400 });
-  }
-
+  const identity = await verifiedIdentity(request, env);
+  if (!identity)
+    return Response.json(
+      { error: "Sign in with your invited Google account." },
+      { status: 401 },
+    );
   try {
-    const result = await acceptInvitation(token, subjectId, env.DB);
-    return NextResponse.json({ ok: true, ...result });
+    const body = (await request.json()) as { token: string };
+    if (typeof body.token !== "string" || body.token.length > 256)
+      throw new Error("Invalid invitation.");
+    return Response.json({
+      ok: true,
+      ...(await acceptInvitation(body.token, identity, env.DB)),
+    });
   } catch (err: any) {
-    return NextResponse.json(
-      { error: err.message, code: err.code || "INVITATION_FAILED" },
-      { status: 400 }
+    return Response.json(
+      {
+        error: err.code
+          ? publicError(err)
+          : "Invitation acceptance failed. Contact your administrator.",
+        code: err.code ?? "INVALID_INPUT",
+      },
+      { status: errorStatus(err) },
     );
   }
 }

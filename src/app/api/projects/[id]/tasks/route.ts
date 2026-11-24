@@ -1,3 +1,4 @@
+import { publicError } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -5,7 +6,7 @@ import { listProjectTasks, createTask } from "@/server/domain/tasks/service";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -28,15 +29,15 @@ export async function GET(
   } catch (err: any) {
     const status = err.code === "NOT_FOUND" ? 404 : 403;
     return NextResponse.json(
-      { error: err.message, code: err.code || "FORBIDDEN" },
-      { status }
+      { error: publicError(err), code: err.code || "FORBIDDEN" },
+      { status },
     );
   }
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -47,7 +48,7 @@ export async function POST(
   }
 
   try {
-    const body = await request.json() as any;
+    const body = (await request.json()) as any;
     const result = await createTask(
       auth.principal,
       {
@@ -59,14 +60,14 @@ export async function POST(
         proposedAssigneeId: body.proposedAssigneeId,
         proposedDueDate: body.proposedDueDate,
       },
-      env.DB
+      env.DB,
     );
     return NextResponse.json({ ok: true, ...result }, { status: 201 });
   } catch (err: any) {
     const status = err.code === "NOT_FOUND" ? 404 : 403;
     return NextResponse.json(
-      { error: err.message, code: err.code || "OPERATION_FAILED" },
-      { status }
+      { error: publicError(err), code: err.code || "OPERATION_FAILED" },
+      { status },
     );
   }
 }

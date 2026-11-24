@@ -1,10 +1,12 @@
+import { assertProjectOrganisation } from "@/server/auth/policy";
+import { validateAttachment, canReadFile } from "@/server/files/visibility";
 /**
  * Domain service for project updates, internal notes, and company announcements.
  * Enforces manager publication boundary, internal note confidentiality, and targeted announcements.
  */
 
 import { D1Database } from "@cloudflare/workers-types";
-import { UserPrincipal } from "../../auth/principal";
+import { UserPrincipal, hasCapability } from "../../auth/principal";
 import {
   assertProjectAccess,
   canReadInternalNotes,
@@ -59,19 +61,28 @@ export class UpdatesService {
   static async createProjectUpdate(
     db: D1Database,
     principal: UserPrincipal,
-    params: CreateProjectUpdateParams
+    params: CreateProjectUpdateParams,
   ) {
     assertProjectAccess(principal, params.projectId);
+    await assertProjectOrganisation(db, principal, params.projectId);
     await ArchiveService.assertProjectNotArchived(db, params.projectId);
 
     if (!canReadInternalNotes(principal, params.projectId)) {
       throw new AuthorizationError(
         "Clients and consultants cannot create project updates",
-        "FORBIDDEN"
+        "FORBIDDEN",
       );
     }
 
     const now = Date.now();
+    for (const fileId of params.fileIds ?? [])
+      await validateAttachment(
+        db,
+        principal,
+        fileId,
+        params.projectId,
+        "UPDATE",
+      );
     const updateId = generateId("upd");
     const versionId = generateId("upv");
 
@@ -81,7 +92,7 @@ export class UpdatesService {
         `INSERT INTO project_updates (
           id, org_id, project_id, stage_id, author_id,
           current_published_version_id, is_retracted, revision, created_at
-        ) VALUES (?, ?, ?, ?, ?, NULL, 0, 1, ?)`
+        ) VALUES (?, ?, ?, ?, ?, NULL, 0, 1, ?)`,
       )
       .bind(
         updateId,
@@ -89,7 +100,7 @@ export class UpdatesService {
         params.projectId,
         params.stageId || null,
         principal.id,
-        now
+        now,
       )
       .run();
 
@@ -99,7 +110,7 @@ export class UpdatesService {
         `INSERT INTO update_versions (
           id, update_id, version_number, title, body_text,
           observed_date, status, revision, created_at
-        ) VALUES (?, ?, 1, ?, ?, ?, 'DRAFT', 1, ?)`
+        ) VALUES (?, ?, 1, ?, ?, ?, 'DRAFT', 1, ?)`,
       )
       .bind(
         versionId,
@@ -107,7 +118,7 @@ export class UpdatesService {
         params.title,
         params.bodyText,
         params.observedDate || null,
-        now
+        now,
       )
       .run();
 
@@ -117,7 +128,7 @@ export class UpdatesService {
         await db
           .prepare(
             `INSERT INTO update_attachments (id, version_id, file_id, created_at)
-             VALUES (?, ?, ?, ?)`
+             VALUES (?, ?, ?, ?)`,
           )
           .bind(generateId("upa"), versionId, fileId, now)
           .run();
@@ -139,7 +150,7 @@ export class UpdatesService {
   static async createUpdateVersion(
     db: D1Database,
     principal: UserPrincipal,
-    params: CreateUpdateVersionParams
+    params: CreateUpdateVersionParams,
   ) {
     const update = (await db
       .prepare(`SELECT * FROM project_updates WHERE id = ?`)
@@ -151,17 +162,27 @@ export class UpdatesService {
     }
 
     assertProjectAccess(principal, update.project_id);
+
+    await assertProjectOrganisation(db, principal, update.project_id);
     await ArchiveService.assertProjectNotArchived(db, update.project_id);
     if (!canReadInternalNotes(principal, update.project_id)) {
       throw new AuthorizationError(
         "Clients and consultants cannot edit updates",
-        "FORBIDDEN"
+        "FORBIDDEN",
       );
     }
 
+    for (const fileId of params.fileIds ?? [])
+      await validateAttachment(
+        db,
+        principal,
+        fileId,
+        update.project_id,
+        "UPDATE",
+      );
     const maxVerRow = (await db
       .prepare(
-        `SELECT MAX(version_number) as max_v FROM update_versions WHERE update_id = ?`
+        `SELECT MAX(version_number) as max_v FROM update_versions WHERE update_id = ?`,
       )
       .bind(params.updateId)
       .first()) as any;
@@ -175,7 +196,7 @@ export class UpdatesService {
         `INSERT INTO update_versions (
           id, update_id, version_number, title, body_text,
           observed_date, status, revision, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 'DRAFT', 1, ?)`
+        ) VALUES (?, ?, ?, ?, ?, ?, 'DRAFT', 1, ?)`,
       )
       .bind(
         versionId,
@@ -184,7 +205,7 @@ export class UpdatesService {
         params.title,
         params.bodyText,
         params.observedDate || null,
-        now
+        now,
       )
       .run();
 
@@ -193,7 +214,7 @@ export class UpdatesService {
         await db
           .prepare(
             `INSERT INTO update_attachments (id, version_id, file_id, created_at)
-             VALUES (?, ?, ?, ?)`
+             VALUES (?, ?, ?, ?)`,
           )
           .bind(generateId("upa"), versionId, fileId, now)
           .run();
@@ -205,7 +226,11 @@ export class UpdatesService {
       }
     }
 
-    return { updateId: params.updateId, versionId, versionNumber: nextVersionNumber };
+    return {
+      updateId: params.updateId,
+      versionId,
+      versionNumber: nextVersionNumber,
+    };
   }
 
   /**
@@ -214,23 +239,31 @@ export class UpdatesService {
   static async submitUpdateForReview(
     db: D1Database,
     principal: UserPrincipal,
-    versionId: string
+    versionId: string,
   ) {
     const version = (await db
       .prepare(
         `SELECT uv.*, pu.project_id
          FROM update_versions uv
          JOIN project_updates pu ON uv.update_id = pu.id
-         WHERE uv.id = ?`
+         WHERE uv.id = ?`,
       )
       .bind(versionId)
       .first()) as any;
 
     if (!version) throw new Error("Update version not found");
     assertProjectAccess(principal, version.project_id);
+    await assertProjectOrganisation(db, principal, version.project_id);
+    await ArchiveService.assertProjectNotArchived(db, version.project_id);
+    if (!canReadInternalNotes(principal, version.project_id))
+      throw new AuthorizationError(
+        "Only assigned project staff may submit updates.",
+      );
 
     if (version.status !== "DRAFT" && version.status !== "CHANGES_REQUESTED") {
-      throw new Error(`Cannot submit update version in status ${version.status}`);
+      throw new Error(
+        `Cannot submit update version in status ${version.status}`,
+      );
     }
 
     await db
@@ -248,14 +281,14 @@ export class UpdatesService {
   static async returnUpdate(
     db: D1Database,
     principal: UserPrincipal,
-    params: { versionId: string; feedback: string }
+    params: { versionId: string; feedback: string },
   ) {
     const version = (await db
       .prepare(
         `SELECT uv.*, pu.project_id
          FROM update_versions uv
          JOIN project_updates pu ON uv.update_id = pu.id
-         WHERE uv.id = ?`
+         WHERE uv.id = ?`,
       )
       .bind(params.versionId)
       .first()) as any;
@@ -265,7 +298,7 @@ export class UpdatesService {
     if (!canPublishProjectUpdates(principal, version.project_id)) {
       throw new AuthorizationError(
         "Only managers can return submitted updates",
-        "FORBIDDEN"
+        "FORBIDDEN",
       );
     }
 
@@ -273,7 +306,7 @@ export class UpdatesService {
       .prepare(
         `UPDATE update_versions
          SET status = 'CHANGES_REQUESTED', review_feedback = ?
-         WHERE id = ?`
+         WHERE id = ?`,
       )
       .bind(params.feedback, params.versionId)
       .run();
@@ -288,14 +321,14 @@ export class UpdatesService {
   static async publishUpdate(
     db: D1Database,
     principal: UserPrincipal,
-    versionId: string
+    versionId: string,
   ) {
     const version = (await db
       .prepare(
         `SELECT uv.*, pu.project_id, pu.id as parent_update_id
          FROM update_versions uv
          JOIN project_updates pu ON uv.update_id = pu.id
-         WHERE uv.id = ?`
+         WHERE uv.id = ?`,
       )
       .bind(versionId)
       .first()) as any;
@@ -305,35 +338,93 @@ export class UpdatesService {
     if (!canPublishProjectUpdates(principal, version.project_id)) {
       throw new AuthorizationError(
         "Only managers can publish client-visible updates",
-        "FORBIDDEN"
+        "FORBIDDEN",
       );
     }
 
     await ArchiveService.assertProjectNotArchived(db, version.project_id);
 
-    const now = Date.now();
-
-    // 1. Mark this version as PUBLISHED
-    await db
-      .prepare(
-        `UPDATE update_versions
-         SET status = 'PUBLISHED', published_at = ?, published_by_user_id = ?
-         WHERE id = ?`
+    if (version.status === "PUBLISHED")
+      return {
+        updateId: version.parent_update_id,
+        versionId,
+        status: "PUBLISHED",
+      };
+    if (version.status !== "IN_REVIEW")
+      throw new AuthorizationError(
+        "Submit this update for review before publication.",
+        "INVALID_STATE",
+      );
+    const attachments = await db
+      .prepare("SELECT file_id FROM update_attachments WHERE version_id=?")
+      .bind(versionId)
+      .all<any>();
+    for (const attachment of attachments.results) {
+      const drawing = await db
+        .prepare(
+          `SELECT v.status FROM drawing_versions v WHERE v.file_id=? OR v.cad_file_id=?`,
+        )
+        .bind(attachment.file_id, attachment.file_id)
+        .all<any>();
+      if (
+        drawing.results.some(
+          (v) => !["RELEASED", "SUPERSEDED"].includes(v.status),
+        )
       )
-      .bind(now, principal.id, versionId)
-      .run();
+        throw new AuthorizationError(
+          "An unreleased drawing cannot be published as an update attachment.",
+          "UNRELEASED_ATTACHMENT",
+        );
+    }
+    const now = Date.now(),
+      guard = crypto.randomUUID();
+    await db.batch([
+      db
+        .prepare(
+          `INSERT INTO command_assertions(id,ok) SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM update_versions v JOIN project_updates u ON u.id=v.update_id JOIN projects p ON p.id=u.project_id WHERE v.id=? AND v.status='IN_REVIEW' AND p.org_id=? AND p.is_archived=0) THEN 1 ELSE 0 END`,
+        )
+        .bind(guard, versionId, principal.orgId),
+      db
+        .prepare(
+          "UPDATE update_versions SET status='PUBLISHED',published_at=?,published_by_user_id=? WHERE id=?",
+        )
+        .bind(now, principal.id, versionId),
+      db
+        .prepare(
+          "UPDATE project_updates SET current_published_version_id=?,revision=revision+1 WHERE id=?",
+        )
+        .bind(versionId, version.parent_update_id),
+      db
+        .prepare(
+          `INSERT INTO audit_events(id,org_id,actor_id,entity_type,entity_id,action,new_state,created_at) VALUES(?,?,?,'UPDATE',?,'UPDATE_PUBLISHED',?,?)`,
+        )
+        .bind(
+          crypto.randomUUID(),
+          principal.orgId,
+          principal.id,
+          version.parent_update_id,
+          JSON.stringify({ versionId }),
+          now,
+        ),
+      db
+        .prepare(
+          `INSERT INTO outbox_events(id,org_id,event_type,entity_type,entity_id,payload_json,status,created_at) VALUES(?,?,'UPDATE_PUBLISHED','UPDATE',?,?,'PENDING',?)`,
+        )
+        .bind(
+          crypto.randomUUID(),
+          principal.orgId,
+          version.parent_update_id,
+          JSON.stringify({ versionId }),
+          now,
+        ),
+      db.prepare("DELETE FROM command_assertions WHERE id=?").bind(guard),
+    ]);
 
-    // 2. Point parent update to this published version
-    await db
-      .prepare(
-        `UPDATE project_updates
-         SET current_published_version_id = ?, revision = revision + 1
-         WHERE id = ?`
-      )
-      .bind(versionId, version.parent_update_id)
-      .run();
-
-    return { updateId: version.parent_update_id, versionId, status: "PUBLISHED" };
+    return {
+      updateId: version.parent_update_id,
+      versionId,
+      status: "PUBLISHED",
+    };
   }
 
   /**
@@ -342,7 +433,7 @@ export class UpdatesService {
   static async retractUpdate(
     db: D1Database,
     principal: UserPrincipal,
-    params: { updateId: string; reason: string }
+    params: { updateId: string; reason: string },
   ) {
     const update = (await db
       .prepare(`SELECT * FROM project_updates WHERE id = ?`)
@@ -354,7 +445,7 @@ export class UpdatesService {
     if (!canPublishProjectUpdates(principal, update.project_id)) {
       throw new AuthorizationError(
         "Only managers can retract published updates",
-        "FORBIDDEN"
+        "FORBIDDEN",
       );
     }
 
@@ -363,7 +454,7 @@ export class UpdatesService {
       .prepare(
         `UPDATE project_updates
          SET is_retracted = 1, retraction_reason = ?, retracted_at = ?
-         WHERE id = ?`
+         WHERE id = ?`,
       )
       .bind(params.reason, now, params.updateId)
       .run();
@@ -379,9 +470,10 @@ export class UpdatesService {
   static async listProjectUpdates(
     db: D1Database,
     principal: UserPrincipal,
-    projectId: string
+    projectId: string,
   ) {
     assertProjectAccess(principal, projectId);
+    await assertProjectOrganisation(db, principal, projectId);
 
     const isInternal = canReadInternalNotes(principal, projectId);
 
@@ -406,7 +498,7 @@ export class UpdatesService {
            WHERE pu.project_id = ?
              AND pu.is_retracted = 0
              AND uv.status = 'PUBLISHED'
-           ORDER BY uv.published_at DESC`
+           ORDER BY uv.published_at DESC`,
         )
         .bind(projectId)
         .all()) as any;
@@ -416,14 +508,15 @@ export class UpdatesService {
       for (const item of items) {
         const attRows = (await db
           .prepare(
-            `SELECT f.id, f.file_name, f.size_bytes, f.mime_type
+            `SELECT f.*
              FROM update_attachments ua
              JOIN files f ON ua.file_id = f.id
-             WHERE ua.version_id = ?`
+             WHERE ua.version_id = ?`,
           )
           .bind(item.published_version_id)
           .all()) as any;
-        item.attachments = attRows.results || [];
+        const accessible=await Promise.all((attRows.results??[]).map(async (f:any)=>await canReadFile(db,principal,f)?{id:f.id,file_name:f.file_name,size_bytes:f.size_bytes,mime_type:f.mime_type}:null));
+        item.attachments=accessible.filter(Boolean);
       }
       return items;
     }
@@ -437,7 +530,7 @@ export class UpdatesService {
          FROM project_updates pu
          JOIN users u ON pu.author_id = u.id
          WHERE pu.project_id = ?
-         ORDER BY pu.created_at DESC`
+         ORDER BY pu.created_at DESC`,
       )
       .bind(projectId)
       .all()) as any;
@@ -450,7 +543,7 @@ export class UpdatesService {
            FROM update_versions uv
            LEFT JOIN users u ON uv.published_by_user_id = u.id
            WHERE uv.update_id = ?
-           ORDER BY uv.version_number DESC`
+           ORDER BY uv.version_number DESC`,
         )
         .bind(up.id)
         .all()) as any;
@@ -459,14 +552,15 @@ export class UpdatesService {
       for (const ver of versions) {
         const attRows = (await db
           .prepare(
-            `SELECT f.id, f.file_name, f.size_bytes, f.mime_type
+            `SELECT f.*
              FROM update_attachments ua
              JOIN files f ON ua.file_id = f.id
-             WHERE ua.version_id = ?`
+             WHERE ua.version_id = ?`,
           )
           .bind(ver.id)
           .all()) as any;
-        ver.attachments = attRows.results || [];
+        const accessible=await Promise.all((attRows.results??[]).map(async (f:any)=>await canReadFile(db,principal,f)?{id:f.id,file_name:f.file_name,size_bytes:f.size_bytes,mime_type:f.mime_type}:null));
+        ver.attachments=accessible.filter(Boolean);
       }
       up.versions = versions;
     }
@@ -481,14 +575,15 @@ export class UpdatesService {
   static async createInternalNote(
     db: D1Database,
     principal: UserPrincipal,
-    params: CreateInternalNoteParams
+    params: CreateInternalNoteParams,
   ) {
     assertProjectAccess(principal, params.projectId);
+    await assertProjectOrganisation(db, principal, params.projectId);
 
     if (!canReadInternalNotes(principal, params.projectId)) {
       throw new AuthorizationError(
         "Clients and consultants cannot access or create internal notes",
-        "FORBIDDEN"
+        "FORBIDDEN",
       );
     }
 
@@ -500,7 +595,7 @@ export class UpdatesService {
         `INSERT INTO project_internal_notes (
           id, org_id, project_id, author_id, title, body_text,
           attachment_file_id, is_confidential, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         noteId,
@@ -512,7 +607,7 @@ export class UpdatesService {
         params.attachmentFileId || null,
         params.isConfidential ? 1 : 0,
         now,
-        now
+        now,
       )
       .run();
 
@@ -533,14 +628,15 @@ export class UpdatesService {
   static async listInternalNotes(
     db: D1Database,
     principal: UserPrincipal,
-    projectId: string
+    projectId: string,
   ) {
     assertProjectAccess(principal, projectId);
+    await assertProjectOrganisation(db, principal, projectId);
 
     if (!canReadInternalNotes(principal, projectId)) {
       throw new AuthorizationError(
         "Clients and consultants cannot access internal notes",
-        "FORBIDDEN"
+        "FORBIDDEN",
       );
     }
 
@@ -554,7 +650,7 @@ export class UpdatesService {
          JOIN users u ON pin.author_id = u.id
          LEFT JOIN files f ON pin.attachment_file_id = f.id
          WHERE pin.project_id = ?
-         ORDER BY pin.created_at DESC`
+         ORDER BY pin.created_at DESC`,
       )
       .bind(projectId)
       .all()) as any;
@@ -569,12 +665,12 @@ export class UpdatesService {
   static async createCompanyAnnouncement(
     db: D1Database,
     principal: UserPrincipal,
-    params: CreateAnnouncementParams
+    params: CreateAnnouncementParams,
   ) {
     if (!canManageCompanyAnnouncements(principal)) {
       throw new AuthorizationError(
         "Only managers can create company announcements",
-        "FORBIDDEN"
+        "FORBIDDEN",
       );
     }
 
@@ -586,7 +682,7 @@ export class UpdatesService {
         `INSERT INTO company_announcements (
           id, org_id, title, body_text, author_id, audience_type,
           status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 'DRAFT', ?)`
+        ) VALUES (?, ?, ?, ?, ?, ?, 'DRAFT', ?)`,
       )
       .bind(
         announcementId,
@@ -595,26 +691,32 @@ export class UpdatesService {
         params.bodyText,
         principal.id,
         params.audienceType,
-        now
+        now,
       )
       .run();
 
-    if (params.audienceType === "SELECTED_PROJECTS" && params.targetProjectIds) {
+    if (
+      params.audienceType === "SELECTED_PROJECTS" &&
+      params.targetProjectIds
+    ) {
       for (const pId of params.targetProjectIds) {
         await db
           .prepare(
             `INSERT INTO announcement_audiences (id, announcement_id, project_id, created_at)
-             VALUES (?, ?, ?, ?)`
+             VALUES (?, ?, ?, ?)`,
           )
           .bind(generateId("ana"), announcementId, pId, now)
           .run();
       }
-    } else if (params.audienceType === "SELECTED_CLIENTS" && params.targetClientUserIds) {
+    } else if (
+      params.audienceType === "SELECTED_CLIENTS" &&
+      params.targetClientUserIds
+    ) {
       for (const cId of params.targetClientUserIds) {
         await db
           .prepare(
             `INSERT INTO announcement_audiences (id, announcement_id, client_user_id, created_at)
-             VALUES (?, ?, ?, ?)`
+             VALUES (?, ?, ?, ?)`,
           )
           .bind(generateId("ana"), announcementId, cId, now)
           .run();
@@ -630,26 +732,24 @@ export class UpdatesService {
   static async publishCompanyAnnouncement(
     db: D1Database,
     principal: UserPrincipal,
-    announcementId: string
+    announcementId: string,
   ) {
-    if (!canManageCompanyAnnouncements(principal)) {
+    if (!hasCapability(principal,"MANAGER")) {
       throw new AuthorizationError(
         "Only managers can publish company announcements",
-        "FORBIDDEN"
+        "FORBIDDEN",
       );
     }
 
-    const now = Date.now();
-    await db
-      .prepare(
-        `UPDATE company_announcements
-         SET status = 'PUBLISHED', published_at = ?, published_by_user_id = ?
-         WHERE id = ?`
-      )
-      .bind(now, principal.id, announcementId)
-      .run();
-
-    return { announcementId, status: "PUBLISHED" };
+    const announcement=await db.prepare('SELECT status FROM company_announcements WHERE id=? AND org_id=?').bind(announcementId,principal.orgId).first<any>();
+    if(!announcement)throw new AuthorizationError('Announcement not found.','NOT_FOUND');
+    if(announcement.status==='PUBLISHED')return {announcementId,status:'PUBLISHED'};
+    if(announcement.status!=='DRAFT')throw new AuthorizationError('This announcement cannot be published.','INVALID_STATE');
+    const now=Date.now();await db.batch([
+      db.prepare("UPDATE company_announcements SET status='PUBLISHED',published_at=?,published_by_user_id=? WHERE id=? AND org_id=?").bind(now,principal.id,announcementId,principal.orgId),
+      db.prepare(`INSERT INTO audit_events(id,org_id,actor_id,entity_type,entity_id,action,created_at) VALUES(?,?,?,'ANNOUNCEMENT',?,'ANNOUNCEMENT_PUBLISHED',?)`).bind(crypto.randomUUID(),principal.orgId,principal.id,announcementId,now)
+    ]);
+    return {announcementId,status:'PUBLISHED'};
   }
 
   /**
@@ -660,7 +760,7 @@ export class UpdatesService {
    */
   static async listCompanyAnnouncements(
     db: D1Database,
-    principal: UserPrincipal
+    principal: UserPrincipal,
   ) {
     if (canManageCompanyAnnouncements(principal)) {
       const rows = (await db
@@ -668,14 +768,16 @@ export class UpdatesService {
           `SELECT ca.*, u.display_name as author_name
            FROM company_announcements ca
            JOIN users u ON ca.author_id = u.id
-           ORDER BY ca.created_at DESC`
+           ORDER BY ca.created_at DESC`,
         )
         .all()) as any;
       return rows.results || [];
     }
 
     // Client/Consultant audience filter
-    const userProjectIds = principal.projectMemberships.map((pm) => pm.projectId);
+    const userProjectIds = principal.projectMemberships.map(
+      (pm) => pm.projectId,
+    );
 
     const rows = (await db
       .prepare(
@@ -689,10 +791,12 @@ export class UpdatesService {
              ca.audience_type = 'ALL_CLIENTS'
              OR aa.client_user_id = ?
              OR (aa.project_id IS NOT NULL AND aa.project_id IN (${
-               userProjectIds.length > 0 ? userProjectIds.map(() => "?").join(",") : "''"
+               userProjectIds.length > 0
+                 ? userProjectIds.map(() => "?").join(",")
+                 : "''"
              }))
            )
-         ORDER BY ca.published_at DESC`
+         ORDER BY ca.published_at DESC`,
       )
       .bind(principal.id, ...userProjectIds)
       .all()) as any;

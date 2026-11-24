@@ -1,3 +1,4 @@
+import { publicError } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -15,14 +16,14 @@ export async function GET(request: NextRequest) {
     const data = await DashboardService.getRoleOverview(
       env.DB,
       auth.principal,
-      auth.principal.orgId
+      auth.principal.orgId,
     );
     return NextResponse.json({ ok: true, ...data });
   } catch (err: any) {
     const status = err.code === "FORBIDDEN" ? 403 : 500;
     return NextResponse.json(
-      { error: err.message, code: err.code || "INTERNAL_ERROR" },
-      { status }
+      { error: publicError(err), code: err.code || "INTERNAL_ERROR" },
+      { status },
     );
   }
 }

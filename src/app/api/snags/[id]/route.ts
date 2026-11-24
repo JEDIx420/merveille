@@ -1,3 +1,4 @@
+import { publicError } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -5,7 +6,7 @@ import { SnagsService } from "@/server/domain/snags/service";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -23,11 +24,11 @@ export async function GET(
       err.code === "CROSS_PROJECT_DENIED" || err.code === "FORBIDDEN"
         ? 403
         : err.code === "NOT_FOUND"
-        ? 404
-        : 400;
+          ? 404
+          : 400;
     return NextResponse.json(
-      { error: err.message, code: err.code || "BAD_REQUEST" },
-      { status }
+      { error: publicError(err), code: err.code || "BAD_REQUEST" },
+      { status },
     );
   }
 }

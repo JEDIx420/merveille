@@ -1,3 +1,4 @@
+import { publicError } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -9,7 +10,7 @@ import {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ versionId: string }> }
+  { params }: { params: Promise<{ versionId: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -20,12 +21,16 @@ export async function POST(
   }
 
   try {
-    const body = await request.json() as any;
+    const body = (await request.json()) as any;
     const action = body.action;
 
     switch (action) {
       case "SUBMIT_REVIEW": {
-        const result = await submitDrawingForReview(auth.principal, versionId, env.DB);
+        const result = await submitDrawingForReview(
+          auth.principal,
+          versionId,
+          env.DB,
+        );
         return NextResponse.json({ ok: true, ...result });
       }
 
@@ -37,7 +42,7 @@ export async function POST(
             decision: body.decision,
             reason: body.reason,
           },
-          env.DB
+          env.DB,
         );
         return NextResponse.json({ ok: true, ...result });
       }
@@ -49,24 +54,27 @@ export async function POST(
             versionId,
             expectedCurrentVersionId: body.expectedCurrentVersionId,
           },
-          env.DB
+          env.DB,
         );
         return NextResponse.json({ ok: true, ...result });
       }
 
       default:
-        return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
+        return NextResponse.json(
+          { error: `Unknown action: ${action}` },
+          { status: 400 },
+        );
     }
   } catch (err: any) {
     const status =
       err.code === "NOT_FOUND"
         ? 404
         : err.code === "CONCURRENCY_CONFLICT"
-        ? 409
-        : 403;
+          ? 409
+          : 403;
     return NextResponse.json(
-      { error: err.message, code: err.code || "OPERATION_FAILED" },
-      { status }
+      { error: publicError(err), code: err.code || "OPERATION_FAILED" },
+      { status },
     );
   }
 }

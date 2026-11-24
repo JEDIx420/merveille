@@ -1,6 +1,12 @@
+import { publicError, errorStatus } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
+import {
+  AuthorizationError,
+  hasCapability,
+  assertProjectAccess,
+} from "@/server/auth/policy";
 import { AccountingService } from "@/server/domain/accounting/service";
 
 export async function GET(request: NextRequest) {
@@ -15,24 +21,34 @@ export async function GET(request: NextRequest) {
   const projectId = searchParams.get("projectId") || undefined;
 
   try {
+    if (!hasCapability(auth.principal, "ADMIN")) {
+      if (!projectId || !hasCapability(auth.principal, "MANAGER", projectId))
+        throw new AuthorizationError(
+          "An assigned manager or administrator is required.",
+        );
+      assertProjectAccess(auth.principal, projectId);
+    }
+
     let sql = `SELECT cb.*, u.display_name as consultant_name, app.display_name as approver_name, p.name as project_name
                FROM consultant_bills cb
                JOIN users u ON cb.consultant_user_id = u.id
                LEFT JOIN users app ON cb.approved_by_user_id = app.id
-               JOIN projects p ON cb.project_id = p.id`;
-    const params: any[] = [];
+               JOIN projects p ON cb.project_id = p.id WHERE cb.org_id=?`;
+    const params: any[] = [auth.principal.orgId];
     if (projectId) {
-      sql += ` WHERE cb.project_id = ?`;
+      sql += ` AND cb.project_id = ?`;
       params.push(projectId);
     }
     sql += ` ORDER BY cb.created_at DESC`;
 
-    const rows = (await env.DB.prepare(sql).bind(...params).all()) as any;
+    const rows = (await env.DB.prepare(sql)
+      .bind(...params)
+      .all()) as any;
     return NextResponse.json({ ok: true, bills: rows.results || [] });
   } catch (err: any) {
     return NextResponse.json(
-      { error: err.message, code: err.code || "BAD_REQUEST" },
-      { status: 400 }
+      { error: publicError(err), code: err.code || "BAD_REQUEST" },
+      { status: errorStatus(err) },
     );
   }
 }
@@ -63,7 +79,7 @@ export async function POST(request: NextRequest) {
             currency: body.currency,
             billDate: body.billDate,
             evidenceFileId: body.evidenceFileId,
-          }
+          },
         );
         return NextResponse.json({ ok: true, ...result }, { status: 201 });
       }
@@ -72,7 +88,7 @@ export async function POST(request: NextRequest) {
         const result = await AccountingService.approveConsultantBill(
           env.DB,
           auth.principal,
-          body.billId
+          body.billId,
         );
         return NextResponse.json({ ok: true, ...result });
       }
@@ -81,7 +97,7 @@ export async function POST(request: NextRequest) {
         const result = await AccountingService.postConsultantBill(
           env.DB,
           auth.principal,
-          body.billId
+          body.billId,
         );
         return NextResponse.json({ ok: true, ...result });
       }
@@ -89,14 +105,17 @@ export async function POST(request: NextRequest) {
       default:
         return NextResponse.json(
           { error: `Unknown action: ${action}` },
-          { status: 400 }
+          { status: 400 },
         );
     }
   } catch (err: any) {
-    const status = err.code === "FORBIDDEN" || err.code === "CLOSED_PERIOD_WRITE_DENIED" ? 403 : 400;
+    const status =
+      err.code === "FORBIDDEN" || err.code === "CLOSED_PERIOD_WRITE_DENIED"
+        ? 403
+        : 400;
     return NextResponse.json(
-      { error: err.message, code: err.code || "BAD_REQUEST" },
-      { status }
+      { error: publicError(err), code: err.code || "BAD_REQUEST" },
+      { status },
     );
   }
 }

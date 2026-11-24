@@ -1,3 +1,4 @@
+import { publicError } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -12,7 +13,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json() as any;
+    const body = (await request.json()) as any;
     const session = await initUploadSession(
       auth.principal,
       {
@@ -27,14 +28,14 @@ export async function POST(request: NextRequest) {
         isSettlementEvidence: body.isSettlementEvidence,
       },
       env.DB,
-      env.PROJECT_FILES
+      env.PROJECT_FILES,
     );
     return NextResponse.json({ ok: true, ...session }, { status: 201 });
   } catch (err: any) {
     const status = err.code === "NOT_FOUND" ? 404 : 403;
     return NextResponse.json(
-      { error: err.message, code: err.code || "OPERATION_FAILED" },
-      { status }
+      { error: publicError(err), code: err.code || "OPERATION_FAILED" },
+      { status },
     );
   }
 }

@@ -22,7 +22,7 @@ describe("Phase P05: Drawing Register, Consultant Approval, and Manager Release"
     email: "admin@merveilledesigns.com",
     name: "Operations Admin",
     orgId,
-    role: "ADMIN",
+    role: "ADMIN", roles: ["ADMIN"],
     projectMemberships: [],
     isSynthetic: false,
   };
@@ -32,8 +32,8 @@ describe("Phase P05: Drawing Register, Consultant Approval, and Manager Release"
     email: "manager@merveilledesigns.com",
     name: "Project Manager",
     orgId,
-    role: "MANAGER",
-    projectMemberships: [{ projectId }],
+    role: "MANAGER", roles: [],
+    projectMemberships: [{ projectId, projectRole: "MANAGER" }],
     isSynthetic: false,
   };
 
@@ -42,8 +42,8 @@ describe("Phase P05: Drawing Register, Consultant Approval, and Manager Release"
     email: "staff@merveilledesigns.com",
     name: "Architectural Staff",
     orgId,
-    role: "STAFF",
-    projectMemberships: [{ projectId }],
+    role: "STAFF", roles: [],
+    projectMemberships: [{ projectId, projectRole: "STAFF" }],
     isSynthetic: false,
   };
 
@@ -52,8 +52,8 @@ describe("Phase P05: Drawing Register, Consultant Approval, and Manager Release"
     email: "structural@cons.example",
     name: "Structural Engineer",
     orgId,
-    role: "CONSULTANT",
-    projectMemberships: [{ projectId }],
+    role: "CONSULTANT", roles: [],
+    projectMemberships: [{ projectId, projectRole: "CONSULTANT" }],
     isSynthetic: false,
   };
 
@@ -62,8 +62,8 @@ describe("Phase P05: Drawing Register, Consultant Approval, and Manager Release"
     email: "mep@cons.example",
     name: "MEP Consultant",
     orgId,
-    role: "CONSULTANT",
-    projectMemberships: [{ projectId }],
+    role: "CONSULTANT", roles: [],
+    projectMemberships: [{ projectId, projectRole: "CONSULTANT" }],
     isSynthetic: false,
   };
 
@@ -72,8 +72,8 @@ describe("Phase P05: Drawing Register, Consultant Approval, and Manager Release"
     email: "landscape@cons.example",
     name: "Landscape Consultant",
     orgId,
-    role: "CONSULTANT",
-    projectMemberships: [{ projectId }],
+    role: "CONSULTANT", roles: [],
+    projectMemberships: [{ projectId, projectRole: "CONSULTANT" }],
     isSynthetic: false,
   };
 
@@ -82,8 +82,8 @@ describe("Phase P05: Drawing Register, Consultant Approval, and Manager Release"
     email: "client@clientfamily.example",
     name: "Client Owner",
     orgId,
-    role: "MAIN_CLIENT",
-    projectMemberships: [{ projectId }],
+    role: "MAIN_CLIENT", roles: [],
+    projectMemberships: [{ projectId, projectRole: "MAIN_CLIENT", contractualAuthority: true }],
     isSynthetic: false,
   };
 
@@ -131,6 +131,7 @@ describe("Phase P05: Drawing Register, Consultant Approval, and Manager Release"
       [projectId, orgId, clientUser.id, managerUser.id, Date.now()]
     );
 
+    for(const consultant of [consultant1,consultant2,unrelatedConsultant]) await db.prepare("INSERT INTO project_memberships(id,org_id,project_id,user_id,project_role,is_active,assigned_at) VALUES(?,?,?,?,'CONSULTANT',1,?)").bind('pm_'+consultant.id,orgId,projectId,consultant.id,Date.now()).run();
     // Seed memberships
     await execute(
       db,
@@ -270,7 +271,7 @@ describe("Phase P05: Drawing Register, Consultant Approval, and Manager Release"
       // Client attempts to release -> FORBIDDEN
       await expect(
         releaseDrawingVersion(clientUser, { versionId: v1Id }, db)
-      ).rejects.toThrow("Only assigned project managers or administrators can release drawings");
+      ).rejects.toThrow("Only the assigned manager can release drawings");
 
       // Manager releases drawing -> SUCCEEDS (AC-017)
       const releaseRes = await releaseDrawingVersion(managerUser, { versionId: v1Id }, db);

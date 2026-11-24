@@ -24,7 +24,7 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     email: "admin@merveilledesigns.com",
     name: "Merveille Admin",
     orgId: testOrgId,
-    role: "ADMIN",
+    role: "ADMIN", roles: ["ADMIN"],
     projectMemberships: [{ projectId: testProjectId, projectRole: "ADMIN" }],
     isSynthetic: true,
   };
@@ -34,7 +34,7 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     email: "manager@merveilledesigns.com",
     name: "Vipin Manager",
     orgId: testOrgId,
-    role: "MANAGER",
+    role: "MANAGER", roles: [],
     projectMemberships: [{ projectId: testProjectId, projectRole: "MANAGER" }],
     isSynthetic: true,
   };
@@ -44,8 +44,8 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     email: "staff@merveilledesigns.com",
     name: "Nithya Architect",
     orgId: testOrgId,
-    role: "STAFF",
-    projectMemberships: [{ projectId: testProjectId, projectRole: "STAFF" }],
+    role: "STAFF", roles: [],
+    projectMemberships: [{ projectId: testProjectId, projectRole: "STAFF", financeAccess:true, financeAuthor:true, invoiceIssue:true }],
     isSynthetic: true,
   };
 
@@ -54,8 +54,8 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     email: "client@example.com",
     name: "Thomas Client (Main Client)",
     orgId: testOrgId,
-    role: "MAIN_CLIENT",
-    projectMemberships: [{ projectId: testProjectId, projectRole: "MAIN_CLIENT" }],
+    role: "MAIN_CLIENT", roles: [],
+    projectMemberships: [{ projectId: testProjectId, projectRole: "MAIN_CLIENT", contractualAuthority:true }],
     isSynthetic: true,
   };
 
@@ -64,7 +64,7 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     email: "rep@example.com",
     name: "Representative John",
     orgId: testOrgId,
-    role: "CLIENT_REP",
+    role: "CLIENT_REP", roles: [],
     projectMemberships: [{ projectId: testProjectId, projectRole: "CLIENT_REP" }],
     isSynthetic: true,
   };
@@ -74,7 +74,7 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
     email: "consultant@example.com",
     name: "Structural Consultant",
     orgId: testOrgId,
-    role: "CONSULTANT",
+    role: "CONSULTANT", roles: [],
     projectMemberships: [{ projectId: testProjectId, projectRole: "CONSULTANT" }],
     isSynthetic: true,
   };
@@ -282,7 +282,7 @@ describe("Phase 09: References, Material Selections, and Commercial Change Gates
         changeRequestId: cr.id,
         receiptId: reportedReceipt.receiptId,
       })
-    ).rejects.toThrow("Cannot allocate unconfirmed receipt funds. Admin must confirm receipt first.");
+    ).rejects.toThrow("Accepted estimate and matching confirmed receipt required");
 
     // Non-admin cannot confirm receipt (AC-031)
     await expect(

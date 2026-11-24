@@ -22,3 +22,13 @@ local-backups/
 *.sqlite
 *.sqlite3
 *.db
+
+# Private operational identity input, local verification and browser state
+.private/
+.dev.vars*
+.env.local
+playwright/.auth/
+test-results/
+tsconfig.tsbuildinfo
+
+.next-ui/

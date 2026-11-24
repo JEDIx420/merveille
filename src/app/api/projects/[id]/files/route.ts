@@ -1,3 +1,4 @@
+import { publicError } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -5,7 +6,7 @@ import { listProjectFiles, deleteFile } from "@/server/files/service";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -24,15 +25,15 @@ export async function GET(
   } catch (err: any) {
     const status = err.code === "NOT_FOUND" ? 404 : 403;
     return NextResponse.json(
-      { error: err.message, code: err.code || "FORBIDDEN" },
-      { status }
+      { error: publicError(err), code: err.code || "FORBIDDEN" },
+      { status },
     );
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -43,14 +44,19 @@ export async function DELETE(
   }
 
   try {
-    const body = await request.json() as any;
-    const result = await deleteFile(auth.principal, body.fileId, env.DB, env.PROJECT_FILES);
+    const body = (await request.json()) as any;
+    const result = await deleteFile(
+      auth.principal,
+      body.fileId,
+      env.DB,
+      env.PROJECT_FILES,
+    );
     return NextResponse.json({ ok: true, ...result });
   } catch (err: any) {
     const status = err.code === "NOT_FOUND" ? 404 : 403;
     return NextResponse.json(
-      { error: err.message, code: err.code || "DELETE_FAILED" },
-      { status }
+      { error: publicError(err), code: err.code || "DELETE_FAILED" },
+      { status },
     );
   }
 }

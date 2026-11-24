@@ -1,7 +1,11 @@
+import { publicError } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
-import { completeUploadSession, abortUploadSession } from "@/server/files/service";
+import {
+  completeUploadSession,
+  abortUploadSession,
+} from "@/server/files/service";
 
 export async function POST(request: NextRequest) {
   const { env } = await getCloudflareContext({ async: true });
@@ -12,9 +16,14 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json() as any;
+    const body = (await request.json()) as any;
     if (body.action === "ABORT") {
-      const result = await abortUploadSession(auth.principal, body.sessionId, env.DB, env.PROJECT_FILES);
+      const result = await abortUploadSession(
+        auth.principal,
+        body.sessionId,
+        env.DB,
+        env.PROJECT_FILES,
+      );
       return NextResponse.json({ ok: true, ...result });
     }
 
@@ -25,14 +34,14 @@ export async function POST(request: NextRequest) {
         parts: body.parts,
       },
       env.DB,
-      env.PROJECT_FILES
+      env.PROJECT_FILES,
     );
     return NextResponse.json({ ok: true, ...result });
   } catch (err: any) {
     const status = err.code === "NOT_FOUND" ? 404 : 403;
     return NextResponse.json(
-      { error: err.message, code: err.code || "OPERATION_FAILED" },
-      { status }
+      { error: publicError(err), code: err.code || "OPERATION_FAILED" },
+      { status },
     );
   }
 }

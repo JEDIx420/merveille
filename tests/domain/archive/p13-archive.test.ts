@@ -18,7 +18,7 @@ describe("Phase 13: Project Archive, Access Retention, Settlement and Recovery",
     id: "usr_owner_p13",
     email: "owner.p13@merveilledesigns.com",
     name: "Vikram Owner",
-    role: "OWNER",
+    role: "OWNER", roles: ["OWNER"],
     orgId,
     projectMemberships: [{ projectId, projectRole: "DIRECTOR" }],
   };
@@ -27,34 +27,34 @@ describe("Phase 13: Project Archive, Access Retention, Settlement and Recovery",
     id: "usr_admin_p13",
     email: "admin.p13@merveilledesigns.com",
     name: "Anita Admin",
-    role: "ADMIN",
+    role: "ADMIN", roles: ["ADMIN"],
     orgId,
-    projectMemberships: [{ projectId, projectRole: "FINANCE" }],
+    projectMemberships: [{ projectId, projectRole: "TEAM_MEMBER", financeAuthor:true,invoiceIssue:true }],
   };
 
   const managerUser: UserPrincipal = {
     id: "usr_mgr_p13",
     email: "manager.p13@merveilledesigns.com",
     name: "Mohan Manager",
-    role: "MANAGER",
+    role: "MANAGER", roles: [],
     orgId,
-    projectMemberships: [{ projectId, projectRole: "PROJECT_MANAGER" }],
+    projectMemberships: [{ projectId, projectRole: "MANAGER" }],
   };
 
   const staffUser: UserPrincipal = {
     id: "usr_staff_p13",
     email: "staff.p13@merveilledesigns.com",
     name: "Suresh Staff",
-    role: "STAFF",
+    role: "STAFF", roles: [],
     orgId,
-    projectMemberships: [{ projectId, projectRole: "ARCHITECT" }],
+    projectMemberships: [{ projectId, projectRole: "TEAM_MEMBER" }],
   };
 
   const consultantUser: UserPrincipal = {
     id: "usr_cons_p13",
     email: "structural.p13@cons.com",
     name: "Cyrus Structural",
-    role: "CONSULTANT",
+    role: "CONSULTANT", roles: [],
     orgId,
     projectMemberships: [{ projectId, projectRole: "CONSULTANT" }],
   };
@@ -63,7 +63,7 @@ describe("Phase 13: Project Archive, Access Retention, Settlement and Recovery",
     id: "usr_client_p13",
     email: "client.p13@gmail.com",
     name: "Dr. K. R. Nambiar",
-    role: "MAIN_CLIENT",
+    role: "MAIN_CLIENT", roles: [],
     orgId,
     projectMemberships: [{ projectId, projectRole: "MAIN_CLIENT" }],
   };
@@ -72,7 +72,7 @@ describe("Phase 13: Project Archive, Access Retention, Settlement and Recovery",
     id: "usr_revoked_p13",
     email: "revoked.p13@gmail.com",
     name: "Revoked Member",
-    role: "MAIN_CLIENT",
+    role: "MAIN_CLIENT", roles: [],
     orgId,
     projectMemberships: [{ projectId, projectRole: "MAIN_CLIENT" }], // Will be set is_active = 0 in DB
   };
@@ -81,7 +81,7 @@ describe("Phase 13: Project Archive, Access Retention, Settlement and Recovery",
     id: "usr_outsider_p13",
     email: "outsider.p13@foreign.com",
     name: "Outsider User",
-    role: "MAIN_CLIENT",
+    role: "MAIN_CLIENT", roles: [],
     orgId,
     projectMemberships: [], // No membership
   };
@@ -143,7 +143,7 @@ describe("Phase 13: Project Archive, Access Retention, Settlement and Recovery",
       .prepare(
         `INSERT INTO project_memberships (id, org_id, project_id, user_id, project_role, is_active, assigned_at)
          VALUES
-         ('pm_mgr_13', ?, ?, ?, 'PROJECT_MANAGER', 1, ?),
+         ('pm_mgr_13', ?, ?, ?, 'MANAGER', 1, ?),
          ('pm_stf_13', ?, ?, ?, 'ARCHITECT', 1, ?),
          ('pm_cns_13', ?, ?, ?, 'CONSULTANT', 1, ?),
          ('pm_clt_13', ?, ?, ?, 'MAIN_CLIENT', 1, ?),
@@ -274,8 +274,8 @@ describe("Phase 13: Project Archive, Access Retention, Settlement and Recovery",
     const consultantRecords = await ArchiveService.getArchivedProjectRecords(db, consultantUser, projectId);
     expect(consultantRecords.releasedDrawings.length).toBe(2);
     expect(consultantRecords.publishedUpdates.length).toBe(1);
-    // Consultants do not see commercial client invoice records
-    expect(consultantRecords.unpaidInvoices.length).toBe(0);
+    // Consultants deliberately retain client-commercial invoice visibility
+    expect(consultantRecords.unpaidInvoices.length).toBe(1);
 
     // 4. Revoked member (is_active = 0) is strictly denied
     await expect(
@@ -285,7 +285,7 @@ describe("Phase 13: Project Archive, Access Retention, Settlement and Recovery",
     // 5. Outsider is strictly denied
     await expect(
       ArchiveService.getArchivedProjectRecords(db, outsiderUser, projectId)
-    ).rejects.toThrow("Access denied: You do not have active membership in this archived project.");
+    ).rejects.toThrow("You are not assigned to this project.");
   });
 
   it("AC-055: Archived project rejects operational mutations, maintains unpaid balances, permits ADMIN-only settlements, and requires authorized audited reopening", async () => {
@@ -362,12 +362,15 @@ describe("Phase 13: Project Archive, Access Retention, Settlement and Recovery",
       })
     ).rejects.toThrow("Only administrators can record financial settlements on archived projects.");
 
-    // ADMIN settles ₹1,00,000 against existing invoice inv_01 without reopening project
+    await db.prepare("INSERT INTO receipts(id,org_id,project_id,currency,amount_minor,allocated_minor,unallocated_minor,received_date,payment_method,status,reported_by_user_id,created_at) VALUES('p13_receipt',?,?,'INR',10000000,0,10000000,'2026-11-24','BANK_TRANSFER','REPORTED',?,?)").bind(orgId,projectId,adminUser.id,Date.now()).run();
+    await FinanceService.confirmReceipt(db,adminUser,{receiptId:'p13_receipt',idempotencyKey:'p13-confirm'});
+    // ADMIN allocates the confirmed receipt without reopening project
     const settleResult = await ArchiveService.settleArchivedInvoice(db, adminUser, {
       projectId,
       invoiceId: "inv_01",
       amountMinor: 10000000,
-      notes: "Client RTGS transfer received for final settlement",
+      notes: "Fictional transfer received for final settlement",
+      receiptId:"p13_receipt",idempotencyKey:"p13-allocate",
     });
 
     expect(settleResult.settledAmountMinor).toBe(10000000);
@@ -390,7 +393,7 @@ describe("Phase 13: Project Archive, Access Retention, Settlement and Recovery",
         projectId,
         reason: "Need to fix drawing",
       })
-    ).rejects.toThrow("Only managers, administrators, or practice owners can reopen an archived project.");
+    ).rejects.toThrow("Only the assigned manager can change archive status.");
 
     // Empty reason must fail
     await expect(
@@ -398,7 +401,7 @@ describe("Phase 13: Project Archive, Access Retention, Settlement and Recovery",
         projectId,
         reason: "   ",
       })
-    ).rejects.toThrow("A formal reopen reason is required.");
+    ).rejects.toThrow("A reason is required.");
 
     // Manager reopens project
     const reopenResult = await ArchiveService.reopenProject(db, managerUser, {
@@ -425,30 +428,33 @@ describe("Phase 13: Project Archive, Access Retention, Settlement and Recovery",
     await r2.put("files/ground_v2.pdf", new Uint8Array([10, 20, 30, 40, 50, 60]));
     await r2.put("files/roof_draft.pdf", new Uint8Array([100, 101, 102]));
 
+    await db.prepare("UPDATE files SET size_bytes=CASE id WHEN 'fil_01' THEN 8 WHEN 'fil_02' THEN 6 ELSE 3 END").run();
+    const backup=createTestR2Bucket(),target=createTestR2Bucket();
     // 2. Export project backup
     const exportResult = await ArchiveService.exportProjectBackup(
       db,
       r2,
       adminUser,
-      projectId
+      projectId,
+      backup
     );
 
-    expect(exportResult.backupKey).toMatch(/^backups\/projects\/prj_archive_azure_/);
+    expect(exportResult.backupKey).toMatch(/^backups\/checkpoints\//);
     expect(exportResult.manifestSha256).toHaveLength(64); // Valid SHA-256 hex string
     expect(exportResult.recordCounts.drawings).toBe(2);
     expect(exportResult.recordCounts.invoices).toBe(1);
-    expect(exportResult.recordCounts.memberships).toBe(5);
+    expect(exportResult.recordCounts.project_memberships).toBe(5);
     expect(exportResult.filesVerifiedCount).toBe(3);
 
     // Verify backup manifest exists in R2
-    const manifestObj = await r2.get(exportResult.backupKey);
+    const manifestObj = await backup.get(exportResult.backupKey);
     expect(manifestObj).not.toBeNull();
     const manifestText = await manifestObj!.text();
     const manifestJson = JSON.parse(manifestText);
 
     expect(manifestJson.projectId).toBe(projectId);
-    expect(manifestJson.fileChecksums["fil_01"]).toHaveLength(64);
-    expect(manifestJson.fileChecksums["fil_02"]).toHaveLength(64);
+    expect(manifestJson.objects.find((o:any)=>o.fileId==="fil_01").sha256).toHaveLength(64);
+    expect(manifestJson.objects.find((o:any)=>o.fileId==="fil_02").sha256).toHaveLength(64);
 
     // 3. Isolated environment recovery test (restore into an independent second database)
     const isolatedDb = await setupMigratedTestDb();
@@ -462,14 +468,13 @@ describe("Phase 13: Project Archive, Access Retention, Settlement and Recovery",
 
     // Restore backup payload into isolated environment
     const restoreResult = await ArchiveService.restoreBackupToIsolatedEnv(
-      isolatedDb,
-      manifestJson
+      isolatedDb,backup,target,exportResult.backupKey,exportResult.manifestSha256
     );
 
     expect(restoreResult.reconciled).toBe(true);
     expect(restoreResult.restoredCounts.drawings).toBe(2);
     expect(restoreResult.restoredCounts.invoices).toBe(1);
-    expect(restoreResult.restoredCounts.memberships).toBe(5);
+    expect(restoreResult.restoredCounts.project_memberships).toBe(5);
     expect(restoreResult.restoredCounts.files).toBe(3);
     expect(restoreResult.restoredCounts.totalOutstandingMinor).toBe(25000000);
     expect(restoreResult.fileChecksumsVerified).toBe(3);

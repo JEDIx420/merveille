@@ -1,11 +1,15 @@
+import { publicError } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
-import { listProjectDrawings, createDrawing } from "@/server/domain/drawings/service";
+import {
+  listProjectDrawings,
+  createDrawing,
+} from "@/server/domain/drawings/service";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -19,20 +23,25 @@ export async function GET(
   const discipline = searchParams.get("discipline") || undefined;
 
   try {
-    const drawings = await listProjectDrawings(auth.principal, projectId, env.DB, discipline);
+    const drawings = await listProjectDrawings(
+      auth.principal,
+      projectId,
+      env.DB,
+      discipline,
+    );
     return NextResponse.json({ ok: true, drawings });
   } catch (err: any) {
     const status = err.code === "NOT_FOUND" ? 404 : 403;
     return NextResponse.json(
-      { error: err.message, code: err.code || "FORBIDDEN" },
-      { status }
+      { error: publicError(err), code: err.code || "FORBIDDEN" },
+      { status },
     );
   }
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -43,7 +52,7 @@ export async function POST(
   }
 
   try {
-    const body = await request.json() as any;
+    const body = (await request.json()) as any;
     const result = await createDrawing(
       auth.principal,
       {
@@ -52,14 +61,14 @@ export async function POST(
         title: body.title,
         discipline: body.discipline,
       },
-      env.DB
+      env.DB,
     );
     return NextResponse.json({ ok: true, ...result }, { status: 201 });
   } catch (err: any) {
     const status = err.code === "NOT_FOUND" ? 404 : 403;
     return NextResponse.json(
-      { error: err.message, code: err.code || "OPERATION_FAILED" },
-      { status }
+      { error: publicError(err), code: err.code || "OPERATION_FAILED" },
+      { status },
     );
   }
 }

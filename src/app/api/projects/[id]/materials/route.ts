@@ -1,3 +1,4 @@
+import { publicError } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -6,7 +7,7 @@ import { assertProjectAccess } from "@/server/auth/policy";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -18,8 +19,16 @@ export async function GET(
 
   try {
     assertProjectAccess(auth.principal, projectId);
-    const references = await MaterialsService.listReferences(env.DB, auth.principal, projectId);
-    const selectionItems = await MaterialsService.listSelectionItems(env.DB, auth.principal, projectId);
+    const references = await MaterialsService.listReferences(
+      env.DB,
+      auth.principal,
+      projectId,
+    );
+    const selectionItems = await MaterialsService.listSelectionItems(
+      env.DB,
+      auth.principal,
+      projectId,
+    );
 
     return NextResponse.json({
       ok: true,
@@ -27,17 +36,20 @@ export async function GET(
       selectionItems,
     });
   } catch (err: any) {
-    const status = err.code === "CROSS_PROJECT_DENIED" || err.code === "FORBIDDEN" ? 403 : 400;
+    const status =
+      err.code === "CROSS_PROJECT_DENIED" || err.code === "FORBIDDEN"
+        ? 403
+        : 400;
     return NextResponse.json(
-      { error: err.message, code: err.code || "BAD_REQUEST" },
-      { status }
+      { error: publicError(err), code: err.code || "BAD_REQUEST" },
+      { status },
     );
   }
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -54,54 +66,74 @@ export async function POST(
 
     switch (action) {
       case "add_reference": {
-        const result = await MaterialsService.addReference(env.DB, auth.principal, {
-          projectId,
-          caption: body.caption,
-          fileId: body.fileId,
-          externalUrl: body.externalUrl,
-          roomArea: body.roomArea,
-          category: body.category,
-        });
+        const result = await MaterialsService.addReference(
+          env.DB,
+          auth.principal,
+          {
+            projectId,
+            caption: body.caption,
+            fileId: body.fileId,
+            externalUrl: body.externalUrl,
+            roomArea: body.roomArea,
+            category: body.category,
+          },
+        );
         return NextResponse.json({ ok: true, result });
       }
 
       case "add_reference_comment": {
-        const result = await MaterialsService.addReferenceComment(env.DB, auth.principal, {
-          referenceId: body.referenceId,
-          commentText: body.commentText,
-        });
+        const result = await MaterialsService.addReferenceComment(
+          env.DB,
+          auth.principal,
+          {
+            referenceId: body.referenceId,
+            commentText: body.commentText,
+          },
+        );
         return NextResponse.json({ ok: true, result });
       }
 
       case "create_selection": {
-        const result = await MaterialsService.createSelectionItem(env.DB, auth.principal, {
-          projectId,
-          title: body.title,
-          location: body.location,
-          question: body.question,
-          neededByDate: body.neededByDate,
-          internalNotes: body.internalNotes,
-          options: body.options,
-        });
+        const result = await MaterialsService.createSelectionItem(
+          env.DB,
+          auth.principal,
+          {
+            projectId,
+            title: body.title,
+            location: body.location,
+            question: body.question,
+            neededByDate: body.neededByDate,
+            internalNotes: body.internalNotes,
+            options: body.options,
+          },
+        );
         return NextResponse.json({ ok: true, result });
       }
 
       case "select_option": {
-        const result = await MaterialsService.selectOption(env.DB, auth.principal, {
-          selectionItemId: body.selectionItemId,
-          optionId: body.optionId,
-          comment: body.comment,
-        });
+        const result = await MaterialsService.selectOption(
+          env.DB,
+          auth.principal,
+          {
+            selectionItemId: body.selectionItemId,
+            optionId: body.optionId,
+            comment: body.comment,
+          },
+        );
         return NextResponse.json({ ok: true, result });
       }
 
       case "record_suggestion": {
-        const result = await MaterialsService.recordSuggestion(env.DB, auth.principal, {
-          selectionItemId: body.selectionItemId,
-          optionId: body.optionId,
-          suggestionType: body.suggestionType,
-          commentText: body.commentText,
-        });
+        const result = await MaterialsService.recordSuggestion(
+          env.DB,
+          auth.principal,
+          {
+            selectionItemId: body.selectionItemId,
+            optionId: body.optionId,
+            suggestionType: body.suggestionType,
+            commentText: body.commentText,
+          },
+        );
         return NextResponse.json({ ok: true, result });
       }
 
@@ -109,29 +141,40 @@ export async function POST(
         const result = await MaterialsService.markReadyForExecution(
           env.DB,
           auth.principal,
-          body.selectionItemId
+          body.selectionItemId,
         );
         return NextResponse.json({ ok: true, result });
       }
 
       case "link_change": {
-        const result = await MaterialsService.linkChangeRequest(env.DB, auth.principal, {
-          selectionItemId: body.selectionItemId,
-          changeRequestId: body.changeRequestId,
-        });
+        const result = await MaterialsService.linkChangeRequest(
+          env.DB,
+          auth.principal,
+          {
+            selectionItemId: body.selectionItemId,
+            changeRequestId: body.changeRequestId,
+          },
+        );
         return NextResponse.json({ ok: true, result });
       }
 
       case "request_changes": {
-        const result = await MaterialsService.requestChanges(env.DB, auth.principal, {
-          selectionItemId: body.selectionItemId,
-          reason: body.reason,
-        });
+        const result = await MaterialsService.requestChanges(
+          env.DB,
+          auth.principal,
+          {
+            selectionItemId: body.selectionItemId,
+            reason: body.reason,
+          },
+        );
         return NextResponse.json({ ok: true, result });
       }
 
       default:
-        return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
+        return NextResponse.json(
+          { error: `Unknown action: ${action}` },
+          { status: 400 },
+        );
     }
   } catch (err: any) {
     const status =
@@ -141,8 +184,8 @@ export async function POST(
         ? 403
         : 400;
     return NextResponse.json(
-      { error: err.message, code: err.code || "BAD_REQUEST" },
-      { status }
+      { error: publicError(err), code: err.code || "BAD_REQUEST" },
+      { status },
     );
   }
 }

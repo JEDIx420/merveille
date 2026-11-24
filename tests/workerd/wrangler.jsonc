@@ -1,0 +1,43 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "merveille-isolated-verification",
+  "main": "worker.ts",
+  "compatibility_date": "2026-11-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "verification-source",
+      "database_id": "verification-source-local-only",
+      "migrations_dir": "../../migrations",
+    },
+    {
+      "binding": "RESTORE_DB",
+      "database_name": "verification-restore",
+      "database_id": "verification-restore-local-only",
+      "migrations_dir": "../../migrations",
+    },
+    {
+      "binding": "IDENTITY_DB",
+      "database_name": "verification-identity",
+      "database_id": "verification-identity-local-only",
+      "migrations_dir": "../../migrations",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "FILES",
+      "bucket_name": "verification-source-local",
+    },
+    {
+      "binding": "BACKUPS",
+      "bucket_name": "verification-backups-local",
+    },
+    {
+      "binding": "RESTORED",
+      "bucket_name": "verification-restored-local",
+    },
+  ],
+}

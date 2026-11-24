@@ -1,28 +1,104 @@
-/**
- * Identity & access management domain service for Merveille Designs.
- * All mutations require ADMIN capability and produce immutable audit events.
- */
-
-import { UserPrincipal } from "@/server/auth/principal";
-import { canManagePeopleAndAccess, AuthorizationError } from "@/server/auth/policy";
+import {
+  UserPrincipal,
+  UserRole,
+  hasCapability,
+} from "@/server/auth/principal";
+import {
+  canManagePeopleAndAccess,
+  AuthorizationError,
+} from "@/server/auth/policy";
 import { query, queryFirst, execute } from "@/server/db";
-
+import { AccessJwtPayload } from "@/server/auth/jwt";
+const id = (prefix: string) => `${prefix}_${crypto.randomUUID()}`;
+const normalize = (email: string) => email.trim().toLowerCase();
+const allowed = new Set([
+  "ADMIN",
+  "OWNER",
+  "MANAGER",
+  "TEAM_MEMBER",
+  "CONSULTANT",
+  "MAIN_CLIENT",
+  "CLIENT_REP",
+]);
+export interface ProjectAccess {
+  projectId: string;
+  roles: UserRole[];
+  financeAccess?: boolean;
+  financeAuthor?: boolean;
+  invoiceIssue?: boolean;
+  contractualAuthority?: boolean;
+}
 export interface InviteUserInput {
   email: string;
   displayName: string;
-  role: "ADMIN" | "OWNER" | "MANAGER" | "STAFF" | "CONSULTANT" | "MAIN_CLIENT" | "CLIENT_REP";
+  role?: UserRole;
   projectId?: string;
+  roles?: UserRole[];
+  projects?: ProjectAccess[];
+  confirmElevation?: boolean;
 }
-
 export interface ReassignMainClientInput {
   projectId: string;
   newUserId: string;
   reason: string;
 }
-
-/**
- * Record an immutable audit log entry.
- */
+export async function digestToken(token: string) {
+  return Array.from(
+    new Uint8Array(
+      await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token)),
+    ),
+  )
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+function token() {
+  return Array.from(crypto.getRandomValues(new Uint8Array(32)))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+function admin(actor: UserPrincipal) {
+  if (!canManagePeopleAndAccess(actor))
+    throw new AuthorizationError(
+      "Administrator access is required.",
+      "ADMIN_REQUIRED",
+    );
+}
+function recent(actor: UserPrincipal, confirmed?: boolean) {
+  if (
+    !confirmed ||
+    !actor.authenticatedAt ||
+    Date.now() - actor.authenticatedAt > 15 * 60 * 1000
+  )
+    throw new AuthorizationError(
+      "Confirm the elevation after signing in again.",
+      "RECENT_AUTH_REQUIRED",
+    );
+}
+function assertion(db: D1Database, predicate: string, params: any[] = []) {
+  return db
+    .prepare(
+      `INSERT INTO command_assertions(id,ok) SELECT ?,CASE WHEN (${predicate}) THEN 1 ELSE 0 END`,
+    )
+    .bind(id("guard"), ...params);
+}
+function auditStatement(db: D1Database, event: any) {
+  return db
+    .prepare(
+      `INSERT INTO audit_events(id,org_id,actor_id,entity_type,entity_id,action,scope,old_state,new_state,reason,created_at) VALUES(?,?,?,?,?,?,'ORGANIZATION',?,?,?,?)`,
+    )
+    .bind(
+      id("aud"),
+      event.orgId,
+      event.actorId,
+      event.entityType,
+      event.entityId,
+      event.action,
+      event.oldState ? JSON.stringify(event.oldState) : null,
+      event.newState ? JSON.stringify(event.newState) : null,
+      event.reason ?? null,
+      Date.now(),
+    );
+}
 export async function recordAuditEvent(
   db: D1Database,
   event: {
@@ -35,405 +111,651 @@ export async function recordAuditEvent(
     oldState?: any;
     newState?: any;
     reason?: string;
-  }
-): Promise<void> {
-  const id = `aud_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-  await execute(
-    db,
-    `INSERT INTO audit_events (id, org_id, actor_id, entity_type, entity_id, action, scope, old_state, new_state, reason, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      id,
-      event.orgId,
-      event.actorId,
-      event.entityType,
-      event.entityId,
-      event.action,
-      event.scope || "ORGANIZATION",
-      event.oldState ? JSON.stringify(event.oldState) : null,
-      event.newState ? JSON.stringify(event.newState) : null,
-      event.reason || null,
-      Date.now(),
-    ]
-  );
+  },
+) {
+  await auditStatement(db, event).run();
 }
-
-/**
- * Invite a new user to the organization with explicit role and project grants.
- */
+async function rateLimit(db: D1Database, key: string, max = 20) {
+  const now = Date.now();
+  await db
+    .prepare(
+      `INSERT INTO security_rate_limits(key,count,window_start) VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET count=CASE WHEN window_start<? THEN 1 ELSE count+1 END,window_start=CASE WHEN window_start<? THEN excluded.window_start ELSE window_start END`,
+    )
+    .bind(key, now, now - 3600000, now - 3600000)
+    .run();
+  const row = await queryFirst<any>(
+    db,
+    "SELECT count FROM security_rate_limits WHERE key=?",
+    [key],
+  );
+  if (row.count > max)
+    throw new AuthorizationError(
+      "Too many attempts. Try again later.",
+      "RATE_LIMITED",
+    );
+}
+async function validateGrants(
+  db: D1Database,
+  orgId: string,
+  roles: UserRole[],
+  projects: ProjectAccess[],
+) {
+  if (
+    roles.some((r) => !["ADMIN", "OWNER", "TEAM_MEMBER", "MANAGER"].includes(r))
+  )
+    throw new AuthorizationError(
+      "Operational roles must be assigned to specific projects.",
+      "INVALID_INPUT",
+    );
+  for (const p of projects) {
+    if (
+      !p.projectId ||
+      !Array.isArray(p.roles) ||
+      p.roles.some((r) => !allowed.has(r) || ["ADMIN", "OWNER"].includes(r))
+    )
+      throw new AuthorizationError(
+        "Choose valid project roles.",
+        "INVALID_INPUT",
+      );
+    if (
+      (p.financeAuthor || p.invoiceIssue) &&
+      !p.roles.some((r) => r === "TEAM_MEMBER" || r === "MANAGER")
+    )
+      throw new AuthorizationError(
+        "Finance authoring and invoice issue require a team member or manager project grant.",
+        "INVALID_INPUT",
+      );
+    if (p.contractualAuthority && !p.roles.includes("MAIN_CLIENT"))
+      throw new AuthorizationError(
+        "Contractual authority requires a main-client project grant.",
+        "INVALID_INPUT",
+      );
+    const project = await queryFirst<any>(
+      db,
+      "SELECT id FROM projects WHERE id=? AND org_id=?",
+      [p.projectId, orgId],
+    );
+    if (!project)
+      throw new AuthorizationError("Project not found.", "NOT_FOUND");
+  }
+}
 export async function inviteUser(
   actor: UserPrincipal,
   input: InviteUserInput,
-  db: D1Database
+  db: D1Database,
 ) {
-  if (!canManagePeopleAndAccess(actor)) {
-    throw new AuthorizationError("Only administrators can invite users.", "ADMIN_REQUIRED");
-  }
-
-  const normalizedEmail = input.email.toLowerCase().trim();
-  const orgId = actor.orgId;
-
-  // Check if user already exists
-  let user = await queryFirst<{ id: string; status: string }>(
-    db,
-    "SELECT id, status FROM users WHERE lower(email) = ?",
-    [normalizedEmail]
-  );
-
-  let userId: string;
-  if (!user) {
-    userId = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    await execute(
-      db,
-      "INSERT INTO users (id, email, display_name, status, created_at) VALUES (?, ?, ?, 'INVITED', ?)",
-      [userId, normalizedEmail, input.displayName, Date.now()]
+  admin(actor);
+  await rateLimit(db, `invite:${actor.id}`);
+  const email = normalize(input.email ?? "");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !input.displayName?.trim())
+    throw new AuthorizationError(
+      "Enter a name and valid email.",
+      "INVALID_INPUT",
     );
-  } else {
-    userId = user.id;
-  }
-
-  // Create single-use invitation token expiring in 7 days
-  const token = `inv_${crypto.randomUUID().replace(/-/g, "")}`;
-  const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
-  const invitationId = `inv_id_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-
-  await execute(
+  const roles =
+    input.roles ??
+    (input.role && ["ADMIN", "OWNER"].includes(input.role) ? [input.role] : []);
+  const projects =
+    input.projects ??
+    (input.projectId && input.role
+      ? [{ projectId: input.projectId, roles: [input.role] }]
+      : []);
+  await validateGrants(db, actor.orgId, roles, projects);
+  if (roles.some((r) => ["ADMIN", "OWNER"].includes(r)))
+    recent(actor, input.confirmElevation);
+  const existing = await queryFirst<any>(
     db,
-    `INSERT INTO invitations (id, org_id, email, display_name, intended_role, project_id, token, status, expires_at, created_by, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?)`,
-    [
-      invitationId,
-      orgId,
-      normalizedEmail,
-      input.displayName,
-      input.role,
-      input.projectId || null,
-      token,
-      expiresAt,
-      actor.id,
-      Date.now(),
-    ]
+    "SELECT status FROM users WHERE lower(email)=?",
+    [email],
   );
-
-  await recordAuditEvent(db, {
-    orgId,
-    actorId: actor.id,
-    entityType: "USER",
-    entityId: userId,
-    action: "USER_INVITED",
-    newState: {
-      email: normalizedEmail,
-      role: input.role,
-      projectId: input.projectId,
-      expiresAt,
-    },
-    reason: `Invited as ${input.role}`,
-  });
-
+  if (existing?.status === "DISABLED")
+    throw new AuthorizationError(
+      "A disabled account requires a deliberate recovery.",
+      "ACCOUNT_DISABLED",
+    );
+  const raw = token(),
+    invitationId = id("inv"),
+    now = Date.now(),
+    expiresAt = now + 72 * 3600000;
+  await db.batch([
+    assertion(
+      db,
+      `EXISTS(SELECT 1 FROM role_assignments r JOIN users u ON u.id=r.user_id JOIN organization_memberships m ON m.user_id=u.id AND m.org_id=r.org_id WHERE r.user_id=? AND r.org_id=? AND r.role='ADMIN' AND r.revoked_at IS NULL AND u.status='ACTIVE' AND m.is_active=1)`,
+      [actor.id, actor.orgId],
+    ),
+    db
+      .prepare(
+        `INSERT INTO invitations(id,org_id,email,display_name,intended_role,token,status,expires_at,created_by,created_at,grants_json,admission_status) VALUES(?,?,?,?,'EXPLICIT',?,'PENDING',?,?,?,?,'PENDING_SETUP')`,
+      )
+      .bind(
+        invitationId,
+        actor.orgId,
+        email,
+        input.displayName.trim(),
+        await digestToken(raw),
+        expiresAt,
+        actor.id,
+        now,
+        JSON.stringify({ roles, projects }),
+      ),
+    db
+      .prepare(
+        `INSERT INTO access_admission_jobs(id,org_id,email,desired_state,created_at) VALUES(?,?,?,'ALLOW',?)`,
+      )
+      .bind(id("edge"), actor.orgId, email, now),
+    auditStatement(db, {
+      orgId: actor.orgId,
+      actorId: actor.id,
+      entityType: "INVITATION",
+      entityId: invitationId,
+      action: "INVITATION_CREATED",
+      newState: { roles, projects, expiresAt },
+    }),
+  ]);
   return {
     invitationId,
-    userId,
-    email: normalizedEmail,
-    role: input.role,
-    token,
+    invitationUrl: `/invite/accept#token=${raw}`,
     expiresAt,
-    invitationUrl: `/invite/accept?token=${token}`,
+    admissionStatus: "PENDING_SETUP",
+    deliveryStatus: "COPY_LINK",
   };
 }
-
-/**
- * Accept an invitation using its single-use token.
- */
-export async function acceptInvitation(
-  token: string,
-  subjectId: string,
-  db: D1Database
+function grantStatements(
+  db: D1Database,
+  userId: string,
+  orgId: string,
+  roles: UserRole[],
+  projects: ProjectAccess[],
+  actorId: string,
 ) {
-  const invitation = await queryFirst<{
-    id: string;
-    org_id: string;
-    email: string;
-    display_name: string;
-    intended_role: string;
-    project_id: string | null;
-    status: string;
-    expires_at: number;
-  }>(db, "SELECT * FROM invitations WHERE token = ?", [token]);
-
-  if (!invitation) {
-    throw new AuthorizationError("Invitation not found or invalid token.", "INVALID_TOKEN");
-  }
-
-  if (invitation.status !== "PENDING") {
-    throw new AuthorizationError(
-      `Invitation has already been ${invitation.status.toLowerCase()}.`,
-      "INVITATION_USED"
-    );
-  }
-
-  if (invitation.expires_at < Date.now()) {
-    await execute(db, "UPDATE invitations SET status = 'EXPIRED' WHERE id = ?", [invitation.id]);
-    throw new AuthorizationError("Invitation token has expired.", "INVITATION_EXPIRED");
-  }
-
-  const user = await queryFirst<{ id: string }>(
-    db,
-    "SELECT id FROM users WHERE lower(email) = ?",
-    [invitation.email.toLowerCase()]
-  );
-
-  if (!user) {
-    throw new AuthorizationError("Linked user record not found.", "USER_NOT_FOUND");
-  }
-
   const now = Date.now();
-
-  // 1. Mark invitation accepted
-  await execute(
-    db,
-    "UPDATE invitations SET status = 'ACCEPTED', accepted_at = ? WHERE id = ?",
-    [now, invitation.id]
-  );
-
-  // 2. Activate user
-  await execute(
-    db,
-    "UPDATE users SET status = 'ACTIVE' WHERE id = ?",
-    [user.id]
-  );
-
-  // 3. Create or update Identity record
-  const identityId = `ident_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-  await execute(
-    db,
-    `INSERT OR REPLACE INTO identities (id, user_id, provider, issuer, subject, email, created_at)
-     VALUES (?, ?, 'cloudflare_access', 'access_provider', ?, ?, ?)`,
-    [identityId, user.id, subjectId, invitation.email, now]
-  );
-
-  // 4. Bind organization membership
-  const orgMemId = `om_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-  await execute(
-    db,
-    `INSERT OR IGNORE INTO organization_memberships (id, org_id, user_id, is_active, created_at)
-     VALUES (?, ?, ?, 1, ?)`,
-    [orgMemId, invitation.org_id, user.id, now]
-  );
-
-  // 5. Grant intended role
-  const roleId = `ra_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-  await execute(
-    db,
-    `INSERT INTO role_assignments (id, org_id, user_id, role, scope, granted_at)
-     VALUES (?, ?, ?, ?, 'GLOBAL', ?)`,
-    [roleId, invitation.org_id, user.id, invitation.intended_role, now]
-  );
-
-  // 6. Bind project membership if scoped
-  if (invitation.project_id) {
-    const pmId = `pm_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-    await execute(
-      db,
-      `INSERT INTO project_memberships (id, org_id, project_id, user_id, project_role, is_active, assigned_at)
-       VALUES (?, ?, ?, ?, ?, 1, ?)`,
-      [pmId, invitation.org_id, invitation.project_id, user.id, invitation.intended_role, now]
+  const statements: D1PreparedStatement[] = [];
+  for (const role of roles)
+    statements.push(
+      db
+        .prepare(
+          `INSERT INTO role_assignments(id,org_id,user_id,role,scope,granted_by,granted_at) VALUES(?,?,?,?,'GLOBAL',?,?)`,
+        )
+        .bind(id("role"), orgId, userId, role, actorId, now),
     );
-  }
-
-  await recordAuditEvent(db, {
-    orgId: invitation.org_id,
-    actorId: user.id,
-    entityType: "USER",
-    entityId: user.id,
-    action: "INVITATION_ACCEPTED",
-    newState: {
-      role: invitation.intended_role,
-      projectId: invitation.project_id,
-    },
-    reason: "Accepted invitation token",
-  });
-
-  return {
-    userId: user.id,
-    email: invitation.email,
-    role: invitation.intended_role,
-    projectId: invitation.project_id,
-  };
+  for (const p of projects)
+    for (const role of p.roles) {
+      statements.push(
+        db
+          .prepare(
+            `INSERT INTO project_memberships(id,org_id,project_id,user_id,project_role,is_active,assigned_at,finance_access,finance_author,invoice_issue) VALUES(?,?,?,?,?,1,?,?,?,?)`,
+          )
+          .bind(
+            id("pm"),
+            orgId,
+            p.projectId,
+            userId,
+            role,
+            now,
+            Number(!!p.financeAccess),
+            Number(!!p.financeAuthor),
+            Number(!!p.invoiceIssue),
+          ),
+      );
+      if (role === "MAIN_CLIENT" && p.contractualAuthority)
+        statements.push(
+          db
+            .prepare(
+              "UPDATE projects SET main_client_user_id=?,revision=revision+1 WHERE id=? AND org_id=?",
+            )
+            .bind(userId, p.projectId, orgId),
+        );
+    }
+  return statements;
 }
-
-/**
- * Disable a user account across all portal surfaces (AC-006).
- */
+export async function acceptInvitation(
+  rawToken: string,
+  identity: AccessJwtPayload,
+  db: D1Database,
+) {
+  if (!identity || typeof identity !== "object")
+    throw new AuthorizationError(
+      "Verified Google sign-in is required.",
+      "UNAUTHENTICATED",
+    );
+  await rateLimit(db, `accept:${identity.sub}`, 30);
+  const inv = await queryFirst<any>(
+    db,
+    "SELECT * FROM invitations WHERE token=?",
+    [await digestToken(rawToken)],
+  );
+  if (!inv || inv.status !== "PENDING" || inv.expires_at <= Date.now())
+    throw new AuthorizationError(
+      "This invitation is invalid, expired, or already used.",
+      "INVITATION_INVALID",
+    );
+  if (normalize(identity.email) !== normalize(inv.email))
+    throw new AuthorizationError(
+      "Sign out and sign in with the Google account invited by your administrator.",
+      "WRONG_ACCOUNT",
+    );
+  if (inv.admission_status !== "READY")
+    throw new AuthorizationError(
+      "Your invitation is awaiting access setup. Contact your administrator.",
+      "ADMISSION_PENDING",
+    );
+  const grants = JSON.parse(inv.grants_json ?? "{}");
+  const roles = grants.roles ?? [];
+  const projects = grants.projects ?? [];
+  await validateGrants(db, inv.org_id, roles, projects);
+  const boot = await queryFirst<any>(
+    db,
+    "SELECT * FROM bootstrap_state WHERE invitation_id=?",
+    [inv.id],
+  );
+  const existing = await queryFirst<any>(
+    db,
+    "SELECT * FROM users WHERE lower(email)=?",
+    [normalize(identity.email)],
+  );
+  if (existing?.status === "DISABLED")
+    throw new AuthorizationError(
+      "This account has been disabled.",
+      "ACCOUNT_DISABLED",
+    );
+  const bound = existing
+    ? await queryFirst<any>(
+        db,
+        "SELECT issuer,subject FROM identities WHERE user_id=?",
+        [existing.id],
+      )
+    : null;
+  if (
+    bound &&
+    (bound.issuer !== identity.iss || bound.subject !== identity.sub)
+  )
+    throw new AuthorizationError(
+      "Identity recovery by an administrator is required.",
+      "IDENTITY_CHANGED",
+    );
+  if (existing?.status === "ACTIVE" && !bound)
+    throw new AuthorizationError(
+      "An existing account requires controlled identity linking.",
+      "IDENTITY_LINK_REQUIRED",
+    );
+  const userId = existing?.id ?? id("usr"),
+    now = Date.now();
+  const statements = [
+    assertion(
+      db,
+      `EXISTS(SELECT 1 FROM invitations WHERE id=? AND status='PENDING' AND expires_at>? AND admission_status='READY')`,
+      [inv.id, now],
+    ),
+  ];
+  if (boot)
+    statements.push(
+      assertion(
+        db,
+        "EXISTS(SELECT 1 FROM bootstrap_state WHERE id=1 AND consumed_at IS NULL AND invitation_id=?)",
+        [inv.id],
+      ),
+    );
+  else
+    statements.push(
+      assertion(
+        db,
+        `EXISTS(SELECT 1 FROM role_assignments r JOIN users u ON u.id=r.user_id JOIN organization_memberships m ON m.user_id=u.id AND m.org_id=r.org_id WHERE r.user_id=? AND r.org_id=? AND r.role='ADMIN' AND r.revoked_at IS NULL AND u.status='ACTIVE' AND m.is_active=1)`,
+        [inv.created_by, inv.org_id],
+      ),
+    );
+  if (!existing)
+    statements.push(
+      db
+        .prepare(
+          "INSERT INTO users(id,email,display_name,status,created_at) VALUES(?,?,?,'INVITED',?)",
+        )
+        .bind(userId, normalize(identity.email), inv.display_name, now),
+    );
+  if (!bound)
+    statements.push(
+      db
+        .prepare(
+          "INSERT INTO identities(id,user_id,provider,issuer,subject,email,created_at) VALUES(?,?,'cloudflare_access',?,?,?,?)",
+        )
+        .bind(
+          id("ident"),
+          userId,
+          identity.iss,
+          identity.sub,
+          normalize(identity.email),
+          now,
+        ),
+    );
+  statements.push(
+    db
+      .prepare(
+        "UPDATE users SET status='ACTIVE' WHERE id=? AND status='INVITED'",
+      )
+      .bind(userId),
+    db
+      .prepare(
+        "INSERT INTO organization_memberships(id,org_id,user_id,is_active,created_at) VALUES(?,?,?,1,?) ON CONFLICT(org_id,user_id) DO UPDATE SET is_active=1",
+      )
+      .bind(id("om"), inv.org_id, userId, now),
+  );
+  statements.push(
+    ...grantStatements(db, userId, inv.org_id, roles, projects, inv.created_by),
+  );
+  statements.push(
+    db
+      .prepare(
+        "UPDATE invitations SET status='ACCEPTED',accepted_at=? WHERE id=?",
+      )
+      .bind(now, inv.id),
+  );
+  if (boot)
+    statements.push(
+      db
+        .prepare("UPDATE bootstrap_state SET consumed_at=? WHERE id=1")
+        .bind(now),
+    );
+  statements.push(
+    auditStatement(db, {
+      orgId: inv.org_id,
+      actorId: userId,
+      entityType: "INVITATION",
+      entityId: inv.id,
+      action: boot ? "BOOTSTRAP_ACCEPTED" : "INVITATION_ACCEPTED",
+      newState: { roles, projects },
+    }),
+  );
+  await db.batch(statements);
+  return { userId, status: "ACTIVE" };
+}
+export async function updateGrants(
+  actor: UserPrincipal,
+  targetId: string,
+  input: {
+    roles: UserRole[];
+    projects: ProjectAccess[];
+    reason: string;
+    confirmElevation?: boolean;
+  },
+  db: D1Database,
+) {
+  admin(actor);
+  if (!input.reason?.trim())
+    throw new AuthorizationError("A reason is required.", "INVALID_INPUT");
+  await validateGrants(db, actor.orgId, input.roles, input.projects);
+  if (input.roles.some((r) => ["ADMIN", "OWNER"].includes(r)))
+    recent(actor, input.confirmElevation);
+  const membership = await queryFirst<any>(
+    db,
+    "SELECT * FROM organization_memberships WHERE user_id=? AND org_id=? AND is_active=1",
+    [targetId, actor.orgId],
+  );
+  if (!membership)
+    throw new AuthorizationError("Account not found.", "NOT_FOUND");
+  const before = await query<any>(
+    db,
+    "SELECT role FROM role_assignments WHERE user_id=? AND org_id=? AND revoked_at IS NULL",
+    [targetId, actor.orgId],
+  );
+  const now = Date.now();
+  await db.batch([
+    currentAdminGuard(db, actor),
+    lastAdminGuard(db, actor.orgId, targetId, input.roles.includes("ADMIN")),
+    db
+      .prepare(
+        "UPDATE role_assignments SET revoked_at=? WHERE user_id=? AND org_id=? AND revoked_at IS NULL",
+      )
+      .bind(now, targetId, actor.orgId),
+    db
+      .prepare(
+        "UPDATE project_memberships SET is_active=0,revoked_at=? WHERE user_id=? AND org_id=? AND is_active=1",
+      )
+      .bind(now, targetId, actor.orgId),
+    db
+      .prepare(
+        "UPDATE projects SET main_client_user_id=NULL,revision=revision+1 WHERE org_id=? AND main_client_user_id=?",
+      )
+      .bind(actor.orgId, targetId),
+    ...grantStatements(
+      db,
+      targetId,
+      actor.orgId,
+      input.roles,
+      input.projects,
+      actor.id,
+    ),
+    auditStatement(db, {
+      orgId: actor.orgId,
+      actorId: actor.id,
+      entityType: "USER",
+      entityId: targetId,
+      action: "GRANTS_CHANGED",
+      oldState: before,
+      newState: input,
+      reason: input.reason,
+    }),
+  ]);
+  return { success: true };
+}
+function currentAdminGuard(db: D1Database, actor: UserPrincipal) {
+  return assertion(
+    db,
+    `EXISTS(SELECT 1 FROM role_assignments r JOIN users u ON u.id=r.user_id JOIN organization_memberships m ON m.user_id=u.id AND m.org_id=r.org_id WHERE r.user_id=? AND r.org_id=? AND r.role='ADMIN' AND r.revoked_at IS NULL AND u.status='ACTIVE' AND m.is_active=1)`,
+    [actor.id, actor.orgId],
+  );
+}
+function lastAdminGuard(
+  db: D1Database,
+  org: string,
+  target: string,
+  keepsAdmin = false,
+) {
+  return assertion(
+    db,
+    `?=1 OR NOT EXISTS(SELECT 1 FROM role_assignments WHERE org_id=? AND user_id=? AND role='ADMIN' AND revoked_at IS NULL) OR EXISTS(SELECT 1 FROM role_assignments r JOIN users u ON u.id=r.user_id JOIN organization_memberships m ON m.user_id=u.id AND m.org_id=r.org_id WHERE r.org_id=? AND r.user_id!=? AND r.role='ADMIN' AND r.revoked_at IS NULL AND u.status='ACTIVE' AND m.is_active=1 AND EXISTS(SELECT 1 FROM identities i WHERE i.user_id=u.id AND i.provider='cloudflare_access'))`,
+    [Number(keepsAdmin), org, target, org, target],
+  );
+}
 export async function disableUser(
   actor: UserPrincipal,
   targetUserId: string,
   reason: string,
-  db: D1Database
+  db: D1Database,
 ) {
-  if (!canManagePeopleAndAccess(actor)) {
-    throw new AuthorizationError("Only administrators can deactivate accounts.", "ADMIN_REQUIRED");
-  }
-
-  const target = await queryFirst<{ id: string; email: string; status: string }>(
-    db,
-    "SELECT id, email, status FROM users WHERE id = ?",
-    [targetUserId]
-  );
-
-  if (!target) {
-    throw new AuthorizationError("User not found.", "NOT_FOUND");
-  }
-
-  // Guard against disabling the last remaining active ADMIN
-  const activeAdmins = await query<{ user_id: string }>(
-    db,
-    `SELECT ra.user_id FROM role_assignments ra
-     JOIN users u ON u.id = ra.user_id
-     WHERE ra.role = 'ADMIN' AND ra.revoked_at IS NULL AND u.status = 'ACTIVE'`
-  );
-
-  if (activeAdmins.length === 1 && activeAdmins[0].user_id === targetUserId) {
-    throw new AuthorizationError(
-      "Cannot disable the sole remaining active administrator.",
-      "CANNOT_DISABLE_LAST_ADMIN"
-    );
-  }
-
+  admin(actor);
+  if (!reason?.trim())
+    throw new AuthorizationError("A reason is required.", "INVALID_INPUT");
   const now = Date.now();
-  await execute(
+  const target = await queryFirst<any>(
     db,
-    "UPDATE users SET status = 'DISABLED', disabled_at = ? WHERE id = ?",
-    [now, targetUserId]
+    "SELECT u.* FROM users u JOIN organization_memberships m ON m.user_id=u.id WHERE u.id=? AND m.org_id=?",
+    [targetUserId, actor.orgId],
   );
-
-  // Deactivate memberships
-  await execute(
-    db,
-    "UPDATE organization_memberships SET is_active = 0 WHERE user_id = ?",
-    [targetUserId]
-  );
-
-  await execute(
-    db,
-    "UPDATE project_memberships SET is_active = 0, revoked_at = ? WHERE user_id = ?",
-    [now, targetUserId]
-  );
-
-  await recordAuditEvent(db, {
-    orgId: actor.orgId,
-    actorId: actor.id,
-    entityType: "USER",
-    entityId: targetUserId,
-    action: "USER_DISABLED",
-    reason,
-  });
-
-  return { success: true, disabledUserId: targetUserId };
+  if (!target) throw new AuthorizationError("Account not found.", "NOT_FOUND");
+  await db.batch([
+    currentAdminGuard(db, actor),
+    lastAdminGuard(db, actor.orgId, targetUserId),
+    db
+      .prepare("UPDATE users SET status='DISABLED',disabled_at=? WHERE id=?")
+      .bind(now, targetUserId),
+    db
+      .prepare(
+        "UPDATE organization_memberships SET is_active=0 WHERE user_id=? AND org_id=?",
+      )
+      .bind(targetUserId, actor.orgId),
+    db
+      .prepare(
+        "UPDATE project_memberships SET is_active=0,revoked_at=? WHERE user_id=? AND org_id=?",
+      )
+      .bind(now, targetUserId, actor.orgId),
+    db
+      .prepare(
+        "INSERT INTO access_admission_jobs(id,org_id,email,desired_state,created_at) VALUES(?,?,?,'REVOKE',?)",
+      )
+      .bind(id("edge"), actor.orgId, target.email, now),
+    auditStatement(db, {
+      orgId: actor.orgId,
+      actorId: actor.id,
+      entityType: "USER",
+      entityId: targetUserId,
+      action: "USER_DISABLED",
+      reason,
+    }),
+  ]);
+  return { success: true };
 }
-
-/**
- * Reassign the main client for a project (AC-007).
- */
 export async function reassignMainClient(
   actor: UserPrincipal,
   input: ReassignMainClientInput,
-  db: D1Database
+  db: D1Database,
 ) {
-  if (!canManagePeopleAndAccess(actor)) {
-    throw new AuthorizationError("Only administrators can reassign main client authority.", "ADMIN_REQUIRED");
-  }
-
-  const project = await queryFirst<{ id: string; org_id: string; main_client_user_id: string }>(
+  admin(actor);
+  const p = await queryFirst<any>(
     db,
-    "SELECT id, org_id, main_client_user_id FROM projects WHERE id = ?",
-    [input.projectId]
+    "SELECT * FROM projects WHERE id=? AND org_id=?",
+    [input.projectId, actor.orgId],
   );
-
-  if (!project) {
-    throw new AuthorizationError("Project not found.", "PROJECT_NOT_FOUND");
-  }
-
-  const oldClientUserId = project.main_client_user_id;
-
-  // Update project main client pointer
-  await execute(
+  const m = await queryFirst<any>(
     db,
-    "UPDATE projects SET main_client_user_id = ?, revision = revision + 1 WHERE id = ?",
-    [input.newUserId, input.projectId]
+    "SELECT m.id FROM project_memberships m JOIN users u ON u.id=m.user_id WHERE m.project_id=? AND m.user_id=? AND m.is_active=1 AND u.status='ACTIVE'",
+    [input.projectId, input.newUserId],
   );
-
-  // Ensure new user has project membership as MAIN_CLIENT
-  const existingMem = await queryFirst<{ id: string }>(
-    db,
-    "SELECT id FROM project_memberships WHERE project_id = ? AND user_id = ? AND is_active = 1",
-    [input.projectId, input.newUserId]
-  );
-
-  if (!existingMem) {
-    await execute(
-      db,
-      `INSERT INTO project_memberships (id, org_id, project_id, user_id, project_role, is_active, assigned_at)
-       VALUES (?, ?, ?, ?, 'MAIN_CLIENT', 1, ?)`,
-      [`pm_${Date.now()}`, project.org_id, input.projectId, input.newUserId, Date.now()]
+  if (!p || !m || !input.reason?.trim())
+    throw new AuthorizationError(
+      "Select an active project contact and enter a reason.",
+      "INVALID_INPUT",
     );
-  }
-
-  await recordAuditEvent(db, {
-    orgId: project.org_id,
-    actorId: actor.id,
-    entityType: "PROJECT",
-    entityId: input.projectId,
-    action: "MAIN_CLIENT_REASSIGNED",
-    scope: "PROJECT",
-    oldState: { mainClientUserId: oldClientUserId },
-    newState: { mainClientUserId: input.newUserId },
-    reason: input.reason,
-  });
-
-  return { success: true, projectId: input.projectId, newMainClientUserId: input.newUserId };
+  await db.batch([
+    currentAdminGuard(db, actor),
+    db
+      .prepare(
+        "UPDATE projects SET main_client_user_id=?,revision=revision+1 WHERE id=? AND org_id=?",
+      )
+      .bind(input.newUserId, p.id, actor.orgId),
+    db
+      .prepare(
+        "UPDATE project_memberships SET project_role='CLIENT_REP' WHERE project_id=? AND project_role='MAIN_CLIENT' AND is_active=1",
+      )
+      .bind(p.id),
+    db
+      .prepare(
+        "UPDATE project_memberships SET project_role='MAIN_CLIENT' WHERE id=?",
+      )
+      .bind(m.id),
+    auditStatement(db, {
+      orgId: actor.orgId,
+      actorId: actor.id,
+      entityType: "PROJECT",
+      entityId: p.id,
+      action: "MAIN_CLIENT_REASSIGNED",
+      oldState: { userId: p.main_client_user_id },
+      newState: { userId: input.newUserId },
+      reason: input.reason,
+    }),
+  ]);
+  return { success: true };
 }
-
-/**
- * List all users with their roles and active status for ADMINs (SCR-18).
- */
 export async function listPeople(actor: UserPrincipal, db: D1Database) {
-  if (!canManagePeopleAndAccess(actor)) {
-    throw new AuthorizationError("Only administrators can view the people register.", "ADMIN_REQUIRED");
-  }
-
-  const users = await query<{
-    id: string;
-    email: string;
-    display_name: string;
-    status: string;
-    created_at: number;
-    disabled_at: number | null;
-  }>(db, "SELECT id, email, display_name, status, created_at, disabled_at FROM users ORDER BY created_at DESC");
-
-  const results = [];
-  for (const u of users) {
-    const roles = await query<{ role: string }>(
-      db,
-      "SELECT role FROM role_assignments WHERE user_id = ? AND revoked_at IS NULL",
-      [u.id]
-    );
-    const projectMems = await query<{ project_id: string; project_role: string }>(
-      db,
-      "SELECT project_id, project_role FROM project_memberships WHERE user_id = ? AND is_active = 1",
-      [u.id]
-    );
-
-    results.push({
+  admin(actor);
+  const users = await query<any>(
+    db,
+    "SELECT DISTINCT u.* FROM users u LEFT JOIN organization_memberships m ON m.user_id=u.id LEFT JOIN invitations i ON lower(i.email)=lower(u.email) WHERE m.org_id=? OR i.org_id=? ORDER BY u.created_at DESC",
+    [actor.orgId, actor.orgId],
+  );
+  return Promise.all(
+    users.map(async (u) => ({
       id: u.id,
       email: u.email,
       name: u.display_name,
       status: u.status,
-      roles: roles.map((r) => r.role),
-      projectCount: projectMems.length,
       createdAt: u.created_at,
-      disabledAt: u.disabled_at,
-    });
+      roles: (
+        await query<any>(
+          db,
+          "SELECT role FROM role_assignments WHERE org_id=? AND user_id=? AND revoked_at IS NULL",
+          [actor.orgId, u.id],
+        )
+      ).map((r) => r.role),
+      projects: await query<any>(
+        db,
+        "SELECT m.project_id,m.project_role,m.finance_access,m.finance_author,m.invoice_issue,CASE WHEN p.main_client_user_id=m.user_id AND m.project_role='MAIN_CLIENT' THEN 1 ELSE 0 END AS contractual_authority FROM project_memberships m JOIN projects p ON p.id=m.project_id AND p.org_id=m.org_id WHERE m.user_id=? AND m.org_id=? AND m.is_active=1",
+        [u.id, actor.orgId],
+      ),
+    })),
+  );
+}
+export async function manageInvitation(
+  actor: UserPrincipal,
+  invitationId: string,
+  action: string,
+  db: D1Database,
+) {
+  admin(actor);
+  const inv = await queryFirst<any>(
+    db,
+    "SELECT * FROM invitations WHERE id=? AND org_id=?",
+    [invitationId, actor.orgId],
+  );
+  if (!inv) throw new AuthorizationError("Invitation not found.", "NOT_FOUND");
+  if (action === "READY") {
+    await db.batch([
+      currentAdminGuard(db, actor),
+      db
+        .prepare(
+          "UPDATE invitations SET admission_status='READY' WHERE id=? AND status='PENDING'",
+        )
+        .bind(inv.id),
+      auditStatement(db, {
+        orgId: actor.orgId,
+        actorId: actor.id,
+        entityType: "INVITATION",
+        entityId: inv.id,
+        action: "EDGE_ADMISSION_CONFIRMED",
+        reason: "Operator confirmed exact-email Google Access admission",
+      }),
+    ]);
+    return { status: "READY" };
   }
-
-  return results;
+  if (action === "REVOKE") {
+    await db.batch([
+      currentAdminGuard(db, actor),
+      db
+        .prepare(
+          "UPDATE invitations SET status='REVOKED' WHERE id=? AND status='PENDING'",
+        )
+        .bind(inv.id),
+      auditStatement(db, {
+        orgId: actor.orgId,
+        actorId: actor.id,
+        entityType: "INVITATION",
+        entityId: inv.id,
+        action: "INVITATION_REVOKED",
+      }),
+    ]);
+    return { status: "REVOKED" };
+  }
+  if (action === "REISSUE") {
+    if (inv.status === "ACCEPTED")
+      throw new AuthorizationError(
+        "An accepted invitation cannot be reissued.",
+        "INVALID_STATE",
+      );
+    const raw = token();
+    await db.batch([
+      currentAdminGuard(db, actor),
+      db
+        .prepare(
+          "UPDATE invitations SET token=?,status='PENDING',expires_at=?,admission_status='PENDING_SETUP' WHERE id=? AND status!='ACCEPTED'",
+        )
+        .bind(await digestToken(raw), Date.now() + 72 * 3600000, inv.id),
+      auditStatement(db, {
+        orgId: actor.orgId,
+        actorId: actor.id,
+        entityType: "INVITATION",
+        entityId: inv.id,
+        action: "INVITATION_REISSUED",
+      }),
+    ]);
+    return { invitationUrl: `/invite/accept#token=${raw}` };
+  }
+  throw new AuthorizationError("Unsupported action.", "INVALID_INPUT");
 }

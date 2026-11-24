@@ -1,3 +1,4 @@
+import { publicError, errorStatus } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -14,8 +15,10 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const projectId = searchParams.get("projectId") || undefined;
   const currency = searchParams.get("currency") || "INR";
-  const startDate = searchParams.get("startDate") || `${new Date().getFullYear()}-01-01`;
-  const endDate = searchParams.get("endDate") || `${new Date().getFullYear()}-12-31`;
+  const startDate =
+    searchParams.get("startDate") || `${new Date().getFullYear()}-01-01`;
+  const endDate =
+    searchParams.get("endDate") || `${new Date().getFullYear()}-12-31`;
 
   try {
     const report = await AccountingService.getFinancialReport(
@@ -26,13 +29,13 @@ export async function GET(request: NextRequest) {
         currency,
         periodStartDate: startDate,
         periodEndDate: endDate,
-      }
+      },
     );
     return NextResponse.json({ ok: true, report });
   } catch (err: any) {
     return NextResponse.json(
-      { error: err.message, code: err.code || "BAD_REQUEST" },
-      { status: 400 }
+      { error: publicError(err), code: err.code || "BAD_REQUEST" },
+      { status: errorStatus(err) },
     );
   }
 }

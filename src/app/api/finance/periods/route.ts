@@ -1,6 +1,12 @@
+import { publicError, errorStatus } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
+import {
+  AuthorizationError,
+  hasCapability,
+  assertProjectAccess,
+} from "@/server/auth/policy";
 import { AccountingService } from "@/server/domain/accounting/service";
 
 export async function GET(request: NextRequest) {
@@ -12,20 +18,24 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const rows = (await env.DB
-      .prepare(
-        `SELECT ap.*, u.display_name as closed_by_name
+    if (!hasCapability(auth.principal, "ADMIN")) {
+      throw new AuthorizationError("Administrator capability is required.");
+    }
+
+    const rows = (await env.DB.prepare(
+      `SELECT ap.*, u.display_name as closed_by_name
          FROM accounting_periods ap
          LEFT JOIN users u ON ap.closed_by_user_id = u.id
-         ORDER BY ap.start_date DESC`
-      )
+         WHERE ap.org_id=? ORDER BY ap.start_date DESC`,
+    )
+      .bind(auth.principal.orgId)
       .all()) as any;
 
     return NextResponse.json({ ok: true, periods: rows.results || [] });
   } catch (err: any) {
     return NextResponse.json(
-      { error: err.message, code: err.code || "BAD_REQUEST" },
-      { status: 400 }
+      { error: publicError(err), code: err.code || "BAD_REQUEST" },
+      { status: errorStatus(err) },
     );
   }
 }
@@ -50,27 +60,27 @@ export async function POST(request: NextRequest) {
           periodLabel: body.periodLabel,
           startDate: body.startDate,
           endDate: body.endDate,
-        }
+        },
       );
       return NextResponse.json({ ok: true, ...result }, { status: 201 });
     } else if (action === "CLOSE") {
       const result = await AccountingService.closeAccountingPeriod(
         env.DB,
         auth.principal,
-        body.periodId
+        body.periodId,
       );
       return NextResponse.json({ ok: true, ...result });
     } else {
       return NextResponse.json(
         { error: `Unknown action: ${action}` },
-        { status: 400 }
+        { status: 400 },
       );
     }
   } catch (err: any) {
     const status = err.code === "FORBIDDEN" ? 403 : 400;
     return NextResponse.json(
-      { error: err.message, code: err.code || "BAD_REQUEST" },
-      { status }
+      { error: publicError(err), code: err.code || "BAD_REQUEST" },
+      { status },
     );
   }
 }

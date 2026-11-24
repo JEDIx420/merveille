@@ -21,7 +21,7 @@ describe("Phase 08: Firm Accounting, Protected Payroll, and Balanced Ledger", ()
     email: "admin@merveilledesigns.com",
     name: "Merveille Admin",
     orgId: testOrgId,
-    role: "ADMIN",
+    role: "ADMIN", roles: ["ADMIN"],
     projectMemberships: [{ projectId: testProjectId, projectRole: "ADMIN" }],
     isSynthetic: true,
   };
@@ -31,7 +31,7 @@ describe("Phase 08: Firm Accounting, Protected Payroll, and Balanced Ledger", ()
     email: "owner@merveilledesigns.com",
     name: "Merveille Owner",
     orgId: testOrgId,
-    role: "OWNER",
+    role: "OWNER", roles: ["OWNER"],
     projectMemberships: [{ projectId: testProjectId, projectRole: "OWNER" }],
     isSynthetic: true,
   };
@@ -41,7 +41,7 @@ describe("Phase 08: Firm Accounting, Protected Payroll, and Balanced Ledger", ()
     email: "manager@merveilledesigns.com",
     name: "Vipin Manager",
     orgId: testOrgId,
-    role: "MANAGER",
+    role: "MANAGER", roles: [],
     projectMemberships: [{ projectId: testProjectId, projectRole: "MANAGER" }],
     isSynthetic: true,
   };
@@ -51,8 +51,8 @@ describe("Phase 08: Firm Accounting, Protected Payroll, and Balanced Ledger", ()
     email: "staff@merveilledesigns.com",
     name: "Nithya Architect",
     orgId: testOrgId,
-    role: "STAFF",
-    projectMemberships: [{ projectId: testProjectId, projectRole: "STAFF" }],
+    role: "STAFF", roles: [],
+    projectMemberships: [{ projectId: testProjectId, projectRole: "STAFF", financeAccess:true, financeAuthor:true, invoiceIssue:true }],
     isSynthetic: true,
   };
 
@@ -61,7 +61,7 @@ describe("Phase 08: Firm Accounting, Protected Payroll, and Balanced Ledger", ()
     email: "consultant@example.com",
     name: "Manoj Structural Engineer",
     orgId: testOrgId,
-    role: "CONSULTANT",
+    role: "CONSULTANT", roles: [],
     projectMemberships: [{ projectId: testProjectId, projectRole: "CONSULTANT" }],
     isSynthetic: true,
   };
@@ -71,8 +71,8 @@ describe("Phase 08: Firm Accounting, Protected Payroll, and Balanced Ledger", ()
     email: "client@example.com",
     name: "Thomas Client",
     orgId: testOrgId,
-    role: "MAIN_CLIENT",
-    projectMemberships: [{ projectId: testProjectId, projectRole: "MAIN_CLIENT" }],
+    role: "MAIN_CLIENT", roles: [],
+    projectMemberships: [{ projectId: testProjectId, projectRole: "MAIN_CLIENT", contractualAuthority:true }],
     isSynthetic: true,
   };
 
@@ -143,7 +143,7 @@ describe("Phase 08: Firm Accounting, Protected Payroll, and Balanced Ledger", ()
     // 2. Staff attempts to post expense -> strictly denied (AC-034)
     await expect(
       AccountingService.postExpense(db, staffUser, expenseId)
-    ).rejects.toThrow(/Only administrators can post expenses to the accounting ledger/);
+    ).rejects.toThrow(/Only administrators can post accounting records/);
 
     // 3. Manager approves expense
     await AccountingService.approveExpense(db, managerUser, expenseId);
@@ -152,8 +152,8 @@ describe("Phase 08: Firm Accounting, Protected Payroll, and Balanced Ledger", ()
     const postRes = await AccountingService.postExpense(db, adminUser, expenseId);
     expect(postRes.status).toBe("POSTED");
 
-    // 5. Consultant submits consultant fee bill
-    const { billId } = await AccountingService.submitConsultantBill(db, consultantUser, {
+    // 5. Finance-authorised staff records the consultant fee bill
+    const { billId } = await AccountingService.submitConsultantBill(db, staffUser, {
       projectId: testProjectId,
       consultantUserId: consultantUser.id,
       billReference: "STR-INV-2026-01",
@@ -165,7 +165,7 @@ describe("Phase 08: Firm Accounting, Protected Payroll, and Balanced Ledger", ()
     // 6. Consultant attempts to post bill -> strictly denied
     await expect(
       AccountingService.postConsultantBill(db, consultantUser, billId)
-    ).rejects.toThrow(/Only administrators can post consultant bills/);
+    ).rejects.toThrow(/Only administrators can post accounting records/);
 
     // 7. Manager approves consultant bill
     await AccountingService.approveConsultantBill(db, managerUser, billId);
@@ -203,8 +203,9 @@ describe("Phase 08: Firm Accounting, Protected Payroll, and Balanced Ledger", ()
       grossSalaryMinor: 4000000,
     });
 
-    // 3. Staff queries financial report
-    const staffReport = await AccountingService.getFinancialReport(db, staffUser, {
+    // Staff cannot inspect project-wide costs. A manager receives non-payroll reporting.
+    await expect(AccountingService.getFinancialReport(db,staffUser,{projectId:testProjectId,periodStartDate:'2026-11-01',periodEndDate:'2026-11-30'})).rejects.toThrow(/Cost reports/);
+    const staffReport = await AccountingService.getFinancialReport(db, managerUser, {
       projectId: testProjectId,
       periodStartDate: "2026-11-01",
       periodEndDate: "2026-11-30",

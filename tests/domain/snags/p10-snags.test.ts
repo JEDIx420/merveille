@@ -25,7 +25,7 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     email: "admin@merveilledesigns.com",
     name: "Merveille Admin",
     orgId: testOrgId,
-    role: "ADMIN",
+    role: "ADMIN", roles: ["ADMIN"],
     projectMemberships: [{ projectId: testProjectId, projectRole: "ADMIN" }],
     isSynthetic: true,
   };
@@ -35,7 +35,7 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     email: "manager@merveilledesigns.com",
     name: "Vipin Manager",
     orgId: testOrgId,
-    role: "MANAGER",
+    role: "MANAGER", roles: [],
     projectMemberships: [{ projectId: testProjectId, projectRole: "MANAGER" }],
     isSynthetic: true,
   };
@@ -45,7 +45,7 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     email: "staff@merveilledesigns.com",
     name: "Nithya Architect",
     orgId: testOrgId,
-    role: "STAFF",
+    role: "STAFF", roles: [],
     projectMemberships: [{ projectId: testProjectId, projectRole: "STAFF" }],
     isSynthetic: true,
   };
@@ -55,8 +55,8 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     email: "client@example.com",
     name: "Thomas Client (Main Client)",
     orgId: testOrgId,
-    role: "MAIN_CLIENT",
-    projectMemberships: [{ projectId: testProjectId, projectRole: "MAIN_CLIENT" }],
+    role: "MAIN_CLIENT", roles: [],
+    projectMemberships: [{ projectId: testProjectId, projectRole: "MAIN_CLIENT", contractualAuthority: true }],
     isSynthetic: true,
   };
 
@@ -65,7 +65,7 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     email: "consultant@example.com",
     name: "Structural Consultant",
     orgId: testOrgId,
-    role: "CONSULTANT",
+    role: "CONSULTANT", roles: [],
     projectMemberships: [{ projectId: testProjectId, projectRole: "CONSULTANT" }],
     isSynthetic: true,
   };
@@ -75,7 +75,7 @@ describe("Phase 10: Site Issues, Snag Resolution, and Verification Controls", ()
     email: "other@merveilledesigns.com",
     name: "Foreign Staff",
     orgId: testOrgId,
-    role: "STAFF",
+    role: "STAFF", roles: [],
     projectMemberships: [{ projectId: foreignProjectId, projectRole: "STAFF" }],
     isSynthetic: true,
   };

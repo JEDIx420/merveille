@@ -1,7 +1,11 @@
+import { publicError, errorStatus } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
-import { listEnquiries, createEnquiry } from "@/server/domain/enquiries/service";
+import {
+  listEnquiries,
+  createEnquiry,
+} from "@/server/domain/enquiries/service";
 
 export async function GET(request: NextRequest) {
   const { env } = await getCloudflareContext({ async: true });
@@ -16,8 +20,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: true, enquiries });
   } catch (err: any) {
     return NextResponse.json(
-      { error: err.message, code: err.code || "FORBIDDEN" },
-      { status: 403 }
+      { error: publicError(err), code: err.code || "FORBIDDEN" },
+      { status: errorStatus(err) },
     );
   }
 }
@@ -31,7 +35,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json() as any;
+    const body = (await request.json()) as any;
     const result = await createEnquiry(
       auth.principal,
       {
@@ -42,13 +46,13 @@ export async function POST(request: NextRequest) {
         requirementsText: body.requirementsText,
         leadManagerId: body.leadManagerId,
       },
-      env.DB
+      env.DB,
     );
     return NextResponse.json({ ok: true, ...result }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json(
-      { error: err.message, code: err.code || "OPERATION_FAILED" },
-      { status: 400 }
+      { error: publicError(err), code: err.code || "OPERATION_FAILED" },
+      { status: errorStatus(err) },
     );
   }
 }

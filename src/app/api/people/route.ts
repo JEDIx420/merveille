@@ -1,3 +1,4 @@
+import { publicError, errorStatus } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -13,11 +14,26 @@ export async function GET(request: NextRequest) {
 
   try {
     const people = await listPeople(auth.principal, env.DB);
-    return NextResponse.json({ ok: true, people });
+    const invitations = await env.DB.prepare(
+      "SELECT id,display_name,email,status,expires_at,admission_status FROM invitations WHERE org_id=? ORDER BY created_at DESC",
+    )
+      .bind(auth.principal.orgId)
+      .all();
+    const projects = await env.DB.prepare(
+      "SELECT id,name FROM projects WHERE org_id=? ORDER BY name",
+    )
+      .bind(auth.principal.orgId)
+      .all();
+    return NextResponse.json({
+      ok: true,
+      people,
+      invitations: invitations.results,
+      projects: projects.results,
+    });
   } catch (err: any) {
     return NextResponse.json(
-      { error: err.message, code: err.code || "FORBIDDEN" },
-      { status: err.code === "ADMIN_REQUIRED" ? 403 : 500 }
+      { error: publicError(err), code: err.code || "FORBIDDEN" },
+      { status: errorStatus(err) },
     );
   }
 }
@@ -37,17 +53,20 @@ export async function POST(request: NextRequest) {
       {
         email: body.email,
         displayName: body.displayName || body.email.split("@")[0],
+        roles: body.roles,
+        projects: body.projects,
+        confirmElevation: body.confirmElevation,
         role: body.role,
         projectId: body.projectId,
       },
-      env.DB
+      env.DB,
     );
 
     return NextResponse.json({ ok: true, ...result }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json(
-      { error: err.message, code: err.code || "FORBIDDEN" },
-      { status: err.code === "ADMIN_REQUIRED" ? 403 : 400 }
+      { error: publicError(err), code: err.code || "FORBIDDEN" },
+      { status: errorStatus(err) },
     );
   }
 }

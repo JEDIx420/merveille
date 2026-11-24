@@ -24,7 +24,7 @@ describe("Phase P03: Private Documents, Media Storage and Authenticated File Del
     email: "admin@merveilledesigns.com",
     name: "Operations Admin",
     orgId,
-    role: "ADMIN",
+    role: "ADMIN", roles: ["ADMIN"],
     projectMemberships: [],
     isSynthetic: false,
   };
@@ -34,8 +34,8 @@ describe("Phase P03: Private Documents, Media Storage and Authenticated File Del
     email: "manager@merveilledesigns.com",
     name: "Lead Project Architect",
     orgId,
-    role: "MANAGER",
-    projectMemberships: [{ projectId }],
+    role: "MANAGER", roles: [],
+    projectMemberships: [{ projectId, projectRole: "MANAGER" }],
     isSynthetic: false,
   };
 
@@ -44,8 +44,8 @@ describe("Phase P03: Private Documents, Media Storage and Authenticated File Del
     email: "client@clientfamily.example",
     name: "Rajesh Kumar",
     orgId,
-    role: "MAIN_CLIENT",
-    projectMemberships: [{ projectId }],
+    role: "MAIN_CLIENT", roles: [],
+    projectMemberships: [{ projectId, projectRole: "MAIN_CLIENT", contractualAuthority: true }],
     isSynthetic: false,
   };
 
@@ -54,7 +54,7 @@ describe("Phase P03: Private Documents, Media Storage and Authenticated File Del
     email: "revoked@clientfamily.example",
     name: "Revoked Member",
     orgId,
-    role: "MAIN_CLIENT",
+    role: "MAIN_CLIENT", roles: [],
     projectMemberships: [], // No project memberships
     isSynthetic: false,
   };
@@ -202,7 +202,7 @@ describe("Phase P03: Private Documents, Media Storage and Authenticated File Del
           db,
           bucket
         )
-      ).rejects.toThrow("Access denied: You are not assigned to this project");
+      ).rejects.toThrow("You are not assigned to this project");
 
       // 2. Client attempts to attach file as internal practice only
       await expect(
@@ -360,13 +360,13 @@ describe("Phase P03: Private Documents, Media Storage and Authenticated File Del
       // 4. Access revocation: Revoked user without project membership is denied
       await expect(
         getFileForDownload(revokedClientUser, fileId, db, bucket)
-      ).rejects.toThrow("Access denied: You are not assigned to this project");
+      ).rejects.toThrow("You are not assigned to this project");
 
       // 5. Internal file protection: Client cannot download internal file
       await execute(db, "UPDATE files SET is_internal_only = 1 WHERE id = ?", [fileId]);
       await expect(
         getFileForDownload(mainClientUser, fileId, db, bucket)
-      ).rejects.toThrow("Access denied: File is classified as internal practice only");
+      ).rejects.toThrow("This file is not available to your account");
     });
   });
 

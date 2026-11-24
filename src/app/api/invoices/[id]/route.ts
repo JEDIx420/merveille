@@ -1,3 +1,4 @@
+import { publicError } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -5,7 +6,7 @@ import { FinanceService } from "@/server/domain/finance/service";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -29,7 +30,8 @@ export async function POST(
             lineItems: body.lineItems,
             dueDate: body.dueDate,
             notes: body.notes,
-          }
+            expectedVersion: body.expectedVersion,
+          },
         );
         return NextResponse.json({ ok: true, ...result });
       }
@@ -41,7 +43,7 @@ export async function POST(
           {
             invoiceId,
             versionNumber: body.versionNumber,
-          }
+          },
         );
         return NextResponse.json({ ok: true, ...result });
       }
@@ -53,7 +55,8 @@ export async function POST(
           {
             invoiceId,
             versionNumber: body.versionNumber,
-          }
+            idempotencyKey: body.idempotencyKey,
+          },
         );
         return NextResponse.json({ ok: true, ...result });
       }
@@ -61,14 +64,14 @@ export async function POST(
       default:
         return NextResponse.json(
           { error: `Unknown action: ${action}` },
-          { status: 400 }
+          { status: 400 },
         );
     }
   } catch (err: any) {
     const status = err.code === "FORBIDDEN" ? 403 : 400;
     return NextResponse.json(
-      { error: err.message, code: err.code || "BAD_REQUEST" },
-      { status }
+      { error: publicError(err), code: err.code || "BAD_REQUEST" },
+      { status },
     );
   }
 }

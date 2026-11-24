@@ -3,10 +3,12 @@
  * Handles initial intake, feasibility evaluations, and stage progression.
  */
 
-import { UserPrincipal } from "@/server/auth/principal";
+import { UserPrincipal, hasCapability } from "@/server/auth/principal";
 import { AuthorizationError } from "@/server/auth/policy";
 import { query, queryFirst, execute } from "@/server/db";
 import { recordAuditEvent } from "../identity/service";
+import { FinanceService } from "../finance/service";
+import { atomicGuard } from "../../db/atomic";
 
 export interface CreateEnquiryInput {
   contactName: string;
@@ -38,11 +40,18 @@ export interface ConvertEnquiryInput {
 export async function createEnquiry(
   actor: UserPrincipal,
   input: CreateEnquiryInput,
-  db: D1Database
+  db: D1Database,
 ) {
   // Only internal staff, manager, owner, or admin can record enquiries
-  if (actor.role === "CONSULTANT" || actor.role === "MAIN_CLIENT" || actor.role === "CLIENT_REP") {
-    throw new AuthorizationError("Only architectural practice members can record new enquiries.", "FORBIDDEN");
+  if (
+    !hasCapability(actor, "ADMIN") &&
+    !hasCapability(actor, "OWNER") &&
+    !actor.intakeAccess
+  ) {
+    throw new AuthorizationError(
+      "Only architectural practice members can record new enquiries.",
+      "FORBIDDEN",
+    );
   }
 
   const id = `enq_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -62,7 +71,7 @@ export async function createEnquiry(
       input.requirementsText || null,
       input.leadManagerId || actor.id,
       now,
-    ]
+    ],
   );
 
   await recordAuditEvent(db, {
@@ -86,19 +95,26 @@ export async function recordFeasibilityStudy(
   actor: UserPrincipal,
   enquiryId: string,
   input: FeasibilityStudyInput,
-  db: D1Database
+  db: D1Database,
 ) {
-  if (actor.role === "CONSULTANT" || actor.role === "MAIN_CLIENT" || actor.role === "CLIENT_REP") {
-    throw new AuthorizationError("Only design staff can record feasibility studies.", "FORBIDDEN");
+  if (
+    !hasCapability(actor, "ADMIN") &&
+    !hasCapability(actor, "OWNER") &&
+    !actor.intakeAccess
+  ) {
+    throw new AuthorizationError(
+      "Only design staff can record feasibility studies.",
+      "FORBIDDEN",
+    );
   }
 
-  const enquiry = await queryFirst<{ id: string; org_id: string; status: string }>(
-    db,
-    "SELECT id, org_id, status FROM enquiries WHERE id = ?",
-    [enquiryId]
-  );
+  const enquiry = await queryFirst<{
+    id: string;
+    org_id: string;
+    status: string;
+  }>(db, "SELECT id, org_id, status FROM enquiries WHERE id = ?", [enquiryId]);
 
-  if (!enquiry) {
+  if (!enquiry || enquiry.org_id !== actor.orgId) {
     throw new AuthorizationError("Enquiry not found.", "NOT_FOUND");
   }
 
@@ -118,13 +134,13 @@ export async function recordFeasibilityStudy(
       actor.id,
       now,
       now,
-    ]
+    ],
   );
 
   await execute(
     db,
     "UPDATE enquiries SET status = 'FEASIBILITY_REVIEW', revision = revision + 1 WHERE id = ?",
-    [enquiryId]
+    [enquiryId],
   );
 
   await recordAuditEvent(db, {
@@ -140,25 +156,37 @@ export async function recordFeasibilityStudy(
 }
 
 /**
- * Close an enquiry without creating an active project (AC-009).
+ * Close an enquiry without creating an active project.
  */
 export async function closeEnquiry(
   actor: UserPrincipal,
   enquiryId: string,
   input: CloseEnquiryInput,
-  db: D1Database
+  db: D1Database,
 ) {
-  if (actor.role !== "ADMIN" && actor.role !== "OWNER" && actor.role !== "MANAGER") {
-    throw new AuthorizationError("Only practice managers or administrators can close enquiries.", "FORBIDDEN");
+  if (
+    !hasCapability(actor, "ADMIN") &&
+    !hasCapability(actor, "OWNER") &&
+    !actor.intakeAccess
+  ) {
+    throw new AuthorizationError(
+      "Only practice managers or administrators can close enquiries.",
+      "FORBIDDEN",
+    );
   }
 
-  const enquiry = await queryFirst<{ id: string; org_id: string; status: string; linked_project_id: string | null }>(
+  const enquiry = await queryFirst<{
+    id: string;
+    org_id: string;
+    status: string;
+    linked_project_id: string | null;
+  }>(
     db,
     "SELECT id, org_id, status, linked_project_id FROM enquiries WHERE id = ?",
-    [enquiryId]
+    [enquiryId],
   );
 
-  if (!enquiry) {
+  if (!enquiry || enquiry.org_id !== actor.orgId) {
     throw new AuthorizationError("Enquiry not found.", "NOT_FOUND");
   }
 
@@ -166,7 +194,7 @@ export async function closeEnquiry(
   await execute(
     db,
     "UPDATE enquiries SET status = ?, decline_reason = ?, revision = revision + 1 WHERE id = ?",
-    [input.status, input.reason, enquiryId]
+    [input.status, input.reason, enquiryId],
   );
 
   await recordAuditEvent(db, {
@@ -180,7 +208,12 @@ export async function closeEnquiry(
     reason: input.reason,
   });
 
-  return { enquiryId, status: input.status, reason: input.reason, hasActiveProject: false };
+  return {
+    enquiryId,
+    status: input.status,
+    reason: input.reason,
+    hasActiveProject: false,
+  };
 }
 
 /**
@@ -190,11 +223,13 @@ export async function convertEnquiryToProject(
   actor: UserPrincipal,
   enquiryId: string,
   input: ConvertEnquiryInput,
-  db: D1Database
+  db: D1Database,
 ) {
-  if (actor.role !== "ADMIN" && actor.role !== "OWNER" && actor.role !== "MANAGER") {
-    throw new AuthorizationError("Only practice managers or administrators can convert enquiries.", "FORBIDDEN");
-  }
+  if (!hasCapability(actor, "ADMIN"))
+    throw new AuthorizationError(
+      "An administrator must assign the project contacts and manager.",
+      "ADMIN_REQUIRED",
+    );
 
   const enquiry = await queryFirst<{
     id: string;
@@ -204,28 +239,52 @@ export async function convertEnquiryToProject(
     status: string;
   }>(db, "SELECT * FROM enquiries WHERE id = ?", [enquiryId]);
 
-  if (!enquiry) {
+  if (!enquiry || enquiry.org_id !== actor.orgId) {
     throw new AuthorizationError("Enquiry not found.", "NOT_FOUND");
   }
 
   const projectId = `prj_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
   const now = Date.now();
 
+  for (const targetId of [input.mainClientUserId, input.managerUserId]) {
+    const target = await queryFirst<any>(
+      db,
+      "SELECT u.id FROM users u JOIN organization_memberships m ON m.user_id=u.id WHERE u.id=? AND u.status='ACTIVE' AND m.org_id=? AND m.is_active=1",
+      [targetId, actor.orgId],
+    );
+    if (!target)
+      throw new AuthorizationError(
+        "Choose active people from this organisation.",
+        "INVALID_INPUT",
+      );
+  }
+  const plan = [
+    FinanceService.activeGuard(db, actor),
+    atomicGuard(
+      db,
+      "EXISTS(SELECT 1 FROM enquiries WHERE id=? AND org_id=? AND status NOT IN ('CONVERTED','LOST','DECLINED') AND linked_project_id IS NULL)",
+      [enquiryId, actor.orgId],
+    ),
+  ];
   // 1. Create Project in DRAFT status
-  await execute(
-    db,
-    `INSERT INTO projects (id, org_id, code, name, site_location, main_client_user_id, manager_user_id, stage, status, is_archived, revision, created_at)
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO projects (id, org_id, code, name, site_location, main_client_user_id, manager_user_id, stage, status, is_archived, revision, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, 'SCHEMATIC_DESIGN', 'DRAFT', 0, 1, ?)`,
-    [
-      projectId,
-      enquiry.org_id,
-      input.projectCode,
-      input.projectName,
-      enquiry.site_location,
-      input.mainClientUserId,
-      input.managerUserId,
-      now,
-    ]
+      )
+      .bind(
+        ...[
+          projectId,
+          enquiry.org_id,
+          input.projectCode,
+          input.projectName,
+          enquiry.site_location,
+          input.mainClientUserId,
+          input.managerUserId,
+          now,
+        ],
+      ),
   );
 
   // 2. Insert standard architectural practice stages
@@ -240,79 +299,124 @@ export async function convertEnquiryToProject(
 
   for (const s of defaultStages) {
     const stageId = `stg_${projectId}_${s.order}`;
-    await execute(
-      db,
-      `INSERT INTO project_stages (id, project_id, stage_order, name, status, revision)
+    plan.push(
+      db
+        .prepare(
+          `INSERT INTO project_stages (id, project_id, stage_order, name, status, revision)
        VALUES (?, ?, ?, ?, 'PENDING', 1)`,
-      [stageId, projectId, s.order, s.name]
+        )
+        .bind(...[stageId, projectId, s.order, s.name]),
     );
   }
 
   // 3. Bind Main Client and Manager to project memberships
-  await execute(
-    db,
-    `INSERT INTO project_memberships (id, org_id, project_id, user_id, project_role, is_active, assigned_at)
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO project_memberships (id, org_id, project_id, user_id, project_role, is_active, assigned_at)
      VALUES (?, ?, ?, ?, 'MAIN_CLIENT', 1, ?)`,
-    [`pm_mc_${projectId}`, enquiry.org_id, projectId, input.mainClientUserId, now]
+      )
+      .bind(
+        ...[
+          `pm_mc_${projectId}`,
+          enquiry.org_id,
+          projectId,
+          input.mainClientUserId,
+          now,
+        ],
+      ),
   );
 
-  await execute(
-    db,
-    `INSERT INTO project_memberships (id, org_id, project_id, user_id, project_role, is_active, assigned_at)
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO project_memberships (id, org_id, project_id, user_id, project_role, is_active, assigned_at)
      VALUES (?, ?, ?, ?, 'MANAGER', 1, ?)`,
-    [`pm_mgr_${projectId}`, enquiry.org_id, projectId, input.managerUserId, now]
+      )
+      .bind(
+        ...[
+          `pm_mgr_${projectId}`,
+          enquiry.org_id,
+          projectId,
+          input.managerUserId,
+          now,
+        ],
+      ),
   );
 
   // 4. Update enquiry to CONVERTED
-  await execute(
-    db,
-    "UPDATE enquiries SET status = 'CONVERTED', linked_project_id = ?, revision = revision + 1 WHERE id = ?",
-    [projectId, enquiryId]
+  plan.push(
+    db
+      .prepare(
+        "UPDATE enquiries SET status = 'CONVERTED', linked_project_id = ?, revision = revision + 1 WHERE id = ?",
+      )
+      .bind(...[projectId, enquiryId]),
   );
 
-  await recordAuditEvent(db, {
-    orgId: enquiry.org_id,
-    actorId: actor.id,
-    entityType: "ENQUIRY",
-    entityId: enquiryId,
-    action: "ENQUIRY_CONVERTED_TO_PROJECT",
-    newState: { projectId, projectCode: input.projectCode },
-  });
+  plan.push(
+    FinanceService.audit(
+      db,
+      actor,
+      "ENQUIRY",
+      enquiryId,
+      "ENQUIRY_CONVERTED_TO_PROJECT",
+      { projectId, projectCode: input.projectCode },
+    ),
+  );
+  await FinanceService.commit(db, plan);
 
   return { projectId, projectCode: input.projectCode, status: "DRAFT" };
 }
 
 export async function listEnquiries(actor: UserPrincipal, db: D1Database) {
-  if (actor.role === "CONSULTANT" || actor.role === "MAIN_CLIENT" || actor.role === "CLIENT_REP") {
-    throw new AuthorizationError("Enquiries are internal practice records.", "FORBIDDEN");
+  if (
+    !hasCapability(actor, "ADMIN") &&
+    !hasCapability(actor, "OWNER") &&
+    !actor.intakeAccess
+  ) {
+    throw new AuthorizationError(
+      "Enquiries are internal practice records.",
+      "FORBIDDEN",
+    );
   }
 
   return await query(
     db,
     "SELECT * FROM enquiries WHERE org_id = ? ORDER BY created_at DESC",
-    [actor.orgId]
+    [actor.orgId],
   );
 }
 
-export async function getEnquiry(actor: UserPrincipal, enquiryId: string, db: D1Database) {
-  if (actor.role === "CONSULTANT" || actor.role === "MAIN_CLIENT" || actor.role === "CLIENT_REP") {
-    throw new AuthorizationError("Enquiries are internal practice records.", "FORBIDDEN");
+export async function getEnquiry(
+  actor: UserPrincipal,
+  enquiryId: string,
+  db: D1Database,
+) {
+  if (
+    !hasCapability(actor, "ADMIN") &&
+    !hasCapability(actor, "OWNER") &&
+    !actor.intakeAccess
+  ) {
+    throw new AuthorizationError(
+      "Enquiries are internal practice records.",
+      "FORBIDDEN",
+    );
   }
 
   const enquiry = await queryFirst(
     db,
     "SELECT * FROM enquiries WHERE id = ? AND org_id = ?",
-    [enquiryId, actor.orgId]
+    [enquiryId, actor.orgId],
   );
 
-  if (!enquiry) {
+  if (!enquiry || enquiry.org_id !== actor.orgId) {
     throw new AuthorizationError("Enquiry not found.", "NOT_FOUND");
   }
 
   const studies = await query(
     db,
     "SELECT * FROM feasibility_studies WHERE enquiry_id = ? ORDER BY created_at DESC",
-    [enquiryId]
+    [enquiryId],
   );
 
   return { enquiry, studies };

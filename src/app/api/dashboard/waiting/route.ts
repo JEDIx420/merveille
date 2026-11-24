@@ -1,3 +1,4 @@
+import { publicError } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -15,15 +16,22 @@ export async function GET(request: NextRequest) {
   const projectId = searchParams.get("projectId") || undefined;
 
   try {
-    const items = await DashboardService.getWaitingOnYou(env.DB, auth.principal, {
-      projectId,
-    });
+    const items = await DashboardService.getWaitingOnYou(
+      env.DB,
+      auth.principal,
+      {
+        projectId,
+      },
+    );
     return NextResponse.json({ ok: true, items });
   } catch (err: any) {
-    const status = err.code === "FORBIDDEN" || err.code === "CROSS_PROJECT_DENIED" ? 403 : 500;
+    const status =
+      err.code === "FORBIDDEN" || err.code === "CROSS_PROJECT_DENIED"
+        ? 403
+        : 500;
     return NextResponse.json(
-      { error: err.message, code: err.code || "INTERNAL_ERROR" },
-      { status }
+      { error: publicError(err), code: err.code || "INTERNAL_ERROR" },
+      { status },
     );
   }
 }

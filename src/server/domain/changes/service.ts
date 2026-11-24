@@ -1,12 +1,21 @@
+import { assertProjectOrganisation } from "../../auth/policy";
 /**
  * Change Requests, Versioned Estimates, Payment Allocation, and Execution Authorization Domain Service.
  * Enforces main-client acceptance authority, three-condition pre-work commercial gate,
- * invalidation of stale consent on revision, and task-linking controls (AC-039, AC-040, AC-041).
+ * invalidation of stale consent on revision, and task-linking controls.
  */
 
-import { UserPrincipal } from "@/server/auth/principal";
-import { assertProjectAccess, AuthorizationError, canReadInternalNotes } from "@/server/auth/policy";
+import { UserPrincipal, hasCapability } from "@/server/auth/principal";
+import {
+  assertProjectAccess,
+  AuthorizationError,
+  canReadInternalNotes,
+  canAcceptContractualDecisions,
+} from "@/server/auth/policy";
 import { query, queryFirst, execute } from "@/server/db";
+import { FinanceService, money } from "../finance/service";
+import { atomicGuard } from "../../db/atomic";
+import { ArchiveService } from "../archive/service";
 
 export type ChangeRequestStatus =
   | "REQUESTED"
@@ -24,7 +33,12 @@ export interface CreateChangeRequestParams {
   projectId: string;
   title: string;
   description: string;
-  sourceType: "MATERIAL_SELECTION" | "CLIENT_REQUEST" | "SITE_CONDITION" | "DESIGN_REVISION" | "DISCUSSION";
+  sourceType:
+    | "MATERIAL_SELECTION"
+    | "CLIENT_REQUEST"
+    | "SITE_CONDITION"
+    | "DESIGN_REVISION"
+    | "DISCUSSION";
   sourceReferenceId?: string;
   affectedOriginalScope?: string;
 }
@@ -50,6 +64,7 @@ export interface ConfirmChangePaymentParams {
   changeRequestId: string;
   receiptId: string;
   amountMinor?: number;
+  idempotencyKey?: string;
 }
 
 export interface ReviseEstimateParams {
@@ -72,17 +87,7 @@ export class ChangesService {
    * Helper to determine if an actor is the authorized MAIN_CLIENT for a project.
    */
   static isMainClient(principal: UserPrincipal, projectId: string): boolean {
-    const membership = principal.projectMemberships?.find((m) => m.projectId === projectId);
-    if (principal.role === "CLIENT_REP" || membership?.projectRole === "CLIENT_REP") {
-      return false; // Representatives can never act as main client
-    }
-    if (principal.role === "MAIN_CLIENT" || membership?.projectRole === "MAIN_CLIENT") {
-      return true;
-    }
-    if (principal.role === "ADMIN" || principal.role === "OWNER") {
-      return true;
-    }
-    return false;
+    return canAcceptContractualDecisions(principal, projectId);
   }
 
   // ---------------------------------------------------------------------------
@@ -92,21 +97,29 @@ export class ChangesService {
   static async createChangeRequest(
     db: D1Database,
     principal: UserPrincipal,
-    params: CreateChangeRequestParams
+    params: CreateChangeRequestParams,
   ) {
     assertProjectAccess(principal, params.projectId);
+    await assertProjectOrganisation(db, principal, params.projectId);
+    await ArchiveService.assertProjectNotArchived(db, params.projectId);
 
     if (!params.title || params.title.trim().length === 0) {
-      throw new AuthorizationError("Change request title is required", "INVALID_INPUT");
+      throw new AuthorizationError(
+        "Change request title is required",
+        "INVALID_INPUT",
+      );
     }
     if (!params.description || params.description.trim().length === 0) {
-      throw new AuthorizationError("Change request description is required", "INVALID_INPUT");
+      throw new AuthorizationError(
+        "Change request description is required",
+        "INVALID_INPUT",
+      );
     }
 
     const countRow = await queryFirst<any>(
       db,
       "SELECT COUNT(*) as c FROM change_requests WHERE project_id = ?",
-      [params.projectId]
+      [params.projectId],
     );
     const seq = (countRow?.c || 0) + 1;
     const requestNumber = `CR-${String(seq).padStart(3, "0")}`;
@@ -134,7 +147,7 @@ export class ChangesService {
         principal.id,
         now,
         now,
-      ]
+      ],
     );
 
     return {
@@ -145,20 +158,36 @@ export class ChangesService {
     };
   }
 
-  static async startEstimating(db: D1Database, principal: UserPrincipal, changeRequestId: string) {
-    const cr = await queryFirst<any>(db, "SELECT * FROM change_requests WHERE id = ?", [changeRequestId]);
-    if (!cr) throw new AuthorizationError("Change request not found", "NOT_FOUND");
+  static async startEstimating(
+    db: D1Database,
+    principal: UserPrincipal,
+    changeRequestId: string,
+  ) {
+    const cr = await queryFirst<any>(
+      db,
+      "SELECT * FROM change_requests WHERE id = ?",
+      [changeRequestId],
+    );
+    if (!cr)
+      throw new AuthorizationError("Change request not found", "NOT_FOUND");
     assertProjectAccess(principal, cr.project_id);
+    await assertProjectOrganisation(db, principal, cr.project_id);
+    await ArchiveService.assertProjectNotArchived(db, cr.project_id);
+    if (cr.org_id !== principal.orgId)
+      throw new AuthorizationError("Record not found", "NOT_FOUND");
 
-    if (!["MANAGER", "ADMIN", "OWNER"].includes(principal.role)) {
-      throw new AuthorizationError("Only project managers can start estimation", "FORBIDDEN");
+    if (!hasCapability(principal, "MANAGER", cr.project_id)) {
+      throw new AuthorizationError(
+        "Only project managers can start estimation",
+        "FORBIDDEN",
+      );
     }
 
     const now = Date.now();
     await execute(
       db,
       "UPDATE change_requests SET status = 'ESTIMATING', updated_at = ? WHERE id = ?",
-      [now, changeRequestId]
+      [now, changeRequestId],
     );
 
     return { id: changeRequestId, status: "ESTIMATING" };
@@ -170,64 +199,104 @@ export class ChangesService {
   static async issueEstimate(
     db: D1Database,
     principal: UserPrincipal,
-    params: IssueEstimateParams
+    params: IssueEstimateParams,
   ) {
-    const cr = await queryFirst<any>(db, "SELECT * FROM change_requests WHERE id = ?", [
-      params.changeRequestId,
-    ]);
-    if (!cr) throw new AuthorizationError("Change request not found", "NOT_FOUND");
+    const cr = await queryFirst<any>(
+      db,
+      "SELECT * FROM change_requests WHERE id = ?",
+      [params.changeRequestId],
+    );
+    if (!cr)
+      throw new AuthorizationError("Change request not found", "NOT_FOUND");
     assertProjectAccess(principal, cr.project_id);
+    await assertProjectOrganisation(db, principal, cr.project_id);
+    await ArchiveService.assertProjectNotArchived(db, cr.project_id);
+    if (cr.org_id !== principal.orgId)
+      throw new AuthorizationError("Record not found", "NOT_FOUND");
 
-    if (!["MANAGER", "ADMIN", "OWNER"].includes(principal.role)) {
-      throw new AuthorizationError("Only project managers can issue change estimates", "FORBIDDEN");
+    if (!hasCapability(principal, "MANAGER", cr.project_id)) {
+      throw new AuthorizationError(
+        "Only project managers can issue change estimates",
+        "FORBIDDEN",
+      );
     }
 
     if (!params.scopeSummary || params.scopeSummary.trim().length === 0) {
-      throw new AuthorizationError("Scope summary is required", "INVALID_INPUT");
+      throw new AuthorizationError(
+        "Scope summary is required",
+        "INVALID_INPUT",
+      );
     }
-    if (params.priceMinor === undefined || params.priceMinor < 0) {
+    if (!Number.isSafeInteger(params.priceMinor) || params.priceMinor < 0) {
       throw new AuthorizationError("Valid price is required", "INVALID_INPUT");
     }
 
     const taxMinor = params.taxMinor || 0;
-    const totalMinor = params.priceMinor + taxMinor;
-    const requiredPrework = params.requiredPreworkPaymentMinor !== undefined
-      ? params.requiredPreworkPaymentMinor
-      : totalMinor;
+    const totalMinor = money(params.priceMinor + money(taxMinor, true));
+    const requiredPrework =
+      params.requiredPreworkPaymentMinor !== undefined
+        ? params.requiredPreworkPaymentMinor
+        : totalMinor;
 
+    money(requiredPrework, true);
+    if (requiredPrework > totalMinor)
+      throw new AuthorizationError(
+        "Required payment exceeds estimate",
+        "INVALID_INPUT",
+      );
     const versionId = generateId("crv");
     const now = Date.now();
 
-    await execute(
-      db,
-      `INSERT INTO change_request_versions (
+    const plan = [
+      FinanceService.activeGuard(db, principal),
+      atomicGuard(
+        db,
+        "EXISTS(SELECT 1 FROM change_requests WHERE id=? AND org_id=? AND current_version_number=? AND status IN ('REQUESTED','ESTIMATING'))",
+        [cr.id, principal.orgId, cr.current_version_number],
+      ),
+    ];
+    plan.push(
+      db
+        .prepare(
+          `INSERT INTO change_request_versions (
         id, change_request_id, version_number, currency, scope_summary,
         exclusions, price_minor, tax_minor, total_minor,
         required_prework_payment_minor, schedule_impact_days, status,
         allocated_payment_minor, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ISSUED', 0, ?)`,
-      [
-        versionId,
-        params.changeRequestId,
-        cr.current_version_number,
-        params.currency || "INR",
-        params.scopeSummary.trim(),
-        params.exclusions || null,
-        params.priceMinor,
-        taxMinor,
-        totalMinor,
-        requiredPrework,
-        params.scheduleImpactDays || 0,
-        now,
-      ]
+        )
+        .bind(
+          ...[
+            versionId,
+            params.changeRequestId,
+            cr.current_version_number,
+            params.currency || "INR",
+            params.scopeSummary.trim(),
+            params.exclusions || null,
+            params.priceMinor,
+            taxMinor,
+            totalMinor,
+            requiredPrework,
+            params.scheduleImpactDays || 0,
+            now,
+          ],
+        ),
     );
 
-    await execute(
-      db,
-      "UPDATE change_requests SET status = 'AWAITING_CLIENT', updated_at = ? WHERE id = ?",
-      [now, params.changeRequestId]
+    plan.push(
+      db
+        .prepare(
+          "UPDATE change_requests SET status = 'AWAITING_CLIENT', updated_at = ? WHERE id = ?",
+        )
+        .bind(...[now, params.changeRequestId]),
     );
 
+    plan.push(
+      FinanceService.audit(db, principal, "CHANGE", cr.id, "ISSUEESTIMATE", {
+        versionNumber: cr.current_version_number,
+      }),
+    );
+    await FinanceService.commit(db, plan);
     return {
       versionId,
       versionNumber: cr.current_version_number,
@@ -238,58 +307,76 @@ export class ChangesService {
   }
 
   /**
-   * Main client estimate acceptance (AC-039).
+   * Main client estimate acceptance.
    * ONLY the main client can accept. Representatives and consultants are denied.
    */
   static async acceptEstimate(
     db: D1Database,
     principal: UserPrincipal,
-    params: AcceptEstimateParams
+    params: AcceptEstimateParams,
   ) {
-    const cr = await queryFirst<any>(db, "SELECT * FROM change_requests WHERE id = ?", [
-      params.changeRequestId,
-    ]);
-    if (!cr) throw new AuthorizationError("Change request not found", "NOT_FOUND");
+    const cr = await queryFirst<any>(
+      db,
+      "SELECT * FROM change_requests WHERE id = ?",
+      [params.changeRequestId],
+    );
+    if (!cr)
+      throw new AuthorizationError("Change request not found", "NOT_FOUND");
     assertProjectAccess(principal, cr.project_id);
+    await assertProjectOrganisation(db, principal, cr.project_id);
+    await ArchiveService.assertProjectNotArchived(db, cr.project_id);
+    if (cr.org_id !== principal.orgId)
+      throw new AuthorizationError("Record not found", "NOT_FOUND");
 
-    // Enforce MAIN_CLIENT authority (AC-039)
+    // Enforce MAIN_CLIENT authority
     if (!this.isMainClient(principal, cr.project_id)) {
       throw new AuthorizationError(
         "Only the main client has authority to accept additional cost and estimate versions",
-        "MAIN_CLIENT_ACCEPTANCE_REQUIRED"
+        "MAIN_CLIENT_ACCEPTANCE_REQUIRED",
       );
     }
 
     const version = await queryFirst<any>(
       db,
       "SELECT * FROM change_request_versions WHERE change_request_id = ? AND version_number = ?",
-      [params.changeRequestId, params.versionNumber]
+      [params.changeRequestId, params.versionNumber],
     );
 
-    if (!version) throw new AuthorizationError("Estimate version not found", "NOT_FOUND");
+    if (!version)
+      throw new AuthorizationError("Estimate version not found", "NOT_FOUND");
     if (version.status !== "ISSUED") {
-      throw new AuthorizationError("Can only accept issued estimate versions", "INVALID_STATE");
+      throw new AuthorizationError(
+        "Can only accept issued estimate versions",
+        "INVALID_STATE",
+      );
     }
 
+    if (cr.current_version_number !== params.versionNumber)
+      throw new AuthorizationError("Estimate version changed", "CONFLICT");
     const now = Date.now();
-    await execute(
-      db,
-      `UPDATE change_request_versions
-       SET status = 'ACCEPTED', accepted_by_user_id = ?, accepted_at = ?, acceptance_notes = ?
-       WHERE id = ?`,
-      [principal.id, now, params.notes || null, version.id]
-    );
-
     const nextStatus: ChangeRequestStatus =
       version.required_prework_payment_minor > 0
         ? "ACCEPTED_AWAITING_PAYMENT"
         : "PAYMENT_CONFIRMED";
-
-    await execute(
-      db,
-      "UPDATE change_requests SET status = ?, updated_at = ? WHERE id = ?",
-      [nextStatus, now, params.changeRequestId]
-    );
+    await FinanceService.commit(db, [
+      FinanceService.activeGuard(db, principal),
+      atomicGuard(
+        db,
+        "EXISTS(SELECT 1 FROM change_requests c JOIN change_request_versions v ON v.change_request_id=c.id AND v.version_number=c.current_version_number JOIN projects p ON p.id=c.project_id WHERE c.id=? AND c.current_version_number=? AND c.org_id=? AND p.main_client_user_id=? AND p.is_archived=0 AND v.status='ISSUED')",
+        [cr.id, params.versionNumber, principal.orgId, principal.id],
+      ),
+      db
+        .prepare(
+          "UPDATE change_request_versions SET status='ACCEPTED',accepted_by_user_id=?,accepted_at=?,acceptance_notes=? WHERE id=?",
+        )
+        .bind(principal.id, now, params.notes ?? null, version.id),
+      db
+        .prepare("UPDATE change_requests SET status=?,updated_at=? WHERE id=?")
+        .bind(nextStatus, now, cr.id),
+      FinanceService.audit(db, principal, "CHANGE", cr.id, "CHANGE_ACCEPTED", {
+        versionNumber: params.versionNumber,
+      }),
+    ]);
 
     return {
       changeRequestId: params.changeRequestId,
@@ -306,18 +393,25 @@ export class ChangesService {
   static async declineEstimate(
     db: D1Database,
     principal: UserPrincipal,
-    params: { changeRequestId: string; reason?: string }
+    params: { changeRequestId: string; reason?: string },
   ) {
-    const cr = await queryFirst<any>(db, "SELECT * FROM change_requests WHERE id = ?", [
-      params.changeRequestId,
-    ]);
-    if (!cr) throw new AuthorizationError("Change request not found", "NOT_FOUND");
+    const cr = await queryFirst<any>(
+      db,
+      "SELECT * FROM change_requests WHERE id = ?",
+      [params.changeRequestId],
+    );
+    if (!cr)
+      throw new AuthorizationError("Change request not found", "NOT_FOUND");
     assertProjectAccess(principal, cr.project_id);
+    await assertProjectOrganisation(db, principal, cr.project_id);
+    await ArchiveService.assertProjectNotArchived(db, cr.project_id);
+    if (cr.org_id !== principal.orgId)
+      throw new AuthorizationError("Record not found", "NOT_FOUND");
 
     if (!this.isMainClient(principal, cr.project_id)) {
       throw new AuthorizationError(
         "Only the main client can decline estimate proposals",
-        "MAIN_CLIENT_ACCEPTANCE_REQUIRED"
+        "MAIN_CLIENT_ACCEPTANCE_REQUIRED",
       );
     }
 
@@ -325,13 +419,13 @@ export class ChangesService {
     await execute(
       db,
       "UPDATE change_request_versions SET status = 'DECLINED' WHERE change_request_id = ? AND version_number = ?",
-      [params.changeRequestId, cr.current_version_number]
+      [params.changeRequestId, cr.current_version_number],
     );
 
     await execute(
       db,
       "UPDATE change_requests SET status = 'DECLINED', updated_at = ? WHERE id = ?",
-      [now, params.changeRequestId]
+      [now, params.changeRequestId],
     );
 
     return { id: params.changeRequestId, status: "DECLINED" };
@@ -343,13 +437,20 @@ export class ChangesService {
   static async addComment(
     db: D1Database,
     principal: UserPrincipal,
-    params: { changeRequestId: string; commentText: string }
+    params: { changeRequestId: string; commentText: string },
   ) {
-    const cr = await queryFirst<any>(db, "SELECT project_id FROM change_requests WHERE id = ?", [
-      params.changeRequestId,
-    ]);
-    if (!cr) throw new AuthorizationError("Change request not found", "NOT_FOUND");
+    const cr = await queryFirst<any>(
+      db,
+      "SELECT * FROM change_requests WHERE id = ?",
+      [params.changeRequestId],
+    );
+    if (!cr)
+      throw new AuthorizationError("Change request not found", "NOT_FOUND");
     assertProjectAccess(principal, cr.project_id);
+    await assertProjectOrganisation(db, principal, cr.project_id);
+    await ArchiveService.assertProjectNotArchived(db, cr.project_id);
+    if (cr.org_id !== principal.orgId)
+      throw new AuthorizationError("Record not found", "NOT_FOUND");
 
     if (!params.commentText || params.commentText.trim().length === 0) {
       throw new AuthorizationError("Comment text is required", "INVALID_INPUT");
@@ -362,127 +463,170 @@ export class ChangesService {
       db,
       `INSERT INTO change_request_comments (id, change_request_id, user_id, comment_text, created_at)
        VALUES (?, ?, ?, ?, ?)`,
-      [commentId, params.changeRequestId, principal.id, params.commentText.trim(), now]
+      [
+        commentId,
+        params.changeRequestId,
+        principal.id,
+        params.commentText.trim(),
+        now,
+      ],
     );
 
-    return { id: commentId, changeRequestId: params.changeRequestId, createdAt: now };
+    return {
+      id: commentId,
+      changeRequestId: params.changeRequestId,
+      createdAt: now,
+    };
   }
 
   /**
-   * Confirm and allocate payment for a change request (AC-040).
+   * Confirm and allocate payment for a change request.
    * ADMIN ONLY. Rejects non-admin attempts.
    * Allocates confirmed receipt funds toward the required pre-work payment.
    */
   static async confirmChangePayment(
     db: D1Database,
     principal: UserPrincipal,
-    params: ConfirmChangePaymentParams
+    params: ConfirmChangePaymentParams,
   ) {
-    if (principal.role !== "ADMIN") {
+    if (!hasCapability(principal, "ADMIN"))
       throw new AuthorizationError(
         "Only administrators can confirm and allocate payment for change requests",
-        "FORBIDDEN"
       );
-    }
-
-    const cr = await queryFirst<any>(db, "SELECT * FROM change_requests WHERE id = ?", [
-      params.changeRequestId,
-    ]);
-    if (!cr) throw new AuthorizationError("Change request not found", "NOT_FOUND");
-
-    const version = await queryFirst<any>(
+    const cr = await queryFirst<any>(
       db,
-      "SELECT * FROM change_request_versions WHERE change_request_id = ? AND version_number = ?",
-      [params.changeRequestId, cr.current_version_number]
+      "SELECT * FROM change_requests WHERE id=? AND org_id=?",
+      [params.changeRequestId, principal.orgId],
     );
-    if (!version) throw new AuthorizationError("Current estimate version not found", "NOT_FOUND");
-
-    const receipt = await queryFirst<any>(db, "SELECT * FROM receipts WHERE id = ?", [
-      params.receiptId,
-    ]);
-    if (!receipt) throw new AuthorizationError("Receipt not found", "NOT_FOUND");
-
-    if (receipt.status !== "CONFIRMED") {
+    if (!cr)
+      throw new AuthorizationError("Change request not found", "NOT_FOUND");
+    await ArchiveService.assertProjectNotArchived(db, cr.project_id);
+    const v = await queryFirst<any>(
+      db,
+      "SELECT * FROM change_request_versions WHERE change_request_id=? AND version_number=?",
+      [cr.id, cr.current_version_number],
+    );
+    const r = await queryFirst<any>(
+      db,
+      "SELECT * FROM receipts WHERE id=? AND org_id=?",
+      [params.receiptId, principal.orgId],
+    );
+    if (
+      !v ||
+      v.status !== "ACCEPTED" ||
+      !r ||
+      r.status !== "CONFIRMED" ||
+      r.project_id !== cr.project_id ||
+      r.currency !== v.currency
+    )
       throw new AuthorizationError(
-        "Cannot allocate unconfirmed receipt funds. Admin must confirm receipt first.",
-        "INVALID_STATE"
+        "Accepted estimate and matching confirmed receipt required",
+        "INVALID_STATE",
       );
-    }
-
-    const neededPayment = Math.max(0, version.required_prework_payment_minor - version.allocated_payment_minor);
-    const requestedAmount = params.amountMinor !== undefined ? params.amountMinor : neededPayment;
-
-    if (receipt.unallocated_minor < requestedAmount) {
+    const amount = money(
+      params.amountMinor ??
+        v.required_prework_payment_minor - v.allocated_payment_minor,
+    );
+    if (
+      amount > r.unallocated_minor ||
+      amount > v.required_prework_payment_minor - v.allocated_payment_minor
+    )
       throw new AuthorizationError(
-        `Allocation exceeds available unallocated receipt funds (available: ${receipt.unallocated_minor}, requested: ${requestedAmount})`,
-        "INVALID_INPUT"
+        "Allocation exceeds available funds or required estimate payment",
+        "INVALID_INPUT",
       );
+    const key =
+        "change-payment:" +
+        (params.idempotencyKey ?? `${r.id}:${v.id}:${amount}`),
+      input = JSON.stringify({ receipt: r.id, version: v.id, amount });
+    const old = await queryFirst<any>(
+      db,
+      "SELECT * FROM finance_operations WHERE org_id=? AND operation_key=?",
+      [principal.orgId, key],
+    );
+    if (old) {
+      if (old.fingerprint !== input)
+        throw new AuthorizationError("Operation key conflict", "CONFLICT");
+      return JSON.parse(old.result_json);
     }
-
-    const actualAllocation = requestedAmount;
-    const newAllocatedMinor = version.allocated_payment_minor + actualAllocation;
-    const now = Date.now();
-
-    // 1. Record receipt allocation
-    const allocId = generateId("rca");
-    await execute(
-      db,
-      `INSERT INTO receipt_allocations (
-        id, receipt_id, change_request_id, change_request_version_id,
-        amount_minor, allocated_by_user_id, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        allocId,
-        params.receiptId,
-        params.changeRequestId,
-        version.id,
-        actualAllocation,
-        principal.id,
-        now,
-      ]
-    );
-
-    // 2. Update receipt balances
-    await execute(
-      db,
-      `UPDATE receipts
-       SET allocated_minor = allocated_minor + ?, unallocated_minor = unallocated_minor - ?
-       WHERE id = ?`,
-      [actualAllocation, actualAllocation, params.receiptId]
-    );
-
-    // 3. Update version allocated payment
-    await execute(
-      db,
-      `UPDATE change_request_versions
-       SET allocated_payment_minor = ?, allocated_receipt_id = ?
-       WHERE id = ?`,
-      [newAllocatedMinor, params.receiptId, version.id]
-    );
-
-    // 4. Update change request status if fully satisfied
-    const isPaymentFullySatisfied = newAllocatedMinor >= version.required_prework_payment_minor;
-    if (isPaymentFullySatisfied) {
-      await execute(
-        db,
-        "UPDATE change_requests SET status = 'PAYMENT_CONFIRMED', updated_at = ? WHERE id = ?",
-        [now, params.changeRequestId]
-      );
-    }
-
-    return {
+    const id = generateId("alloc"),
+      total = v.allocated_payment_minor + amount,
+      full = total >= v.required_prework_payment_minor,
+      newStatus = full ? "PAYMENT_CONFIRMED" : "ACCEPTED_AWAITING_PAYMENT";
+    const result = {
       success: true,
-      changeRequestId: params.changeRequestId,
-      allocatedMinor: actualAllocation,
-      totalAllocatedMinor: newAllocatedMinor,
-      requiredMinor: version.required_prework_payment_minor,
-      isFullySatisfied: isPaymentFullySatisfied,
-      newStatus: isPaymentFullySatisfied ? "PAYMENT_CONFIRMED" : "ACCEPTED_AWAITING_PAYMENT",
+      changeRequestId: cr.id,
+      allocatedMinor: amount,
+      totalAllocatedMinor: total,
+      requiredMinor: v.required_prework_payment_minor,
+      isFullySatisfied: full,
+      newStatus,
     };
+    const ledger = FinanceService.journalStatements(db, {
+      orgId: principal.orgId,
+      projectId: cr.project_id,
+      sourceType: "CHANGE_PAYMENT_ALLOCATED",
+      sourceId: id,
+      entryDate: new Date().toISOString().slice(0, 10),
+      description: "Payment reserved for accepted additional work",
+      lines: [
+        {
+          accountCode: "2100_CUSTOMER_ADVANCES",
+          debitMinor: amount,
+          creditMinor: 0,
+        },
+        {
+          accountCode: "2110_CHANGE_WORK_ADVANCES",
+          debitMinor: 0,
+          creditMinor: amount,
+        },
+      ],
+    });
+    await FinanceService.commit(db, [
+      FinanceService.activeGuard(db, principal),
+      atomicGuard(
+        db,
+        "EXISTS(SELECT 1 FROM receipts r JOIN change_requests c ON c.project_id=r.project_id AND c.org_id=r.org_id JOIN change_request_versions v ON v.change_request_id=c.id AND v.version_number=c.current_version_number WHERE r.id=? AND v.id=? AND v.status='ACCEPTED' AND r.status='CONFIRMED' AND r.currency=v.currency AND r.unallocated_minor=? AND r.unallocated_minor>=? AND v.allocated_payment_minor=?)",
+        [r.id, v.id, r.unallocated_minor, amount, v.allocated_payment_minor],
+      ),
+      db
+        .prepare(
+          "INSERT INTO receipt_allocations(id,receipt_id,change_request_id,change_request_version_id,amount_minor,allocated_by_user_id,created_at) VALUES (?,?,?,?,?,?,?)",
+        )
+        .bind(id, r.id, cr.id, v.id, amount, principal.id, Date.now()),
+      db
+        .prepare(
+          "UPDATE receipts SET allocated_minor=allocated_minor+?,unallocated_minor=unallocated_minor-? WHERE id=?",
+        )
+        .bind(amount, amount, r.id),
+      db
+        .prepare(
+          "UPDATE change_request_versions SET allocated_payment_minor=allocated_payment_minor+?,allocated_receipt_id=? WHERE id=?",
+        )
+        .bind(amount, r.id, v.id),
+      db
+        .prepare("UPDATE change_requests SET status=?,updated_at=? WHERE id=?")
+        .bind(newStatus, Date.now(), cr.id),
+      ...ledger.statements,
+      FinanceService.audit(
+        db,
+        principal,
+        "CHANGE",
+        cr.id,
+        "CHANGE_PAYMENT_ALLOCATED",
+        { version: v.version_number, amount },
+      ),
+      db
+        .prepare(
+          "INSERT INTO finance_operations(org_id,operation_key,fingerprint,result_json,created_at) VALUES (?,?,?,?,?)",
+        )
+        .bind(principal.orgId, key, input, JSON.stringify(result), Date.now()),
+    ]);
+    return result;
   }
 
   /**
-   * Authorize change request for work execution (AC-040).
+   * Authorize change request for work execution.
    * Guarded by THREE independent conditions:
    * 1. Main-client estimate acceptance.
    * 2. Administrator-confirmed required payment.
@@ -491,59 +635,85 @@ export class ChangesService {
   static async authorizeChangeWork(
     db: D1Database,
     principal: UserPrincipal,
-    params: { changeRequestId: string; notes?: string }
+    params: { changeRequestId: string; notes?: string },
   ) {
-    const cr = await queryFirst<any>(db, "SELECT * FROM change_requests WHERE id = ?", [
-      params.changeRequestId,
-    ]);
-    if (!cr) throw new AuthorizationError("Change request not found", "NOT_FOUND");
+    const cr = await queryFirst<any>(
+      db,
+      "SELECT * FROM change_requests WHERE id = ?",
+      [params.changeRequestId],
+    );
+    if (!cr)
+      throw new AuthorizationError("Change request not found", "NOT_FOUND");
     assertProjectAccess(principal, cr.project_id);
+    await assertProjectOrganisation(db, principal, cr.project_id);
+    await ArchiveService.assertProjectNotArchived(db, cr.project_id);
+    if (cr.org_id !== principal.orgId)
+      throw new AuthorizationError("Record not found", "NOT_FOUND");
 
-    if (!["MANAGER", "ADMIN", "OWNER"].includes(principal.role)) {
+    if (!hasCapability(principal, "MANAGER", cr.project_id)) {
       throw new AuthorizationError(
         "Only project managers can authorize additional change work",
-        "FORBIDDEN"
+        "FORBIDDEN",
       );
     }
 
     const version = await queryFirst<any>(
       db,
       "SELECT * FROM change_request_versions WHERE change_request_id = ? AND version_number = ?",
-      [params.changeRequestId, cr.current_version_number]
+      [params.changeRequestId, cr.current_version_number],
     );
-    if (!version) throw new AuthorizationError("Current estimate version not found", "NOT_FOUND");
+    if (!version)
+      throw new AuthorizationError(
+        "Current estimate version not found",
+        "NOT_FOUND",
+      );
 
     // Condition 1: Main-client acceptance check
     if (version.status !== "ACCEPTED" || !version.accepted_by_user_id) {
       throw new AuthorizationError(
         "Change request requires main client estimate acceptance before authorization",
-        "ESTIMATE_NOT_ACCEPTED"
+        "ESTIMATE_NOT_ACCEPTED",
       );
     }
 
     // Condition 2: Admin-confirmed payment check
-    if (version.allocated_payment_minor < version.required_prework_payment_minor) {
+    if (
+      version.allocated_payment_minor < version.required_prework_payment_minor
+    ) {
       throw new AuthorizationError(
         `Change request requires administrator-confirmed payment allocation before authorization (required: ${version.required_prework_payment_minor}, allocated: ${version.allocated_payment_minor})`,
-        "PAYMENT_NOT_CONFIRMED"
+        "PAYMENT_NOT_CONFIRMED",
       );
     }
 
-    // Condition 3: Manager authorization
+    // The same accepted version and payment gate are checked inside the write transaction.
     const now = Date.now();
-    await execute(
-      db,
-      `UPDATE change_request_versions
-       SET authorized_by_user_id = ?, authorized_at = ?
-       WHERE id = ?`,
-      [principal.id, now, version.id]
-    );
-
-    await execute(
-      db,
-      "UPDATE change_requests SET status = 'AUTHORIZED', updated_at = ? WHERE id = ?",
-      [now, params.changeRequestId]
-    );
+    await FinanceService.commit(db, [
+      FinanceService.activeGuard(db, principal),
+      atomicGuard(
+        db,
+        "EXISTS(SELECT 1 FROM change_requests c JOIN change_request_versions v ON v.change_request_id=c.id AND v.version_number=c.current_version_number JOIN projects p ON p.id=c.project_id WHERE c.id=? AND c.org_id=? AND c.current_version_number=? AND c.status IN ('PAYMENT_CONFIRMED','ACCEPTED_AWAITING_PAYMENT') AND p.is_archived=0 AND v.id=? AND v.status='ACCEPTED' AND v.accepted_by_user_id IS NOT NULL AND v.allocated_payment_minor>=v.required_prework_payment_minor)",
+        [cr.id, principal.orgId, cr.current_version_number, version.id],
+      ),
+      db
+        .prepare(
+          "UPDATE change_request_versions SET authorized_by_user_id=?,authorized_at=? WHERE id=?",
+        )
+        .bind(principal.id, now, version.id),
+      db
+        .prepare(
+          "UPDATE change_requests SET status='AUTHORIZED',updated_at=? WHERE id=?",
+        )
+        .bind(now, cr.id),
+      FinanceService.audit(
+        db,
+        principal,
+        "CHANGE",
+        cr.id,
+        "CHANGE_AUTHORIZED",
+        { version: cr.current_version_number },
+      ),
+    ]);
 
     return {
       changeRequestId: params.changeRequestId,
@@ -555,39 +725,59 @@ export class ChangesService {
   }
 
   /**
-   * Revise estimate scope, price, or terms (AC-041).
+   * Revise estimate scope, price, or terms.
    * Supersedes prior estimate version and INVALIDATES previous acceptance and authorization.
    * Requires fresh main-client acceptance, re-evaluated payment, and manager authorization.
    */
   static async reviseEstimate(
     db: D1Database,
     principal: UserPrincipal,
-    params: ReviseEstimateParams
+    params: ReviseEstimateParams,
   ) {
-    const cr = await queryFirst<any>(db, "SELECT * FROM change_requests WHERE id = ?", [
-      params.changeRequestId,
-    ]);
-    if (!cr) throw new AuthorizationError("Change request not found", "NOT_FOUND");
+    const cr = await queryFirst<any>(
+      db,
+      "SELECT * FROM change_requests WHERE id = ?",
+      [params.changeRequestId],
+    );
+    if (!cr)
+      throw new AuthorizationError("Change request not found", "NOT_FOUND");
     assertProjectAccess(principal, cr.project_id);
+    await assertProjectOrganisation(db, principal, cr.project_id);
+    await ArchiveService.assertProjectNotArchived(db, cr.project_id);
+    if (cr.org_id !== principal.orgId)
+      throw new AuthorizationError("Record not found", "NOT_FOUND");
 
-    if (!["MANAGER", "ADMIN", "OWNER"].includes(principal.role)) {
-      throw new AuthorizationError("Only project managers can revise change estimates", "FORBIDDEN");
+    if (!hasCapability(principal, "MANAGER", cr.project_id)) {
+      throw new AuthorizationError(
+        "Only project managers can revise change estimates",
+        "FORBIDDEN",
+      );
     }
 
     const currentVersion = await queryFirst<any>(
       db,
       "SELECT * FROM change_request_versions WHERE change_request_id = ? AND version_number = ?",
-      [params.changeRequestId, cr.current_version_number]
+      [params.changeRequestId, cr.current_version_number],
     );
 
     const now = Date.now();
 
     // 1. Mark existing version as SUPERSEDED (invalidates prior acceptance & authorization)
-    if (currentVersion) {
-      await execute(
+    const plan = [
+      FinanceService.activeGuard(db, principal),
+      atomicGuard(
         db,
-        "UPDATE change_request_versions SET status = 'SUPERSEDED' WHERE id = ?",
-        [currentVersion.id]
+        "EXISTS(SELECT 1 FROM change_requests WHERE id=? AND org_id=? AND current_version_number=? AND status IN ('AWAITING_CLIENT','ACCEPTED_AWAITING_PAYMENT','PAYMENT_CONFIRMED','AUTHORIZED'))",
+        [cr.id, principal.orgId, cr.current_version_number],
+      ),
+    ];
+    if (currentVersion) {
+      plan.push(
+        db
+          .prepare(
+            "UPDATE change_request_versions SET status = 'SUPERSEDED' WHERE id = ?",
+          )
+          .bind(...[currentVersion.id]),
       );
     }
 
@@ -595,43 +785,58 @@ export class ChangesService {
     const nextVersionNumber = cr.current_version_number + 1;
     const newVersionId = generateId("crv");
     const taxMinor = params.taxMinor || 0;
-    const totalMinor = params.priceMinor + taxMinor;
-    const requiredPrework = params.requiredPreworkPaymentMinor !== undefined
-      ? params.requiredPreworkPaymentMinor
-      : totalMinor;
-
-    await execute(
-      db,
-      `INSERT INTO change_request_versions (
+    const totalMinor = money(params.priceMinor + money(taxMinor, true));
+    const requiredPrework =
+      params.requiredPreworkPaymentMinor !== undefined
+        ? params.requiredPreworkPaymentMinor
+        : totalMinor;
+    money(requiredPrework, true);
+    if (requiredPrework > totalMinor)
+      throw new AuthorizationError("Payment exceeds estimate", "INVALID_INPUT");
+    plan.push(
+      db
+        .prepare(
+          `INSERT INTO change_request_versions (
         id, change_request_id, version_number, currency, scope_summary,
         exclusions, price_minor, tax_minor, total_minor,
         required_prework_payment_minor, schedule_impact_days, status,
         allocated_payment_minor, created_at
       ) VALUES (?, ?, ?, 'INR', ?, ?, ?, ?, ?, ?, ?, 'ISSUED', 0, ?)`,
-      [
-        newVersionId,
-        params.changeRequestId,
-        nextVersionNumber,
-        params.scopeSummary.trim(),
-        params.exclusions || null,
-        params.priceMinor,
-        taxMinor,
-        totalMinor,
-        requiredPrework,
-        params.scheduleImpactDays || 0,
-        now,
-      ]
+        )
+        .bind(
+          ...[
+            newVersionId,
+            params.changeRequestId,
+            nextVersionNumber,
+            params.scopeSummary.trim(),
+            params.exclusions || null,
+            params.priceMinor,
+            taxMinor,
+            totalMinor,
+            requiredPrework,
+            params.scheduleImpactDays || 0,
+            now,
+          ],
+        ),
     );
 
     // 3. Reset change request status to AWAITING_CLIENT
-    await execute(
-      db,
-      `UPDATE change_requests
+    plan.push(
+      db
+        .prepare(
+          `UPDATE change_requests
        SET current_version_number = ?, status = 'AWAITING_CLIENT', updated_at = ?
        WHERE id = ?`,
-      [nextVersionNumber, now, params.changeRequestId]
+        )
+        .bind(...[nextVersionNumber, now, params.changeRequestId]),
     );
 
+    plan.push(
+      FinanceService.audit(db, principal, "CHANGE", cr.id, "REVISEESTIMATE", {
+        versionNumber: cr.current_version_number,
+      }),
+    );
+    await FinanceService.commit(db, plan);
     return {
       changeRequestId: params.changeRequestId,
       versionNumber: nextVersionNumber,
@@ -647,16 +852,30 @@ export class ChangesService {
   static async startChangeWork(
     db: D1Database,
     principal: UserPrincipal,
-    changeRequestId: string
+    changeRequestId: string,
   ) {
-    const cr = await queryFirst<any>(db, "SELECT * FROM change_requests WHERE id = ?", [changeRequestId]);
-    if (!cr) throw new AuthorizationError("Change request not found", "NOT_FOUND");
+    const cr = await queryFirst<any>(
+      db,
+      "SELECT * FROM change_requests WHERE id = ?",
+      [changeRequestId],
+    );
+    if (!cr)
+      throw new AuthorizationError("Change request not found", "NOT_FOUND");
     assertProjectAccess(principal, cr.project_id);
+    await assertProjectOrganisation(db, principal, cr.project_id);
+    await ArchiveService.assertProjectNotArchived(db, cr.project_id);
+    if (cr.org_id !== principal.orgId)
+      throw new AuthorizationError("Record not found", "NOT_FOUND");
 
+    if (
+      !hasCapability(principal, "MANAGER", cr.project_id) &&
+      !hasCapability(principal, "TEAM_MEMBER", cr.project_id)
+    )
+      throw new AuthorizationError("Work grant required");
     if (cr.status !== "AUTHORIZED") {
       throw new AuthorizationError(
         "Cannot start work before change request is fully authorized",
-        "CHANGE_REQUEST_NOT_AUTHORIZED"
+        "CHANGE_REQUEST_NOT_AUTHORIZED",
       );
     }
 
@@ -664,7 +883,7 @@ export class ChangesService {
     await execute(
       db,
       "UPDATE change_requests SET status = 'IN_PROGRESS', updated_at = ? WHERE id = ?",
-      [now, changeRequestId]
+      [now, changeRequestId],
     );
 
     return { id: changeRequestId, status: "IN_PROGRESS" };
@@ -676,21 +895,33 @@ export class ChangesService {
   static async completeChangeWork(
     db: D1Database,
     principal: UserPrincipal,
-    changeRequestId: string
+    changeRequestId: string,
   ) {
-    const cr = await queryFirst<any>(db, "SELECT * FROM change_requests WHERE id = ?", [changeRequestId]);
-    if (!cr) throw new AuthorizationError("Change request not found", "NOT_FOUND");
+    const cr = await queryFirst<any>(
+      db,
+      "SELECT * FROM change_requests WHERE id = ?",
+      [changeRequestId],
+    );
+    if (!cr)
+      throw new AuthorizationError("Change request not found", "NOT_FOUND");
     assertProjectAccess(principal, cr.project_id);
+    await assertProjectOrganisation(db, principal, cr.project_id);
+    await ArchiveService.assertProjectNotArchived(db, cr.project_id);
+    if (cr.org_id !== principal.orgId)
+      throw new AuthorizationError("Record not found", "NOT_FOUND");
 
-    if (!["MANAGER", "ADMIN", "OWNER"].includes(principal.role)) {
-      throw new AuthorizationError("Only project managers can complete change requests", "FORBIDDEN");
+    if (!hasCapability(principal, "MANAGER", cr.project_id)) {
+      throw new AuthorizationError(
+        "Only project managers can complete change requests",
+        "FORBIDDEN",
+      );
     }
 
     const now = Date.now();
     await execute(
       db,
       "UPDATE change_requests SET status = 'COMPLETED', updated_at = ? WHERE id = ?",
-      [now, changeRequestId]
+      [now, changeRequestId],
     );
 
     return { id: changeRequestId, status: "COMPLETED" };
@@ -702,7 +933,7 @@ export class ChangesService {
   static async getChangeRequest(
     db: D1Database,
     principal: UserPrincipal,
-    changeRequestId: string
+    changeRequestId: string,
   ) {
     const cr = await queryFirst<any>(
       db,
@@ -710,10 +941,14 @@ export class ChangesService {
        FROM change_requests cr
        JOIN users u ON cr.requested_by_user_id = u.id
        WHERE cr.id = ?`,
-      [changeRequestId]
+      [changeRequestId],
     );
-    if (!cr) throw new AuthorizationError("Change request not found", "NOT_FOUND");
+    if (!cr)
+      throw new AuthorizationError("Change request not found", "NOT_FOUND");
     assertProjectAccess(principal, cr.project_id);
+    await assertProjectOrganisation(db, principal, cr.project_id);
+    if (cr.org_id !== principal.orgId)
+      throw new AuthorizationError("Record not found", "NOT_FOUND");
 
     const versions = await query<any>(
       db,
@@ -723,7 +958,7 @@ export class ChangesService {
        LEFT JOIN users m ON crv.authorized_by_user_id = m.id
        WHERE crv.change_request_id = ?
        ORDER BY crv.version_number DESC`,
-      [changeRequestId]
+      [changeRequestId],
     );
 
     const comments = await query<any>(
@@ -733,17 +968,24 @@ export class ChangesService {
        JOIN users u ON c.user_id = u.id
        WHERE c.change_request_id = ?
        ORDER BY c.created_at ASC`,
-      [changeRequestId]
+      [changeRequestId],
     );
 
-    const currentVersion = versions.find((v) => v.version_number === cr.current_version_number);
+    const currentVersion = versions.find(
+      (v) => v.version_number === cr.current_version_number,
+    );
 
     // Readiness evaluation (SCR-14: three independent conditions)
-    const isAccepted = currentVersion?.status === "ACCEPTED" || currentVersion?.status === "SUPERSEDED"; // checked exact version
+    const isAccepted =
+      currentVersion?.status === "ACCEPTED" ||
+      currentVersion?.status === "SUPERSEDED"; // checked exact version
     const isPaymentSatisfied =
       currentVersion !== undefined &&
-      currentVersion.allocated_payment_minor >= currentVersion.required_prework_payment_minor;
-    const isAuthorized = currentVersion?.authorized_by_user_id !== null && currentVersion?.authorized_by_user_id !== undefined;
+      currentVersion.allocated_payment_minor >=
+        currentVersion.required_prework_payment_minor;
+    const isAuthorized =
+      currentVersion?.authorized_by_user_id !== null &&
+      currentVersion?.authorized_by_user_id !== undefined;
 
     return {
       ...cr,
@@ -751,10 +993,15 @@ export class ChangesService {
       comments,
       currentVersion,
       readiness: {
-        condition1_estimateAccepted: Boolean(currentVersion?.accepted_by_user_id),
+        condition1_estimateAccepted: Boolean(
+          currentVersion?.accepted_by_user_id,
+        ),
         condition2_paymentConfirmed: isPaymentSatisfied,
         condition3_managerAuthorized: isAuthorized,
-        readyToStart: Boolean(currentVersion?.accepted_by_user_id) && isPaymentSatisfied && isAuthorized,
+        readyToStart:
+          Boolean(currentVersion?.accepted_by_user_id) &&
+          isPaymentSatisfied &&
+          isAuthorized,
       },
     };
   }
@@ -765,9 +1012,10 @@ export class ChangesService {
   static async listChangeRequests(
     db: D1Database,
     principal: UserPrincipal,
-    projectId: string
+    projectId: string,
   ) {
     assertProjectAccess(principal, projectId);
+    await assertProjectOrganisation(db, principal, projectId);
 
     const requests = await query<any>(
       db,
@@ -776,7 +1024,7 @@ export class ChangesService {
        JOIN users u ON cr.requested_by_user_id = u.id
        WHERE cr.project_id = ?
        ORDER BY cr.created_at DESC`,
-      [projectId]
+      [projectId],
     );
 
     return requests;

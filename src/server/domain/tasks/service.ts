@@ -1,11 +1,18 @@
+import { businessDateISO } from "@/shared/config";
+import { isBusinessDate } from "@/shared/validation";
+import { assertProjectOrganisation } from "@/server/auth/policy";
 /**
  * Project Tasks, Deadlines, Completion History, and Internal Evidence Domain Service.
  * Enforces manager deadline authority, staff creation/completion, manager reopening,
  * optimistic concurrency, and strict internal confidentiality (clients/consultants denied).
  */
 
-import { UserPrincipal } from "@/server/auth/principal";
-import { assertProjectAccess, AuthorizationError, canReadInternalNotes } from "@/server/auth/policy";
+import { UserPrincipal, hasCapability } from "@/server/auth/principal";
+import {
+  assertProjectAccess,
+  AuthorizationError,
+  canReadInternalNotes,
+} from "@/server/auth/policy";
 import { query, queryFirst, execute } from "@/server/db";
 import { recordAuditEvent } from "../identity/service";
 import { ArchiveService } from "../archive/service";
@@ -52,7 +59,11 @@ export interface CompleteTaskInput {
 
 export interface ReopenTaskInput {
   reason: string;
-  category: "CORRECTION_DEFECT" | "CLIENT_SCOPE_CHANGE" | "EXTERNAL_DEPENDENCY" | "ADMINISTRATIVE";
+  category:
+    | "CORRECTION_DEFECT"
+    | "CLIENT_SCOPE_CHANGE"
+    | "EXTERNAL_DEPENDENCY"
+    | "ADMINISTRATIVE";
   newDueDate?: string;
   expectedRevision?: number;
 }
@@ -76,7 +87,7 @@ export function assertTaskAccess(actor: UserPrincipal, projectId: string) {
   if (!canReadInternalNotes(actor, projectId)) {
     throw new AuthorizationError(
       "Tasks and completion history are internal practice records.",
-      "FORBIDDEN"
+      "FORBIDDEN",
     );
   }
 }
@@ -84,11 +95,18 @@ export function assertTaskAccess(actor: UserPrincipal, projectId: string) {
 /**
  * Check if a task is overdue based on current date.
  */
-export function computeIsOverdue(task: { status: string; effective_due_date: string | null }): boolean {
-  if (task.status === "COMPLETED" || task.status === "CANCELLED" || !task.effective_due_date) {
+export function computeIsOverdue(task: {
+  status: string;
+  effective_due_date: string | null;
+}): boolean {
+  if (
+    task.status === "COMPLETED" ||
+    task.status === "CANCELLED" ||
+    !task.effective_due_date
+  ) {
     return false;
   }
-  const today = new Date().toISOString().split("T")[0];
+  const today = businessDateISO();
   return task.effective_due_date < today;
 }
 
@@ -99,54 +117,73 @@ export function computeIsOverdue(task: { status: string; effective_due_date: str
 export async function createTask(
   actor: UserPrincipal,
   input: CreateTaskInput,
-  db: D1Database
+  db: D1Database,
 ) {
+  const plan: D1PreparedStatement[] = [];
+
   assertTaskAccess(actor, input.projectId);
+  await assertProjectOrganisation(db, actor, input.projectId);
   await ArchiveService.assertProjectNotArchived(db, input.projectId);
 
   if (!input.title || input.title.trim().length === 0) {
     throw new AuthorizationError("Task title is required.", "INVALID_INPUT");
   }
 
+  if (input.proposedDueDate && !isBusinessDate(input.proposedDueDate))
+    throw new AuthorizationError("Choose a valid deadline.", "INVALID_INPUT");
   const taskId = `tsk_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
   const now = Date.now();
 
-  const isManagerOrAdmin = actor.role === "MANAGER" || actor.role === "ADMIN" || actor.role === "OWNER";
-  const initialStatus: TaskStatus = isManagerOrAdmin && input.proposedAssigneeId ? "TODO" : "PENDING_ASSIGNMENT";
-  const officialAssignee = isManagerOrAdmin ? input.proposedAssigneeId || null : null;
-  const officialDueDate = isManagerOrAdmin ? input.proposedDueDate || null : null;
+  const isManagerOrAdmin = hasCapability(actor, "MANAGER", input.projectId);
+  const initialStatus: TaskStatus =
+    isManagerOrAdmin && input.proposedAssigneeId
+      ? "TODO"
+      : "PENDING_ASSIGNMENT";
+  const officialAssignee = isManagerOrAdmin
+    ? input.proposedAssigneeId || null
+    : null;
+  const officialDueDate = isManagerOrAdmin
+    ? input.proposedDueDate || null
+    : null;
 
-  await execute(
-    db,
-    `INSERT INTO tasks (id, org_id, project_id, stage_id, change_request_id, snag_id, title, description, priority, status, creator_user_id, assignee_user_id, original_due_date, effective_due_date, reopen_count, revision, created_at)
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO tasks (id, org_id, project_id, stage_id, change_request_id, snag_id, title, description, priority, status, creator_user_id, assignee_user_id, original_due_date, effective_due_date, reopen_count, revision, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, ?)`,
-    [
-      taskId,
-      actor.orgId,
-      input.projectId,
-      input.stageId || null,
-      input.changeRequestId || null,
-      input.snagId || null,
-      input.title.trim(),
-      input.description || null,
-      input.priority || "MEDIUM",
-      initialStatus,
-      actor.id,
-      officialAssignee,
-      officialDueDate,
-      officialDueDate,
-      now,
-    ]
+      )
+      .bind(
+        ...[
+          taskId,
+          actor.orgId,
+          input.projectId,
+          input.stageId || null,
+          input.changeRequestId || null,
+          input.snagId || null,
+          input.title.trim(),
+          input.description || null,
+          input.priority || "MEDIUM",
+          initialStatus,
+          actor.id,
+          officialAssignee,
+          officialDueDate,
+          officialDueDate,
+          now,
+        ],
+      ),
   );
 
   // Record creation event
-  await execute(
-    db,
-    `INSERT INTO task_events (id, task_id, actor_id, event_type, new_state, reason, created_at)
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO task_events (id, task_id, actor_id, event_type, new_state, reason, created_at)
      VALUES (?, ?, ?, 'TASK_CREATED', ?, 'Task proposed by practice member', ?)`,
-    [createEventId(), taskId, actor.id, initialStatus, now]
+      )
+      .bind(...[createEventId(), taskId, actor.id, initialStatus, now]),
   );
 
+  await db.batch(plan);
   return { id: taskId, status: initialStatus };
 }
 
@@ -158,60 +195,113 @@ export async function assignTask(
   actor: UserPrincipal,
   taskId: string,
   input: AssignTaskInput,
-  db: D1Database
+  db: D1Database,
 ) {
-  const task = await queryFirst<any>(db, "SELECT * FROM tasks WHERE id = ?", [taskId]);
+  const plan: D1PreparedStatement[] = [];
+
+  const task = await queryFirst<any>(db, "SELECT * FROM tasks WHERE id = ?", [
+    taskId,
+  ]);
   if (!task) throw new AuthorizationError("Task not found.", "NOT_FOUND");
 
   assertTaskAccess(actor, task.project_id);
+  await assertProjectOrganisation(db, actor, task.project_id);
+  await ArchiveService.assertProjectNotArchived(db, task.project_id);
+  if (task.org_id !== actor.orgId)
+    throw new AuthorizationError("Task not found.", "NOT_FOUND");
 
-  if (actor.role !== "MANAGER" && actor.role !== "ADMIN" && actor.role !== "OWNER") {
-    throw new AuthorizationError("Only project managers can assign tasks or set official deadlines.", "FORBIDDEN");
+  if (!hasCapability(actor, "MANAGER", task.project_id)) {
+    throw new AuthorizationError(
+      "Only project managers can assign tasks or set official deadlines.",
+      "FORBIDDEN",
+    );
   }
 
   // Concurrency check
   if (input.expectedRevision && task.revision !== input.expectedRevision) {
-    throw new AuthorizationError("Task was modified concurrently. Refresh and retry.", "CONCURRENCY_CONFLICT");
+    throw new AuthorizationError(
+      "Task was modified concurrently. Refresh and retry.",
+      "CONCURRENCY_CONFLICT",
+    );
   }
 
   // Validate assignee project membership
   const membership = await queryFirst(
     db,
-    "SELECT id FROM project_memberships WHERE project_id = ? AND user_id = ? AND is_active = 1",
-    [task.project_id, input.assigneeUserId]
+    "SELECT m.id FROM project_memberships m JOIN users u ON u.id=m.user_id JOIN organization_memberships o ON o.user_id=u.id AND o.org_id=m.org_id WHERE m.project_id=? AND m.user_id=? AND m.is_active=1 AND m.project_role IN ('STAFF','TEAM_MEMBER','MANAGER') AND u.status='ACTIVE' AND o.is_active=1",
+    [task.project_id, input.assigneeUserId],
   );
   if (!membership) {
-    throw new AuthorizationError("Assignee is not an active member of this project.", "INVALID_ASSIGNEE");
+    throw new AuthorizationError(
+      "Assignee is not an active member of this project.",
+      "INVALID_ASSIGNEE",
+    );
   }
 
   const now = Date.now();
+  if (!isBusinessDate(input.dueDate))
+    throw new AuthorizationError("Choose a valid deadline.", "INVALID_INPUT");
   const originalDueDate = task.original_due_date || input.dueDate;
-  const newStatus: TaskStatus = task.status === "PENDING_ASSIGNMENT" ? "TODO" : task.status;
+  const newStatus: TaskStatus =
+    task.status === "PENDING_ASSIGNMENT" ? "TODO" : task.status;
 
-  await execute(
-    db,
-    `UPDATE tasks
+  const guardId = crypto.randomUUID();
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO command_assertions(id,ok) SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM tasks t JOIN projects p ON p.id=t.project_id WHERE t.id=? AND t.org_id=? AND t.revision=? AND p.is_archived=0) THEN 1 ELSE 0 END`,
+      )
+      .bind(guardId, task.id, actor.orgId, task.revision),
+  );
+  plan.push(
+    db
+      .prepare(
+        `UPDATE tasks
      SET assignee_user_id = ?, original_due_date = ?, effective_due_date = ?, priority = COALESCE(?, priority), status = ?, revision = revision + 1
      WHERE id = ?`,
-    [input.assigneeUserId, originalDueDate, input.dueDate, input.priority || null, newStatus, taskId]
+      )
+      .bind(
+        ...[
+          input.assigneeUserId,
+          originalDueDate,
+          input.dueDate,
+          input.priority || null,
+          newStatus,
+          taskId,
+        ],
+      ),
   );
 
-  await execute(
-    db,
-    `INSERT INTO task_events (id, task_id, actor_id, event_type, old_state, new_state, reason, created_at)
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO task_events (id, task_id, actor_id, event_type, old_state, new_state, reason, created_at)
      VALUES (?, ?, ?, 'TASK_ASSIGNED', ?, ?, ?, ?)`,
-    [
-      createEventId(),
-      taskId,
-      actor.id,
-      task.assignee_user_id || "UNASSIGNED",
-      input.assigneeUserId,
-      input.reason || `Assigned with due date ${input.dueDate}`,
-      now,
-    ]
+      )
+      .bind(
+        ...[
+          createEventId(),
+          taskId,
+          actor.id,
+          task.assignee_user_id || "UNASSIGNED",
+          input.assigneeUserId,
+          input.reason || `Assigned with due date ${input.dueDate}`,
+          now,
+        ],
+      ),
   );
 
-  return { success: true, taskId, assigneeId: input.assigneeUserId, dueDate: input.dueDate, status: newStatus };
+  plan.push(
+    db.prepare("DELETE FROM command_assertions WHERE id=?").bind(guardId),
+  );
+  await db.batch(plan);
+  return {
+    success: true,
+    taskId,
+    assigneeId: input.assigneeUserId,
+    dueDate: input.dueDate,
+    status: newStatus,
+  };
 }
 
 /**
@@ -222,86 +312,194 @@ export async function changeTaskDeadline(
   actor: UserPrincipal,
   taskId: string,
   input: ChangeDeadlineInput,
-  db: D1Database
+  db: D1Database,
 ) {
-  const task = await queryFirst<any>(db, "SELECT * FROM tasks WHERE id = ?", [taskId]);
+  const plan: D1PreparedStatement[] = [];
+
+  const task = await queryFirst<any>(db, "SELECT * FROM tasks WHERE id = ?", [
+    taskId,
+  ]);
   if (!task) throw new AuthorizationError("Task not found.", "NOT_FOUND");
 
   assertTaskAccess(actor, task.project_id);
+  await assertProjectOrganisation(db, actor, task.project_id);
+  await ArchiveService.assertProjectNotArchived(db, task.project_id);
+  if (task.org_id !== actor.orgId)
+    throw new AuthorizationError("Task not found.", "NOT_FOUND");
+  if (!input.reason?.trim())
+    throw new AuthorizationError("A reason is required.", "INVALID_INPUT");
 
-  if (actor.role !== "MANAGER" && actor.role !== "ADMIN" && actor.role !== "OWNER") {
-    throw new AuthorizationError("Only project managers can change official task deadlines.", "FORBIDDEN");
+  if (!hasCapability(actor, "MANAGER", task.project_id)) {
+    throw new AuthorizationError(
+      "Only project managers can change official task deadlines.",
+      "FORBIDDEN",
+    );
   }
 
   if (input.expectedRevision && task.revision !== input.expectedRevision) {
-    throw new AuthorizationError("Task was modified concurrently. Refresh and retry.", "CONCURRENCY_CONFLICT");
+    throw new AuthorizationError(
+      "Task was modified concurrently. Refresh and retry.",
+      "CONCURRENCY_CONFLICT",
+    );
   }
 
+  if (!isBusinessDate(input.dueDate))
+    throw new AuthorizationError("Choose a valid deadline.", "INVALID_INPUT");
   const now = Date.now();
-  await execute(
-    db,
-    "UPDATE tasks SET effective_due_date = ?, revision = revision + 1 WHERE id = ?",
-    [input.dueDate, taskId]
+  const guardId = crypto.randomUUID();
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO command_assertions(id,ok) SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM tasks t JOIN projects p ON p.id=t.project_id WHERE t.id=? AND t.org_id=? AND t.revision=? AND p.is_archived=0) THEN 1 ELSE 0 END`,
+      )
+      .bind(guardId, task.id, actor.orgId, task.revision),
+  );
+  plan.push(
+    db
+      .prepare(
+        "UPDATE tasks SET effective_due_date = ?, revision = revision + 1 WHERE id = ?",
+      )
+      .bind(...[input.dueDate, taskId]),
   );
 
-  await execute(
-    db,
-    `INSERT INTO task_events (id, task_id, actor_id, event_type, old_state, new_state, reason, created_at)
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO task_events (id, task_id, actor_id, event_type, old_state, new_state, reason, created_at)
      VALUES (?, ?, ?, 'TASK_DEADLINE_CHANGED', ?, ?, ?, ?)`,
-    [createEventId(), taskId, actor.id, task.effective_due_date || "NONE", input.dueDate, input.reason, now]
+      )
+      .bind(
+        ...[
+          createEventId(),
+          taskId,
+          actor.id,
+          task.effective_due_date || "NONE",
+          input.dueDate,
+          input.reason,
+          now,
+        ],
+      ),
   );
 
+  plan.push(
+    db.prepare("DELETE FROM command_assertions WHERE id=?").bind(guardId),
+  );
+  await db.batch(plan);
   return { success: true, taskId, effectiveDueDate: input.dueDate };
 }
 
 /**
  * Start work on a task.
  */
-export async function startTask(actor: UserPrincipal, taskId: string, db: D1Database) {
-  const task = await queryFirst<any>(db, "SELECT * FROM tasks WHERE id = ?", [taskId]);
+export async function startTask(
+  actor: UserPrincipal,
+  taskId: string,
+  db: D1Database,
+) {
+  const plan: D1PreparedStatement[] = [];
+
+  const task = await queryFirst<any>(db, "SELECT * FROM tasks WHERE id = ?", [
+    taskId,
+  ]);
   if (!task) throw new AuthorizationError("Task not found.", "NOT_FOUND");
 
   assertTaskAccess(actor, task.project_id);
+  await assertProjectOrganisation(db, actor, task.project_id);
+  await ArchiveService.assertProjectNotArchived(db, task.project_id);
+  if (task.org_id !== actor.orgId)
+    throw new AuthorizationError("Task not found.", "NOT_FOUND");
+  if (
+    task.assignee_user_id !== actor.id &&
+    !hasCapability(actor, "MANAGER", task.project_id)
+  )
+    throw new AuthorizationError(
+      "Only the assigned person or manager may update this task.",
+    );
+  if (!["TODO", "IN_PROGRESS", "BLOCKED"].includes(task.status))
+    throw new AuthorizationError(
+      "Task cannot be changed in its current state.",
+      "INVALID_STATE",
+    );
 
   if (task.change_request_id) {
-    const cr = await queryFirst<any>(db, "SELECT status FROM change_requests WHERE id = ?", [task.change_request_id]);
-    if (!cr || (cr.status !== "AUTHORIZED" && cr.status !== "IN_PROGRESS" && cr.status !== "COMPLETED")) {
+    const cr = await queryFirst<any>(
+      db,
+      "SELECT status FROM change_requests WHERE id = ?",
+      [task.change_request_id],
+    );
+    if (
+      !cr ||
+      (cr.status !== "AUTHORIZED" &&
+        cr.status !== "IN_PROGRESS" &&
+        cr.status !== "COMPLETED")
+    ) {
       throw new AuthorizationError(
         "Cannot start task linked to unauthorized change request. Manager authorization and payment confirmation required.",
-        "CHANGE_REQUEST_NOT_AUTHORIZED"
+        "CHANGE_REQUEST_NOT_AUTHORIZED",
       );
     }
   }
 
   if (task.snag_id) {
-    const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [task.snag_id]);
+    const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [
+      task.snag_id,
+    ]);
     if (snag && snag.is_charged_work) {
       if (!snag.change_request_id) {
         throw new AuthorizationError(
           "Charged snag remediation requires an authorized change request before starting work",
-          "CHANGE_REQUEST_REQUIRED"
+          "CHANGE_REQUEST_REQUIRED",
         );
       }
-      const cr = await queryFirst<any>(db, "SELECT status FROM change_requests WHERE id = ?", [snag.change_request_id]);
-      if (!cr || (cr.status !== "AUTHORIZED" && cr.status !== "IN_PROGRESS" && cr.status !== "COMPLETED")) {
+      const cr = await queryFirst<any>(
+        db,
+        "SELECT status FROM change_requests WHERE id = ?",
+        [snag.change_request_id],
+      );
+      if (
+        !cr ||
+        (cr.status !== "AUTHORIZED" &&
+          cr.status !== "IN_PROGRESS" &&
+          cr.status !== "COMPLETED")
+      ) {
         throw new AuthorizationError(
           "Charged snag remediation work remains blocked until change request is authorized and paid",
-          "CHANGE_REQUEST_NOT_AUTHORIZED"
+          "CHANGE_REQUEST_NOT_AUTHORIZED",
         );
       }
     }
   }
 
   const now = Date.now();
-  await execute(db, "UPDATE tasks SET status = 'IN_PROGRESS', revision = revision + 1 WHERE id = ?", [taskId]);
-
-  await execute(
-    db,
-    `INSERT INTO task_events (id, task_id, actor_id, event_type, old_state, new_state, reason, created_at)
-     VALUES (?, ?, ?, 'TASK_STARTED', ?, 'IN_PROGRESS', 'Work started', ?)`,
-    [createEventId(), taskId, actor.id, task.status, now]
+  const guardId = crypto.randomUUID();
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO command_assertions(id,ok) SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM tasks t JOIN projects p ON p.id=t.project_id WHERE t.id=? AND t.org_id=? AND t.revision=? AND p.is_archived=0) THEN 1 ELSE 0 END`,
+      )
+      .bind(guardId, task.id, actor.orgId, task.revision),
+  );
+  plan.push(
+    db
+      .prepare(
+        "UPDATE tasks SET status = 'IN_PROGRESS', revision = revision + 1 WHERE id = ?",
+      )
+      .bind(...[taskId]),
   );
 
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO task_events (id, task_id, actor_id, event_type, old_state, new_state, reason, created_at)
+     VALUES (?, ?, ?, 'TASK_STARTED', ?, 'IN_PROGRESS', 'Work started', ?)`,
+      )
+      .bind(...[createEventId(), taskId, actor.id, task.status, now]),
+  );
+
+  plan.push(
+    db.prepare("DELETE FROM command_assertions WHERE id=?").bind(guardId),
+  );
+  await db.batch(plan);
   return { success: true, taskId, status: "IN_PROGRESS" };
 }
 
@@ -313,31 +511,79 @@ export async function completeTask(
   actor: UserPrincipal,
   taskId: string,
   input: CompleteTaskInput,
-  db: D1Database
+  db: D1Database,
 ) {
-  const task = await queryFirst<any>(db, "SELECT * FROM tasks WHERE id = ?", [taskId]);
+  const plan: D1PreparedStatement[] = [];
+
+  const task = await queryFirst<any>(db, "SELECT * FROM tasks WHERE id = ?", [
+    taskId,
+  ]);
   if (!task) throw new AuthorizationError("Task not found.", "NOT_FOUND");
 
   assertTaskAccess(actor, task.project_id);
+  await assertProjectOrganisation(db, actor, task.project_id);
+  await ArchiveService.assertProjectNotArchived(db, task.project_id);
+  if (task.org_id !== actor.orgId)
+    throw new AuthorizationError("Task not found.", "NOT_FOUND");
+  if (
+    task.assignee_user_id !== actor.id &&
+    !hasCapability(actor, "MANAGER", task.project_id)
+  )
+    throw new AuthorizationError(
+      "Only the assigned person or manager may update this task.",
+    );
+  if (!["TODO", "IN_PROGRESS", "BLOCKED"].includes(task.status))
+    throw new AuthorizationError(
+      "Task cannot be changed in its current state.",
+      "INVALID_STATE",
+    );
 
   if (input.expectedRevision && task.revision !== input.expectedRevision) {
-    throw new AuthorizationError("Task was modified concurrently. Refresh and retry.", "CONCURRENCY_CONFLICT");
+    throw new AuthorizationError(
+      "Task was modified concurrently. Refresh and retry.",
+      "CONCURRENCY_CONFLICT",
+    );
   }
 
   const now = Date.now();
-  await execute(
-    db,
-    "UPDATE tasks SET status = 'COMPLETED', completed_at = ?, completed_by_user_id = ?, revision = revision + 1 WHERE id = ?",
-    [now, actor.id, taskId]
+  const guardId = crypto.randomUUID();
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO command_assertions(id,ok) SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM tasks t JOIN projects p ON p.id=t.project_id WHERE t.id=? AND t.org_id=? AND t.revision=? AND p.is_archived=0) THEN 1 ELSE 0 END`,
+      )
+      .bind(guardId, task.id, actor.orgId, task.revision),
+  );
+  plan.push(
+    db
+      .prepare(
+        "UPDATE tasks SET status = 'COMPLETED', completed_at = ?, completed_by_user_id = ?, revision = revision + 1 WHERE id = ?",
+      )
+      .bind(...[now, actor.id, taskId]),
   );
 
-  await execute(
-    db,
-    `INSERT INTO task_events (id, task_id, actor_id, event_type, old_state, new_state, reason, created_at)
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO task_events (id, task_id, actor_id, event_type, old_state, new_state, reason, created_at)
      VALUES (?, ?, ?, 'TASK_COMPLETED', ?, 'COMPLETED', ?, ?)`,
-    [createEventId(), taskId, actor.id, task.status, input.completionNote || "Work completed by assignee", now]
+      )
+      .bind(
+        ...[
+          createEventId(),
+          taskId,
+          actor.id,
+          task.status,
+          input.completionNote || "Work completed by assignee",
+          now,
+        ],
+      ),
   );
 
+  plan.push(
+    db.prepare("DELETE FROM command_assertions WHERE id=?").bind(guardId),
+  );
+  await db.batch(plan);
   return { success: true, taskId, status: "COMPLETED", completedAt: now };
 }
 
@@ -350,40 +596,88 @@ export async function reopenTask(
   actor: UserPrincipal,
   taskId: string,
   input: ReopenTaskInput,
-  db: D1Database
+  db: D1Database,
 ) {
-  const task = await queryFirst<any>(db, "SELECT * FROM tasks WHERE id = ?", [taskId]);
+  const plan: D1PreparedStatement[] = [];
+
+  const task = await queryFirst<any>(db, "SELECT * FROM tasks WHERE id = ?", [
+    taskId,
+  ]);
   if (!task) throw new AuthorizationError("Task not found.", "NOT_FOUND");
 
   assertTaskAccess(actor, task.project_id);
+  await assertProjectOrganisation(db, actor, task.project_id);
+  await ArchiveService.assertProjectNotArchived(db, task.project_id);
+  if (task.org_id !== actor.orgId)
+    throw new AuthorizationError("Task not found.", "NOT_FOUND");
+  if (task.status !== "COMPLETED" || !input.reason?.trim())
+    throw new AuthorizationError(
+      "Only completed work may be reopened with a reason.",
+      "INVALID_STATE",
+    );
 
-  if (actor.role !== "MANAGER" && actor.role !== "ADMIN" && actor.role !== "OWNER") {
-    throw new AuthorizationError("Only project managers can reopen completed tasks.", "FORBIDDEN");
+  if (!hasCapability(actor, "MANAGER", task.project_id)) {
+    throw new AuthorizationError(
+      "Only project managers can reopen completed tasks.",
+      "FORBIDDEN",
+    );
   }
 
   if (input.expectedRevision && task.revision !== input.expectedRevision) {
-    throw new AuthorizationError("Task was modified concurrently. Refresh and retry.", "CONCURRENCY_CONFLICT");
+    throw new AuthorizationError(
+      "Task was modified concurrently. Refresh and retry.",
+      "CONCURRENCY_CONFLICT",
+    );
   }
 
   const now = Date.now();
   const effectiveDueDate = input.newDueDate || task.effective_due_date;
 
-  await execute(
-    db,
-    `UPDATE tasks
+  const guardId = crypto.randomUUID();
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO command_assertions(id,ok) SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM tasks t JOIN projects p ON p.id=t.project_id WHERE t.id=? AND t.org_id=? AND t.revision=? AND p.is_archived=0) THEN 1 ELSE 0 END`,
+      )
+      .bind(guardId, task.id, actor.orgId, task.revision),
+  );
+  plan.push(
+    db
+      .prepare(
+        `UPDATE tasks
      SET status = 'TODO', effective_due_date = ?, reopen_count = reopen_count + 1, revision = revision + 1
      WHERE id = ?`,
-    [effectiveDueDate, taskId]
+      )
+      .bind(...[effectiveDueDate, taskId]),
   );
 
-  await execute(
-    db,
-    `INSERT INTO task_events (id, task_id, actor_id, event_type, old_state, new_state, reason, created_at)
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO task_events (id, task_id, actor_id, event_type, old_state, new_state, reason, created_at)
      VALUES (?, ?, ?, 'TASK_REOPENED', 'COMPLETED', 'TODO', ?, ?)`,
-    [createEventId(), taskId, actor.id, `[${input.category}] ${input.reason}`, now]
+      )
+      .bind(
+        ...[
+          createEventId(),
+          taskId,
+          actor.id,
+          `[${input.category}] ${input.reason}`,
+          now,
+        ],
+      ),
   );
 
-  return { success: true, taskId, status: "TODO", reopenCount: task.reopen_count + 1 };
+  plan.push(
+    db.prepare("DELETE FROM command_assertions WHERE id=?").bind(guardId),
+  );
+  await db.batch(plan);
+  return {
+    success: true,
+    taskId,
+    status: "TODO",
+    reopenCount: task.reopen_count + 1,
+  };
 }
 
 /**
@@ -393,27 +687,65 @@ export async function blockTask(
   actor: UserPrincipal,
   taskId: string,
   input: BlockTaskInput,
-  db: D1Database
+  db: D1Database,
 ) {
-  const task = await queryFirst<any>(db, "SELECT * FROM tasks WHERE id = ?", [taskId]);
+  const plan: D1PreparedStatement[] = [];
+
+  const task = await queryFirst<any>(db, "SELECT * FROM tasks WHERE id = ?", [
+    taskId,
+  ]);
   if (!task) throw new AuthorizationError("Task not found.", "NOT_FOUND");
 
   assertTaskAccess(actor, task.project_id);
+  await assertProjectOrganisation(db, actor, task.project_id);
+  await ArchiveService.assertProjectNotArchived(db, task.project_id);
+  if (task.org_id !== actor.orgId)
+    throw new AuthorizationError("Task not found.", "NOT_FOUND");
+  if (
+    task.assignee_user_id !== actor.id &&
+    !hasCapability(actor, "MANAGER", task.project_id)
+  )
+    throw new AuthorizationError(
+      "Only the assigned person or manager may update this task.",
+    );
+  if (!["TODO", "IN_PROGRESS", "BLOCKED"].includes(task.status))
+    throw new AuthorizationError(
+      "Task cannot be changed in its current state.",
+      "INVALID_STATE",
+    );
 
   const now = Date.now();
-  await execute(
-    db,
-    "UPDATE tasks SET status = 'BLOCKED', blocker_reason = ?, revision = revision + 1 WHERE id = ?",
-    [input.reason, taskId]
+  const guardId = crypto.randomUUID();
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO command_assertions(id,ok) SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM tasks t JOIN projects p ON p.id=t.project_id WHERE t.id=? AND t.org_id=? AND t.revision=? AND p.is_archived=0) THEN 1 ELSE 0 END`,
+      )
+      .bind(guardId, task.id, actor.orgId, task.revision),
+  );
+  plan.push(
+    db
+      .prepare(
+        "UPDATE tasks SET status = 'BLOCKED', blocker_reason = ?, revision = revision + 1 WHERE id = ?",
+      )
+      .bind(...[input.reason, taskId]),
   );
 
-  await execute(
-    db,
-    `INSERT INTO task_events (id, task_id, actor_id, event_type, old_state, new_state, reason, created_at)
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO task_events (id, task_id, actor_id, event_type, old_state, new_state, reason, created_at)
      VALUES (?, ?, ?, 'TASK_BLOCKED', ?, 'BLOCKED', ?, ?)`,
-    [createEventId(), taskId, actor.id, task.status, input.reason, now]
+      )
+      .bind(
+        ...[createEventId(), taskId, actor.id, task.status, input.reason, now],
+      ),
   );
 
+  plan.push(
+    db.prepare("DELETE FROM command_assertions WHERE id=?").bind(guardId),
+  );
+  await db.batch(plan);
   return { success: true, taskId, status: "BLOCKED", reason: input.reason };
 }
 
@@ -424,31 +756,58 @@ export async function cancelTask(
   actor: UserPrincipal,
   taskId: string,
   reason: string,
-  db: D1Database
+  db: D1Database,
 ) {
-  const task = await queryFirst<any>(db, "SELECT * FROM tasks WHERE id = ?", [taskId]);
+  const plan: D1PreparedStatement[] = [];
+
+  const task = await queryFirst<any>(db, "SELECT * FROM tasks WHERE id = ?", [
+    taskId,
+  ]);
   if (!task) throw new AuthorizationError("Task not found.", "NOT_FOUND");
 
   assertTaskAccess(actor, task.project_id);
+  await assertProjectOrganisation(db, actor, task.project_id);
+  await ArchiveService.assertProjectNotArchived(db, task.project_id);
+  if (task.org_id !== actor.orgId)
+    throw new AuthorizationError("Task not found.", "NOT_FOUND");
 
-  if (actor.role !== "MANAGER" && actor.role !== "ADMIN" && actor.role !== "OWNER") {
-    throw new AuthorizationError("Only project managers can cancel tasks.", "FORBIDDEN");
+  if (!hasCapability(actor, "MANAGER", task.project_id)) {
+    throw new AuthorizationError(
+      "Only project managers can cancel tasks.",
+      "FORBIDDEN",
+    );
   }
 
   const now = Date.now();
-  await execute(
-    db,
-    "UPDATE tasks SET status = 'CANCELLED', revision = revision + 1 WHERE id = ?",
-    [taskId]
+  const guardId = crypto.randomUUID();
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO command_assertions(id,ok) SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM tasks t JOIN projects p ON p.id=t.project_id WHERE t.id=? AND t.org_id=? AND t.revision=? AND p.is_archived=0) THEN 1 ELSE 0 END`,
+      )
+      .bind(guardId, task.id, actor.orgId, task.revision),
+  );
+  plan.push(
+    db
+      .prepare(
+        "UPDATE tasks SET status = 'CANCELLED', revision = revision + 1 WHERE id = ?",
+      )
+      .bind(...[taskId]),
   );
 
-  await execute(
-    db,
-    `INSERT INTO task_events (id, task_id, actor_id, event_type, old_state, new_state, reason, created_at)
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO task_events (id, task_id, actor_id, event_type, old_state, new_state, reason, created_at)
      VALUES (?, ?, ?, 'TASK_CANCELLED', ?, 'CANCELLED', ?, ?)`,
-    [createEventId(), taskId, actor.id, task.status, reason, now]
+      )
+      .bind(...[createEventId(), taskId, actor.id, task.status, reason, now]),
   );
 
+  plan.push(
+    db.prepare("DELETE FROM command_assertions WHERE id=?").bind(guardId),
+  );
+  await db.batch(plan);
   return { success: true, taskId, status: "CANCELLED" };
 }
 
@@ -460,32 +819,67 @@ export async function addTaskComment(
   taskId: string,
   commentText: string,
   attachmentFileId?: string,
-  db?: D1Database
+  db?: D1Database,
 ) {
+  const plan: D1PreparedStatement[] = [];
+
   if (!db) throw new Error("Database instance required");
 
-  const task = await queryFirst<any>(db, "SELECT * FROM tasks WHERE id = ?", [taskId]);
+  const task = await queryFirst<any>(db, "SELECT * FROM tasks WHERE id = ?", [
+    taskId,
+  ]);
   if (!task) throw new AuthorizationError("Task not found.", "NOT_FOUND");
 
   assertTaskAccess(actor, task.project_id);
+  await assertProjectOrganisation(db, actor, task.project_id);
+  await ArchiveService.assertProjectNotArchived(db, task.project_id);
+  if (task.org_id !== actor.orgId)
+    throw new AuthorizationError("Task not found.", "NOT_FOUND");
 
   const commentId = `cm_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
   const now = Date.now();
 
-  await execute(
-    db,
-    `INSERT INTO task_comments (id, task_id, author_id, comment_text, attachment_file_id, created_at)
+  const guardId = crypto.randomUUID();
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO command_assertions(id,ok) SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM tasks t JOIN projects p ON p.id=t.project_id WHERE t.id=? AND t.org_id=? AND t.revision=? AND p.is_archived=0) THEN 1 ELSE 0 END`,
+      )
+      .bind(guardId, task.id, actor.orgId, task.revision),
+  );
+  plan.push(
+    db
+      .prepare(
+        `INSERT INTO task_comments (id, task_id, author_id, comment_text, attachment_file_id, created_at)
      VALUES (?, ?, ?, ?, ?, ?)`,
-    [commentId, taskId, actor.id, commentText, attachmentFileId || null, now]
+      )
+      .bind(
+        ...[
+          commentId,
+          taskId,
+          actor.id,
+          commentText,
+          attachmentFileId || null,
+          now,
+        ],
+      ),
   );
 
+  plan.push(
+    db.prepare("DELETE FROM command_assertions WHERE id=?").bind(guardId),
+  );
+  await db.batch(plan);
   return { commentId, taskId };
 }
 
 /**
  * Get task details, events history, and comments (AC-014, AC-015).
  */
-export async function getTask(actor: UserPrincipal, taskId: string, db: D1Database) {
+export async function getTask(
+  actor: UserPrincipal,
+  taskId: string,
+  db: D1Database,
+) {
   const task = await queryFirst<any>(
     db,
     `SELECT t.*,
@@ -499,12 +893,13 @@ export async function getTask(actor: UserPrincipal, taskId: string, db: D1Databa
      LEFT JOIN users cmp ON cmp.id = t.completed_by_user_id
      LEFT JOIN project_stages s ON s.id = t.stage_id
      WHERE t.id = ?`,
-    [taskId]
+    [taskId],
   );
 
   if (!task) throw new AuthorizationError("Task not found.", "NOT_FOUND");
 
   assertTaskAccess(actor, task.project_id);
+  await assertProjectOrganisation(db, actor, task.project_id);
 
   const events = await query(
     db,
@@ -513,7 +908,7 @@ export async function getTask(actor: UserPrincipal, taskId: string, db: D1Databa
      LEFT JOIN users u ON u.id = te.actor_id
      WHERE te.task_id = ?
      ORDER BY te.created_at ASC`,
-    [taskId]
+    [taskId],
   );
 
   const comments = await query(
@@ -524,7 +919,7 @@ export async function getTask(actor: UserPrincipal, taskId: string, db: D1Databa
      LEFT JOIN files f ON f.id = tc.attachment_file_id
      WHERE tc.task_id = ?
      ORDER BY tc.created_at ASC`,
-    [taskId]
+    [taskId],
   );
 
   const isOverdue = computeIsOverdue(task);
@@ -539,9 +934,10 @@ export async function listProjectTasks(
   actor: UserPrincipal,
   projectId: string,
   db: D1Database,
-  options: { status?: string; assigneeId?: string } = {}
+  options: { status?: string; assigneeId?: string } = {},
 ) {
   assertTaskAccess(actor, projectId);
+  await assertProjectOrganisation(db, actor, projectId);
 
   let sql = `
     SELECT t.*,

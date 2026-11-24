@@ -21,7 +21,7 @@ describe("Phase 06: Updates, Internal Notes, Announcements, and Permits", () => 
     email: "admin@merveilledesigns.com",
     name: "Merveille Admin",
     orgId: testOrgId,
-    role: "ADMIN",
+    role: "ADMIN", roles: ["ADMIN"],
     projectMemberships: [{ projectId: testProjectId, projectRole: "ADMIN" }],
     isSynthetic: true,
   };
@@ -31,7 +31,7 @@ describe("Phase 06: Updates, Internal Notes, Announcements, and Permits", () => 
     email: "manager@merveilledesigns.com",
     name: "Vipin Manager",
     orgId: testOrgId,
-    role: "MANAGER",
+    role: "MANAGER", roles: ["MANAGER"],
     projectMemberships: [{ projectId: testProjectId, projectRole: "MANAGER" }],
     isSynthetic: true,
   };
@@ -41,7 +41,7 @@ describe("Phase 06: Updates, Internal Notes, Announcements, and Permits", () => 
     email: "staff@merveilledesigns.com",
     name: "Nithya Architect",
     orgId: testOrgId,
-    role: "STAFF",
+    role: "STAFF", roles: [],
     projectMemberships: [{ projectId: testProjectId, projectRole: "STAFF" }],
     isSynthetic: true,
   };
@@ -51,7 +51,7 @@ describe("Phase 06: Updates, Internal Notes, Announcements, and Permits", () => 
     email: "client@example.com",
     name: "Thomas Client",
     orgId: testOrgId,
-    role: "MAIN_CLIENT",
+    role: "MAIN_CLIENT", roles: [],
     projectMemberships: [{ projectId: testProjectId, projectRole: "MAIN_CLIENT" }],
     isSynthetic: true,
   };
@@ -61,7 +61,7 @@ describe("Phase 06: Updates, Internal Notes, Announcements, and Permits", () => 
     email: "otherclient@example.com",
     name: "Anand Other Client",
     orgId: testOrgId,
-    role: "MAIN_CLIENT",
+    role: "MAIN_CLIENT", roles: [],
     projectMemberships: [{ projectId: "prj_other_residence", projectRole: "MAIN_CLIENT" }],
     isSynthetic: true,
   };

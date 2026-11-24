@@ -17,78 +17,158 @@ export interface WhatsAppTemplatePayload {
 export interface WhatsAppSendResult {
   success: boolean;
   providerMessageId?: string;
-  status: "SENT" | "DELIVERED" | "FAILED" | "UNKNOWN";
+  status: "SENT" | "DELIVERED" | "FAILED" | "UNKNOWN" | "UNAVAILABLE";
   error?: string;
+  retryable?: boolean;
 }
 
 export interface WhatsAppAdapter {
   sendTemplate(payload: WhatsAppTemplatePayload): Promise<WhatsAppSendResult>;
 }
 
-/**
- * Synthetic WhatsApp Adapter for local development and deterministic acceptance testing.
- * Enforces AC-049: Rejects any attempt to send sensitive unredacted data, raw files, or salaries.
- */
-export class SyntheticWhatsAppAdapter implements WhatsAppAdapter {
-  public sentMessages: Array<{
-    payload: WhatsAppTemplatePayload;
-    result: WhatsAppSendResult;
-    timestamp: number;
-  }> = [];
-
-  public simulateTimeout = false;
-  public simulateFailure = false;
-
-  async sendTemplate(payload: WhatsAppTemplatePayload): Promise<WhatsAppSendResult> {
-    // AC-049: Validate safety and privacy - no raw documents or salaries allowed in payload
-    for (const [key, value] of Object.entries(payload.templateParameters)) {
-      const lowerKey = key.toLowerCase();
-      const stringVal = String(value).toLowerCase();
-
+/** No deployed fake sends: unconfigured delivery remains explicitly unavailable. */
+export interface WhatsAppSettings {
+  WHATSAPP_MODE?: string;
+  WHATSAPP_PHONE_NUMBER_ID?: string;
+  WHATSAPP_ACCESS_TOKEN?: string;
+  WHATSAPP_GRAPH_VERSION?: string;
+  WHATSAPP_TEMPLATE_LANGUAGE?: string;
+  WHATSAPP_APPROVED_TEST_RECIPIENTS?: string;
+}
+export function isWhatsAppConfigured(settings: WhatsAppSettings): boolean {
+  return (
+    ["test", "live"].includes(settings.WHATSAPP_MODE || "") &&
+    !!settings.WHATSAPP_ACCESS_TOKEN &&
+    /^v\d+\.\d+$/.test(settings.WHATSAPP_GRAPH_VERSION || "") &&
+    /^\d+$/.test(settings.WHATSAPP_PHONE_NUMBER_ID || "")
+  );
+}
+export function createWhatsAppAdapter(
+  settings: WhatsAppSettings,
+): WhatsAppAdapter {
+  return {
+    async sendTemplate(payload) {
       if (
-        lowerKey.includes("salary") ||
-        lowerKey.includes("payroll") ||
-        lowerKey.includes("raw_document") ||
-        stringVal.includes("salary") ||
-        stringVal.includes("margin")
+        !["test", "live"].includes(settings.WHATSAPP_MODE || "") ||
+        !settings.WHATSAPP_PHONE_NUMBER_ID ||
+        !settings.WHATSAPP_ACCESS_TOKEN ||
+        !settings.WHATSAPP_GRAPH_VERSION
       ) {
-        throw new AuthorizationError(
-          "WhatsApp payload contains prohibited sensitive data (salaries or raw documents).",
-          "SENSITIVE_PAYLOAD_DETECTED"
-        );
+        return {
+          success: false,
+          status: "UNAVAILABLE",
+          error: "WhatsApp delivery is not configured.",
+        };
       }
-    }
-
-    if (this.simulateTimeout) {
-      const result: WhatsAppSendResult = {
-        success: false,
-        status: "UNKNOWN",
-        error: "Provider request timed out. Delivery outcome uncertain.",
-      };
-      this.sentMessages.push({ payload, result, timestamp: Date.now() });
-      return result;
-    }
-
-    if (this.simulateFailure) {
-      const result: WhatsAppSendResult = {
-        success: false,
-        status: "FAILED",
-        error: "Template not approved or recipient opted out.",
-      };
-      this.sentMessages.push({ payload, result, timestamp: Date.now() });
-      return result;
-    }
-
-    const providerMessageId = `wamid_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    const result: WhatsAppSendResult = {
-      success: true,
-      providerMessageId,
-      status: "DELIVERED",
-    };
-
-    this.sentMessages.push({ payload, result, timestamp: Date.now() });
-    return result;
-  }
+      if (
+        settings.WHATSAPP_MODE === "test" &&
+        !(settings.WHATSAPP_APPROVED_TEST_RECIPIENTS || "")
+          .split(",")
+          .map((v) => v.trim())
+          .includes(payload.recipientPhone)
+      ) {
+        return {
+          success: false,
+          status: "UNAVAILABLE",
+          error: "This recipient is not authorised for test delivery.",
+        };
+      }
+      if (
+        !/^v\d+\.\d+$/.test(settings.WHATSAPP_GRAPH_VERSION) ||
+        !/^\d+$/.test(settings.WHATSAPP_PHONE_NUMBER_ID)
+      )
+        return {
+          success: false,
+          status: "UNAVAILABLE",
+          error: "Invalid provider configuration.",
+        };
+      if (!/^\/[a-zA-Z0-9/_-]*$/.test(payload.deepLinkPath))
+        return {
+          success: false,
+          status: "FAILED",
+          error: "Invalid notification destination.",
+        };
+      if (!/^\+?[1-9]\d{7,14}$/.test(payload.recipientPhone))
+        return {
+          success: false,
+          status: "FAILED",
+          error: "Invalid verified destination.",
+        };
+      try {
+        const response = await fetch(
+          `https://graph.facebook.com/${settings.WHATSAPP_GRAPH_VERSION}/${settings.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+          {
+            method: "POST",
+            signal: AbortSignal.timeout(15000),
+            headers: {
+              Authorization: `Bearer ${settings.WHATSAPP_ACCESS_TOKEN}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              messaging_product: "whatsapp",
+              to: payload.recipientPhone,
+              type: "template",
+              template: {
+                name: payload.templateName,
+                language: { code: settings.WHATSAPP_TEMPLATE_LANGUAGE || "en" },
+                components: [
+                  {
+                    type: "body",
+                    parameters: Object.values(payload.templateParameters).map(
+                      (text) => ({ type: "text", text: String(text) }),
+                    ),
+                  },
+                  {
+                    type: "button",
+                    sub_type: "url",
+                    index: "0",
+                    parameters: [
+                      { type: "text", text: payload.deepLinkPath.slice(1) },
+                    ],
+                  },
+                ],
+              },
+            }),
+          },
+        );
+        if (response.status === 429)
+          return {
+            success: false,
+            status: "FAILED",
+            retryable: true,
+            error: "Provider rate limit; retry scheduled.",
+          };
+        if (response.status >= 500)
+          return {
+            success: false,
+            status: "UNKNOWN",
+            error: "Provider outcome is uncertain; reconcile before retry.",
+          };
+        if (!response.ok)
+          return {
+            success: false,
+            status: "FAILED",
+            error: "Provider rejected the approved template or destination.",
+          };
+        const body = (await response.json()) as { messages?: { id: string }[] };
+        const id = body.messages?.[0]?.id;
+        if (!id)
+          return {
+            success: false,
+            status: "UNKNOWN",
+            error: "Provider accepted request without a message identifier.",
+          };
+        return { success: true, status: "SENT", providerMessageId: id };
+      } catch {
+        return {
+          success: false,
+          status: "UNKNOWN",
+          error:
+            "Provider request interrupted. Delivery is uncertain; do not resend automatically.",
+        };
+      }
+    },
+  };
 }
 
 /**
@@ -98,13 +178,15 @@ export class SyntheticWhatsAppAdapter implements WhatsAppAdapter {
 export async function verifyMetaWebhookSignature(
   rawBody: Uint8Array | ArrayBuffer,
   signatureHeader: string | null,
-  appSecret: string
+  appSecret: string,
 ): Promise<boolean> {
   if (!signatureHeader || !signatureHeader.startsWith("sha256=")) {
     return false;
   }
 
-  const expectedSignatureHex = signatureHeader.substring("sha256=".length).trim();
+  const expectedSignatureHex = signatureHeader
+    .substring("sha256=".length)
+    .trim();
   const encoder = new TextEncoder();
   const keyData = encoder.encode(appSecret);
 
@@ -113,13 +195,13 @@ export async function verifyMetaWebhookSignature(
     keyData,
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"]
+    ["sign"],
   );
 
   const signatureBuffer = await crypto.subtle.sign(
     "HMAC",
     cryptoKey,
-    (rawBody instanceof Uint8Array ? rawBody : new Uint8Array(rawBody)) as any
+    (rawBody instanceof Uint8Array ? rawBody : new Uint8Array(rawBody)) as any,
   );
 
   const actualHex = Array.from(new Uint8Array(signatureBuffer))

@@ -1,3 +1,4 @@
+import { publicError } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -6,7 +7,7 @@ import { AuthorizationError } from "@/server/auth/policy";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
   const { env } = await getCloudflareContext({ async: true });
@@ -20,24 +21,26 @@ export async function GET(
     const data = await ArchiveService.getArchivedProjectRecords(
       env.DB,
       auth.principal,
-      id
+      id,
     );
     return NextResponse.json({ ok: true, ...data });
   } catch (err: any) {
     const status =
-      err instanceof AuthorizationError || err.code === "CROSS_PROJECT_DENIED" || err.code === "FORBIDDEN"
+      err instanceof AuthorizationError ||
+      err.code === "CROSS_PROJECT_DENIED" ||
+      err.code === "FORBIDDEN"
         ? 403
         : 400;
     return NextResponse.json(
-      { error: err.message, code: err.code || "REQUEST_ERROR" },
-      { status }
+      { error: publicError(err), code: err.code || "REQUEST_ERROR" },
+      { status },
     );
   }
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
   const { env } = await getCloudflareContext({ async: true });
@@ -58,7 +61,9 @@ export async function POST(
         {
           projectId: id,
           reason: body.reason,
-        }
+          expectedRevision: body.expectedRevision,
+          idempotencyKey: body.idempotencyKey,
+        },
       );
       return NextResponse.json({ ok: true, result });
     }
@@ -70,7 +75,9 @@ export async function POST(
         {
           projectId: id,
           reason: body.reason,
-        }
+          expectedRevision: body.expectedRevision,
+          idempotencyKey: body.idempotencyKey,
+        },
       );
       return NextResponse.json({ ok: true, result });
     }
@@ -85,23 +92,26 @@ export async function POST(
           amountMinor: body.amountMinor,
           receiptId: body.receiptId,
           notes: body.notes,
-        }
+          idempotencyKey: body.idempotencyKey,
+        },
       );
       return NextResponse.json({ ok: true, result });
     }
 
     return NextResponse.json(
       { error: `Unknown action: ${action}` },
-      { status: 400 }
+      { status: 400 },
     );
   } catch (err: any) {
     const status =
-      err instanceof AuthorizationError || err.code === "FORBIDDEN" || err.code === "PROJECT_ARCHIVED_READ_ONLY"
+      err instanceof AuthorizationError ||
+      err.code === "FORBIDDEN" ||
+      err.code === "PROJECT_ARCHIVED_READ_ONLY"
         ? 403
         : 400;
     return NextResponse.json(
-      { error: err.message, code: err.code || "ARCHIVE_ERROR" },
-      { status }
+      { error: publicError(err), code: err.code || "ARCHIVE_ERROR" },
+      { status },
     );
   }
 }

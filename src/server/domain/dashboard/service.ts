@@ -1,3 +1,7 @@
+import { businessDateISO } from "@/shared/config";
+import { canReadFile } from "@/server/files/visibility";
+import { assertProjectOrganisation } from "@/server/auth/policy";
+import { canViewFinancials } from "@/server/auth/policy";
 /**
  * Domain service for Role Dashboards, Actionable "Waiting-on-you" Queue,
  * Evidence-based Owner Performance, and Calm Client Overview.
@@ -5,7 +9,7 @@
  */
 
 import { D1Database } from "@cloudflare/workers-types";
-import { UserPrincipal } from "../../auth/principal";
+import { UserPrincipal, hasCapability } from "../../auth/principal";
 import {
   assertProjectAccess,
   canAccessProject,
@@ -103,6 +107,7 @@ export interface ClientOverviewData {
     siteAddress?: string | null;
     status: string;
     currentStageName?: string | null;
+    nextMilestone?: {name:string;targetDate:string|null}|null;
   };
   publishedUpdates: Array<{
     id: string;
@@ -160,21 +165,33 @@ export class DashboardService {
   static async getWaitingOnYou(
     db: D1Database,
     principal: UserPrincipal,
-    options?: { projectId?: string }
+    options?: { projectId?: string },
   ): Promise<WaitingItem[]> {
     const items: WaitingItem[] = [];
     const now = new Date();
-    const nowIso = now.toISOString().split("T")[0]; // YYYY-MM-DD
-    const isOwner = principal.role === "OWNER";
-    const isAdmin = principal.role === "ADMIN";
-    const isManager = principal.role === "MANAGER" || isOwner || isAdmin;
+    const nowIso = businessDateISO(now); // YYYY-MM-DD
+    const isOwner = hasCapability(principal, "OWNER");
+    const isAdmin = hasCapability(principal, "ADMIN");
+    const isManager = principal.projectMemberships.some((m) =>
+      hasCapability(principal, "MANAGER", m.projectId),
+    );
     const isStaff =
-      principal.role === "STAFF" ||
-      principal.role === "TEAM_MEMBER" ||
+      principal.projectMemberships.some((m) =>
+        hasCapability(principal, "STAFF", m.projectId),
+      ) ||
+      principal.projectMemberships.some((m) =>
+        hasCapability(principal, "TEAM_MEMBER", m.projectId),
+      ) ||
       isManager;
-    const isConsultant = principal.role === "CONSULTANT";
-    const isMainClient = principal.role === "MAIN_CLIENT";
-    const isClientRep = principal.role === "CLIENT_REP";
+    const isConsultant = principal.projectMemberships.some((m) =>
+      hasCapability(principal, "CONSULTANT", m.projectId),
+    );
+    const isMainClient = principal.projectMemberships.some((m) =>
+      hasCapability(principal, "MAIN_CLIENT", m.projectId),
+    );
+    const isClientRep = principal.projectMemberships.some((m) =>
+      hasCapability(principal, "CLIENT_REP", m.projectId),
+    );
 
     // 1. Assigned open tasks for Staff / Assignee
     if (isStaff) {
@@ -190,7 +207,10 @@ export class DashboardService {
         params.push(options.projectId);
       }
 
-      const tasks = await db.prepare(taskQuery).bind(...params).all<any>();
+      const tasks = await db
+        .prepare(taskQuery)
+        .bind(...params)
+        .all<any>();
       for (const t of tasks.results || []) {
         const dueDate = t.effective_due_date || t.original_due_date;
         const isOverdue = !!(dueDate && dueDate < nowIso);
@@ -207,7 +227,10 @@ export class DashboardService {
           projectName: t.project_name,
           title: t.title,
           description: t.description || `Task in ${t.status} status`,
-          requiredAction: t.status === "BLOCKED" ? "Resolve blocker & continue task" : "Complete assigned task",
+          requiredAction:
+            t.status === "BLOCKED"
+              ? "Resolve blocker & continue task"
+              : "Complete assigned task",
           urgency,
           isOverdue,
           dueDate,
@@ -228,10 +251,18 @@ export class DashboardService {
         snagRemQuery += ` AND s.project_id = ?`;
         snagRemParams.push(options.projectId);
       }
-      const snagsToFix = await db.prepare(snagRemQuery).bind(...snagRemParams).all<any>();
+      const snagsToFix = await db
+        .prepare(snagRemQuery)
+        .bind(...snagRemParams)
+        .all<any>();
       for (const s of snagsToFix.results || []) {
         const isOverdue = !!(s.target_date && s.target_date < nowIso);
-        const urgency: WaitingUrgency = isOverdue || s.severity === "URGENT" ? "URGENT" : s.severity === "HIGH" ? "HIGH" : "NORMAL";
+        const urgency: WaitingUrgency =
+          isOverdue || s.severity === "URGENT"
+            ? "URGENT"
+            : s.severity === "HIGH"
+              ? "HIGH"
+              : "NORMAL";
         items.push({
           id: `snag_rem:${s.id}`,
           entityType: "SNAG_REMEDIATION",
@@ -271,7 +302,10 @@ export class DashboardService {
         revQuery += ` AND d.project_id = ?`;
         revParams.push(options.projectId);
       }
-      const reviews = await db.prepare(revQuery).bind(...revParams).all<any>();
+      const reviews = await db
+        .prepare(revQuery)
+        .bind(...revParams)
+        .all<any>();
       for (const r of reviews.results || []) {
         items.push({
           id: `review:${r.id}`,
@@ -310,7 +344,10 @@ export class DashboardService {
         relQuery += ` AND d.project_id = ?`;
         relParams.push(options.projectId);
       }
-      const releases = await db.prepare(relQuery).bind(...relParams).all<any>();
+      const releases = await db
+        .prepare(relQuery)
+        .bind(...relParams)
+        .all<any>();
       for (const r of releases.results || []) {
         items.push({
           id: `release:${r.id}`,
@@ -343,7 +380,10 @@ export class DashboardService {
         invQuery += ` AND i.project_id = ?`;
         invParams.push(options.projectId);
       }
-      const draftInvoices = await db.prepare(invQuery).bind(...invParams).all<any>();
+      const draftInvoices = await db
+        .prepare(invQuery)
+        .bind(...invParams)
+        .all<any>();
       for (const i of draftInvoices.results || []) {
         items.push({
           id: `invoice_appr:${i.id}`,
@@ -375,7 +415,10 @@ export class DashboardService {
         crEstQuery += ` AND cr.project_id = ?`;
         crEstParams.push(options.projectId);
       }
-      const crEstimates = await db.prepare(crEstQuery).bind(...crEstParams).all<any>();
+      const crEstimates = await db
+        .prepare(crEstQuery)
+        .bind(...crEstParams)
+        .all<any>();
       for (const cr of crEstimates.results || []) {
         items.push({
           id: `cr_est:${cr.id}`,
@@ -409,7 +452,10 @@ export class DashboardService {
         crAuthQuery += ` AND cr.project_id = ?`;
         crAuthParams.push(options.projectId);
       }
-      const crAuths = await db.prepare(crAuthQuery).bind(...crAuthParams).all<any>();
+      const crAuths = await db
+        .prepare(crAuthQuery)
+        .bind(...crAuthParams)
+        .all<any>();
       for (const cr of crAuths.results || []) {
         items.push({
           id: `cr_auth:${cr.id}`,
@@ -442,7 +488,10 @@ export class DashboardService {
         snagTriageQuery += ` AND s.project_id = ?`;
         snagTriageParams.push(options.projectId);
       }
-      const reportedSnags = await db.prepare(snagTriageQuery).bind(...snagTriageParams).all<any>();
+      const reportedSnags = await db
+        .prepare(snagTriageQuery)
+        .bind(...snagTriageParams)
+        .all<any>();
       for (const s of reportedSnags.results || []) {
         items.push({
           id: `snag_triage:${s.id}`,
@@ -473,7 +522,10 @@ export class DashboardService {
         snagVerQuery += ` AND s.project_id = ?`;
         snagVerParams.push(options.projectId);
       }
-      const verSnags = await db.prepare(snagVerQuery).bind(...snagVerParams).all<any>();
+      const verSnags = await db
+        .prepare(snagVerQuery)
+        .bind(...snagVerParams)
+        .all<any>();
       for (const s of verSnags.results || []) {
         items.push({
           id: `snag_ver:${s.id}`,
@@ -549,7 +601,11 @@ export class DashboardService {
     if (isMainClient) {
       // Get projects where user is MAIN_CLIENT
       const clientMemberships = principal.projectMemberships.filter(
-        (pm) => pm.projectRole === "MAIN_CLIENT" || principal.role === "MAIN_CLIENT"
+        (pm) =>
+          pm.projectRole === "MAIN_CLIENT" ||
+          principal.projectMemberships.some((m) =>
+            hasCapability(principal, "MAIN_CLIENT", m.projectId),
+          ),
       );
       const projectIds = clientMemberships.map((m) => m.projectId);
 
@@ -568,7 +624,10 @@ export class DashboardService {
           JOIN projects p ON p.id = cr.project_id
           WHERE cr.status = 'AWAITING_CLIENT' AND cr.project_id IN (${placeholders}) AND p.status != 'ARCHIVED'
         `;
-        const crCliList = await db.prepare(crCliQuery).bind(...projectIds).all<any>();
+        const crCliList = await db
+          .prepare(crCliQuery)
+          .bind(...projectIds)
+          .all<any>();
         for (const cr of crCliList.results || []) {
           items.push({
             id: `cr_dec:${cr.id}`,
@@ -596,7 +655,10 @@ export class DashboardService {
           JOIN projects p ON p.id = msi.project_id
           WHERE msi.status IN ('PENDING', 'AWAITING_MAIN_CLIENT') AND msi.project_id IN (${placeholders}) AND p.status != 'ARCHIVED'
         `;
-        const matItems = await db.prepare(matQuery).bind(...projectIds).all<any>();
+        const matItems = await db
+          .prepare(matQuery)
+          .bind(...projectIds)
+          .all<any>();
         for (const m of matItems.results || []) {
           const isOverdue = !!(m.due_date && m.due_date < nowIso);
           items.push({
@@ -624,7 +686,10 @@ export class DashboardService {
           JOIN projects p ON p.id = q.project_id
           WHERE q.status IN ('SENT', 'ISSUED') AND q.project_id IN (${placeholders}) AND p.status != 'ARCHIVED'
         `;
-        const quotes = await db.prepare(quoteQuery).bind(...projectIds).all<any>();
+        const quotes = await db
+          .prepare(quoteQuery)
+          .bind(...projectIds)
+          .all<any>();
         for (const q of quotes.results || []) {
           const qName = q.title || `Quotation v${q.version_number}`;
           items.push({
@@ -654,7 +719,10 @@ export class DashboardService {
           WHERE i.status = 'ISSUED' AND i.outstanding_minor > 0
             AND i.project_id IN (${placeholders}) AND p.status != 'ARCHIVED'
         `;
-        const dueInvoices = await db.prepare(payDueQuery).bind(...projectIds).all<any>();
+        const dueInvoices = await db
+          .prepare(payDueQuery)
+          .bind(...projectIds)
+          .all<any>();
         for (const i of dueInvoices.results || []) {
           const isOverdue = !!(i.due_date && i.due_date < nowIso);
           items.push({
@@ -710,7 +778,36 @@ export class DashboardService {
       return b.createdAt - a.createdAt;
     });
 
-    return items;
+    return items.filter((item) => {
+      if (!item.projectId) return hasCapability(principal, "ADMIN");
+      if (!canAccessProject(principal, item.projectId)) return false;
+      if (
+        [
+          "DRAWING_RELEASE",
+          "INVOICE_APPROVAL",
+          "CHANGE_ESTIMATE",
+          "CHANGE_AUTHORIZATION",
+          "SNAG_TRIAGE",
+          "SNAG_VERIFICATION",
+          "TASK_ASSIGNMENT",
+        ].includes(item.entityType)
+      )
+        return hasCapability(principal, "MANAGER", item.projectId);
+      if (
+        ["QUOTE_DECISION", "CHANGE_DECISION", "MATERIAL_DECISION"].includes(
+          item.entityType,
+        )
+      )
+        return principal.projectMemberships.some(
+          (m) =>
+            m.projectId === item.projectId &&
+            m.contractualAuthority &&
+            hasCapability(principal, "MAIN_CLIENT", item.projectId),
+        );
+      if (item.entityType === "RECEIPT_CONFIRMATION")
+        return hasCapability(principal, "ADMIN");
+      return true;
+    });
   }
 
   /**
@@ -722,12 +819,12 @@ export class DashboardService {
     db: D1Database,
     principal: UserPrincipal,
     orgId: string,
-    options?: { periodDays?: number; projectId?: string }
+    options?: { periodDays?: number; projectId?: string },
   ): Promise<OwnerPerformanceMetrics> {
     if (!canViewIndividualPerformance(principal)) {
       throw new AuthorizationError(
         "Forbidden: Individual performance metrics are strictly restricted to the practice Owner.",
-        "FORBIDDEN"
+        "FORBIDDEN",
       );
     }
 
@@ -767,13 +864,16 @@ export class DashboardService {
       taskParams.push(options.projectId);
     }
 
-    const tasksRes = await db.prepare(taskSql).bind(...taskParams).all<any>();
+    const tasksRes = await db
+      .prepare(taskSql)
+      .bind(...taskParams)
+      .all<any>();
     const allTasks = tasksRes.results || [];
 
     // Query deadline revision events to check for client scope reasons
     const eventsRes = await db
       .prepare(
-        `SELECT task_id, event_type, reason FROM task_events WHERE event_type IN ('TASK_DEADLINE_CHANGED', 'DEADLINE_CHANGED')`
+        `SELECT task_id, event_type, reason FROM task_events WHERE event_type IN ('TASK_DEADLINE_CHANGED', 'DEADLINE_CHANGED')`,
       )
       .all<any>();
     const deadlineEvents = eventsRes.results || [];
@@ -791,10 +891,12 @@ export class DashboardService {
       }
     }
 
-    const nowIso = new Date().toISOString().split("T")[0];
+    const nowIso = businessDateISO();
 
     const teamMetrics = (members.results || []).map((m: any) => {
-      const memberTasks = allTasks.filter((t: any) => (t.assignee_user_id || t.assignee_id) === m.id);
+      const memberTasks = allTasks.filter(
+        (t: any) => (t.assignee_user_id || t.assignee_id) === m.id,
+      );
 
       let completedTasksCount = 0;
       let onTimeCount = 0;
@@ -913,14 +1015,15 @@ export class DashboardService {
   static async getClientProjectOverview(
     db: D1Database,
     principal: UserPrincipal,
-    projectId: string
+    projectId: string,
   ): Promise<ClientOverviewData> {
     assertProjectAccess(principal, projectId);
+    await assertProjectOrganisation(db, principal, projectId);
 
     // Project details
     const project = await db
       .prepare(
-        `SELECT id, code, name, stage, status FROM projects WHERE id = ?`
+        `SELECT id, code, name, stage, status FROM projects WHERE id = ?`,
       )
       .bind(projectId)
       .first<any>();
@@ -932,32 +1035,54 @@ export class DashboardService {
     // Current active stage
     const activeStage = await db
       .prepare(
-        `SELECT name FROM project_stages WHERE project_id = ? AND status = 'IN_PROGRESS' LIMIT 1`
+        `SELECT name FROM project_stages WHERE project_id = ? AND status = 'IN_PROGRESS' LIMIT 1`,
       )
       .bind(projectId)
       .first<any>();
 
+    const nextMilestone=await db.prepare("SELECT name,planned_completion_date AS targetDate FROM project_stages WHERE project_id=? AND status!='COMPLETED' ORDER BY stage_order LIMIT 1").bind(projectId).first<any>();
     // 1. Published progress updates ONLY (AC-022, AC-053)
     const updatesRes = await db
       .prepare(
-        `SELECT pu.id, uv.title, uv.body_text, uv.observed_date, uv.published_at
+        `SELECT pu.id, uv.id AS version_id, uv.title, uv.body_text, uv.observed_date, uv.published_at
          FROM project_updates pu
          JOIN update_versions uv ON uv.id = pu.current_published_version_id
          WHERE pu.project_id = ? AND pu.is_retracted = 0 AND uv.status = 'PUBLISHED'
          ORDER BY uv.published_at DESC
-         LIMIT 10`
+         LIMIT 10`,
       )
       .bind(projectId)
       .all<any>();
 
-    const publishedUpdates = (updatesRes.results || []).map((u: any) => ({
-      id: u.id,
-      title: u.title,
-      summary: u.observed_date ? `Observed: ${u.observed_date}` : null,
-      body: u.body_text,
-      updateType: "SITE_PROGRESS",
-      publishedAt: u.published_at,
-    }));
+    const publishedUpdates = await Promise.all(
+      (updatesRes.results || []).map(async (u: any) => {
+        const files = await db
+          .prepare(
+            "SELECT f.* FROM files f JOIN update_attachments a ON a.file_id=f.id WHERE a.version_id=?",
+          )
+          .bind(u.version_id)
+          .all<any>();
+        const attachments = [];
+        for (const file of files.results ?? [])
+          if (await canReadFile(db as any, principal, file))
+            attachments.push({
+              fileId: file.id,
+              fileName: file.file_name,
+              mimeType: file.mime_type,
+              sizeBytes: file.size_bytes,
+              caption: file.file_name,
+            });
+        return {
+          id: u.id,
+          title: u.title,
+          summary: u.observed_date ? `Observed: ${u.observed_date}` : null,
+          body: u.body_text,
+          updateType: "SITE_PROGRESS",
+          publishedAt: u.published_at,
+          attachments,
+        };
+      }),
+    );
 
     // 2. Current Released Drawings ONLY (AC-018, AC-053)
     const drawingsRes = await db
@@ -970,7 +1095,7 @@ export class DashboardService {
          JOIN drawing_versions dv ON dv.id = d.current_released_version_id
          LEFT JOIN files f ON f.id = dv.file_id
          WHERE d.project_id = ? AND d.is_withdrawn = 0
-         ORDER BY d.drawing_number ASC`
+         ORDER BY d.drawing_number ASC`,
       )
       .bind(projectId)
       .all<any>();
@@ -989,9 +1114,15 @@ export class DashboardService {
     // 3. Billing & Payment Summary
     // Client representative without financial read grant receives null billing
     let billingSummary = null;
-    const isClientRep = principal.role === "CLIENT_REP";
+    const isClientRep = principal.projectMemberships.some((m) =>
+      hasCapability(principal, "CLIENT_REP", m.projectId),
+    );
     // Check if client representative has explicit financial read grant (or is MAIN_CLIENT / internal)
-    const canReadFinance = !isClientRep || principal.projectMemberships.some((pm) => pm.projectId === projectId && pm.projectRole === "FINANCIAL_VIEWER");
+    const canReadFinance = canViewFinancials(
+      principal,
+      projectId,
+      "CLIENT_COMMERCIAL",
+    );
 
     if (canReadFinance) {
       const invoicesRes = await db
@@ -1003,7 +1134,7 @@ export class DashboardService {
                   due_date, status
            FROM invoices
            WHERE project_id = ? AND status = 'ISSUED'
-           ORDER BY due_date ASC`
+           ORDER BY due_date ASC`,
         )
         .bind(projectId)
         .all<any>();
@@ -1040,7 +1171,7 @@ export class DashboardService {
     // 4. Pending Client Decisions
     const quotesRes = await db
       .prepare(
-        `SELECT id, version_number, title, status FROM quotations WHERE project_id = ? AND status IN ('SENT', 'ISSUED')`
+        `SELECT id, version_number, title, status FROM quotations WHERE project_id = ? AND status IN ('SENT', 'ISSUED')`,
       )
       .bind(projectId)
       .all<any>();
@@ -1053,7 +1184,7 @@ export class DashboardService {
                 COALESCE(crv.schedule_impact_days, 0) as timeline_impact_days
          FROM change_requests cr
          JOIN change_request_versions crv ON (crv.change_request_id = cr.id AND crv.version_number = cr.current_version_number)
-         WHERE cr.project_id = ? AND cr.status = 'AWAITING_CLIENT'`
+         WHERE cr.project_id = ? AND cr.status = 'AWAITING_CLIENT'`,
       )
       .bind(projectId)
       .all<any>();
@@ -1063,7 +1194,7 @@ export class DashboardService {
         `SELECT id, title, needed_by_date as due_date,
                 (SELECT COUNT(*) FROM material_selection_options WHERE selection_item_id = msi.id) as options_count
          FROM material_selection_items msi
-         WHERE msi.project_id = ? AND msi.status IN ('PENDING', 'AWAITING_MAIN_CLIENT')`
+         WHERE msi.project_id = ? AND msi.status IN ('PENDING', 'AWAITING_MAIN_CLIENT')`,
       )
       .bind(projectId)
       .all<any>();
@@ -1076,13 +1207,25 @@ export class DashboardService {
         stage: project.stage,
         status: project.status,
         currentStageName: activeStage?.name || null,
+        nextMilestone: nextMilestone ?? null,
       },
       publishedUpdates,
       releasedDrawings,
       billingSummary,
       pendingDecisions: {
-        quotations: quotesRes.results || [],
-        changeRequests: (crRes.results || []).map((cr: any) => ({
+        quotations:
+          canReadFinance &&
+          principal.projectMemberships.some(
+            (m) => m.projectId === projectId && m.contractualAuthority,
+          )
+            ? quotesRes.results || []
+            : [],
+        changeRequests: (principal.projectMemberships.some(
+          (m) => m.projectId === projectId && m.contractualAuthority,
+        )
+          ? crRes.results || []
+          : []
+        ).map((cr: any) => ({
           id: cr.id,
           referenceNumber: cr.reference_number,
           title: cr.title,
@@ -1090,7 +1233,12 @@ export class DashboardService {
           costMinor: cr.cost_minor,
           timelineImpactDays: cr.timeline_impact_days,
         })),
-        materialSelections: (matRes.results || []).map((m: any) => ({
+        materialSelections: (principal.projectMemberships.some(
+          (m) => m.projectId === projectId && m.contractualAuthority,
+        )
+          ? matRes.results || []
+          : []
+        ).map((m: any) => ({
           id: m.id,
           title: m.title,
           dueDate: m.due_date,
@@ -1107,10 +1255,10 @@ export class DashboardService {
   static async getRoleOverview(
     db: D1Database,
     principal: UserPrincipal,
-    orgId: string
+    orgId: string,
   ) {
-    const isOwner = principal.role === "OWNER";
-    const isAdmin = principal.role === "ADMIN";
+    const isOwner = hasCapability(principal, "OWNER");
+    const isAdmin = hasCapability(principal, "ADMIN");
     const canSeeSalaries = canViewPayrollAndProfit(principal);
 
     // Waiting on you queue
@@ -1129,7 +1277,10 @@ export class DashboardService {
         projParams.push(...pids);
       }
     }
-    const projectsRes = await db.prepare(projectsSql).bind(...projParams).all<any>();
+    const projectsRes = await db
+      .prepare(projectsSql)
+      .bind(...projParams)
+      .all<any>();
 
     // Firm finance numbers (separate invoiced vs received - REQ-DAS-002)
     let firmFinance: any = null;
@@ -1139,7 +1290,7 @@ export class DashboardService {
           `SELECT SUM(COALESCE(total_minor, 0)) as total_invoiced,
                   SUM(COALESCE(allocated_minor, 0)) as total_received
            FROM invoices
-           WHERE status IN ('ISSUED', 'PARTIALLY_PAID', 'PAID')`
+           WHERE status IN ('ISSUED', 'PARTIALLY_PAID', 'PAID')`,
         )
         .first<any>();
 
@@ -1151,10 +1302,16 @@ export class DashboardService {
       // Only ADMIN can see payroll & profit totals (REQ-DAS-002, AC-005)
       if (canSeeSalaries) {
         const payrollTotal = await db
-          .prepare(`SELECT SUM(gross_salary_minor) as total_payroll FROM payroll_records`)
+          .prepare(
+            `SELECT SUM(gross_salary_minor) as total_payroll FROM payroll_records WHERE org_id = ?`,
+          )
+          .bind(principal.orgId)
           .first<any>();
         const expenseTotal = await db
-          .prepare(`SELECT SUM(amount_minor) as total_expenses FROM expenses WHERE status = 'POSTED'`)
+          .prepare(
+            `SELECT SUM(amount_minor) as total_expenses FROM expenses WHERE org_id=? AND status = 'POSTED'`,
+          )
+          .bind(principal.orgId)
           .first<any>();
 
         firmFinance.payrollAndProfit = {

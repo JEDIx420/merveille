@@ -1,3 +1,4 @@
+import { publicError } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -15,7 +16,7 @@ import {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -31,15 +32,15 @@ export async function GET(
   } catch (err: any) {
     const status = err.code === "NOT_FOUND" ? 404 : 403;
     return NextResponse.json(
-      { error: err.message, code: err.code || "FORBIDDEN" },
-      { status }
+      { error: publicError(err), code: err.code || "FORBIDDEN" },
+      { status },
     );
   }
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = await getSessionPrincipal(request, env);
@@ -50,7 +51,7 @@ export async function POST(
   }
 
   try {
-    const body = await request.json() as any;
+    const body = (await request.json()) as any;
     const action = body.action;
 
     switch (action) {
@@ -65,7 +66,7 @@ export async function POST(
             reason: body.reason,
             expectedRevision: body.expectedRevision,
           },
-          env.DB
+          env.DB,
         );
         return NextResponse.json({ ok: true, ...result });
       }
@@ -79,7 +80,7 @@ export async function POST(
             reason: body.reason,
             expectedRevision: body.expectedRevision,
           },
-          env.DB
+          env.DB,
         );
         return NextResponse.json({ ok: true, ...result });
       }
@@ -97,7 +98,7 @@ export async function POST(
             completionNote: body.completionNote,
             expectedRevision: body.expectedRevision,
           },
-          env.DB
+          env.DB,
         );
         return NextResponse.json({ ok: true, ...result });
       }
@@ -112,7 +113,7 @@ export async function POST(
             newDueDate: body.newDueDate,
             expectedRevision: body.expectedRevision,
           },
-          env.DB
+          env.DB,
         );
         return NextResponse.json({ ok: true, ...result });
       }
@@ -125,7 +126,7 @@ export async function POST(
             reason: body.reason,
             expectedRevision: body.expectedRevision,
           },
-          env.DB
+          env.DB,
         );
         return NextResponse.json({ ok: true, ...result });
       }
@@ -135,7 +136,7 @@ export async function POST(
           auth.principal,
           taskId,
           body.reason || "Cancelled by manager",
-          env.DB
+          env.DB,
         );
         return NextResponse.json({ ok: true, ...result });
       }
@@ -146,7 +147,7 @@ export async function POST(
           taskId,
           body.commentText,
           body.attachmentFileId,
-          env.DB
+          env.DB,
         );
         return NextResponse.json({ ok: true, ...result }, { status: 201 });
       }
@@ -154,7 +155,7 @@ export async function POST(
       default:
         return NextResponse.json(
           { error: `Unknown task action: ${action}` },
-          { status: 400 }
+          { status: 400 },
         );
     }
   } catch (err: any) {
@@ -162,11 +163,11 @@ export async function POST(
       err.code === "NOT_FOUND"
         ? 404
         : err.code === "CONCURRENCY_CONFLICT"
-        ? 409
-        : 403;
+          ? 409
+          : 403;
     return NextResponse.json(
-      { error: err.message, code: err.code || "OPERATION_FAILED" },
-      { status }
+      { error: publicError(err), code: err.code || "OPERATION_FAILED" },
+      { status },
     );
   }
 }

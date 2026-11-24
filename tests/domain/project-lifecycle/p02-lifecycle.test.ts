@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { setupMigratedTestDb } from "../../test-db";
 import { execute, query, queryFirst } from "@/server/db";
+import { FinanceService } from "@/server/domain/finance/service";
 import { UserPrincipal } from "@/server/auth/principal";
 import {
   createEnquiry,
@@ -29,7 +30,7 @@ describe("Phase P02: Project Portfolios, Lifecycle, and Enquiry Intake", () => {
     email: "admin@merveilledesigns.com",
     name: "Merveille Admin",
     orgId,
-    role: "ADMIN",
+    role: "ADMIN", roles: ["ADMIN"],
     projectMemberships: [],
     isSynthetic: false,
   };
@@ -39,8 +40,8 @@ describe("Phase P02: Project Portfolios, Lifecycle, and Enquiry Intake", () => {
     email: "lead.architect.p02@merveilledesigns.com",
     name: "Lead Architect",
     orgId,
-    role: "MANAGER",
-    projectMemberships: [{ projectId: "prj_1" }, { projectId: "prj_2" }, { projectId: "prj_demo" }, { projectId: "prj_gate" }],
+    role: "MANAGER", roles: [], intakeAccess: true,
+    projectMemberships: [{ projectId: "prj_1" , projectRole: "MANAGER" }, { projectId: "prj_2" , projectRole: "MANAGER" }, { projectId: "prj_demo" , projectRole: "MANAGER" }, { projectId: "prj_gate" , projectRole: "MANAGER" }],
     isSynthetic: false,
   };
 
@@ -49,8 +50,8 @@ describe("Phase P02: Project Portfolios, Lifecycle, and Enquiry Intake", () => {
     email: "george.kurian@clientfamily.com",
     name: "George Kurian",
     orgId,
-    role: "MAIN_CLIENT",
-    projectMemberships: [{ projectId: "prj_1" }, { projectId: "prj_2" }, { projectId: "prj_demo" }, { projectId: "prj_gate" }],
+    role: "MAIN_CLIENT", roles: [],
+    projectMemberships: [{ projectId: "prj_1" , projectRole: "MAIN_CLIENT", contractualAuthority: true }, { projectId: "prj_2" , projectRole: "MAIN_CLIENT", contractualAuthority: true }, { projectId: "prj_demo" , projectRole: "MAIN_CLIENT", contractualAuthority: true }, { projectId: "prj_gate" , projectRole: "MAIN_CLIENT", contractualAuthority: true }],
     isSynthetic: false,
   };
 
@@ -59,8 +60,8 @@ describe("Phase P02: Project Portfolios, Lifecycle, and Enquiry Intake", () => {
     email: "mathew.kurian@clientfamily.com",
     name: "Mathew Kurian",
     orgId,
-    role: "CLIENT_REP",
-    projectMemberships: [{ projectId: "prj_1" }],
+    role: "CLIENT_REP", roles: [],
+    projectMemberships: [{ projectId: "prj_1" , projectRole: "CLIENT_REP" }],
     isSynthetic: false,
   };
 
@@ -201,7 +202,7 @@ describe("Phase P02: Project Portfolios, Lifecycle, and Enquiry Intake", () => {
       expect(repProjects[0].code).toBe("PRJ-2026-001");
 
       // 5. Representative trying to access Project 2 detail is blocked
-      await expect(getProject(clientRepUser, "prj_2", db)).rejects.toThrow("Access denied: You are not assigned to this project");
+      await expect(getProject(clientRepUser, "prj_2", db)).rejects.toThrow("You are not assigned to this project");
     });
   });
 
@@ -298,24 +299,15 @@ describe("Phase P02: Project Portfolios, Lifecycle, and Enquiry Intake", () => {
         [orgId, mainClientUser.id, managerUser.id, Date.now()]
       );
 
-      // Attempt activation without gates -> Fails
-      await expect(activateProject(managerUser, "prj_gate", db)).rejects.toThrow(
-        "Cannot activate project. Missing required commercial gates: Accepted client quotation and Admin-confirmed advance receipt"
-      );
-
-      // Set quotation accepted only
-      await execute(db, "UPDATE projects SET quote_accepted_at = ? WHERE id = 'prj_gate'", [Date.now()]);
-      await expect(activateProject(managerUser, "prj_gate", db)).rejects.toThrow(
-        "Cannot activate project. Missing required commercial gates: Admin-confirmed advance receipt"
-      );
-
-      // Set advance confirmed
-      await execute(db, "UPDATE projects SET advance_confirmed_at = ? WHERE id = 'prj_gate'", [Date.now()]);
-
-      // Now activation succeeds
-      const actRes = await activateProject(managerUser, "prj_gate", db);
-      expect(actRes.status).toBe("ACTIVE");
-
+      // Legacy timestamps must never substitute for accepted commercial records.
+      await expect(activateProject(managerUser,"prj_gate",db)).rejects.toThrow(/missing accepted quotation/);
+      await execute(db,"UPDATE projects SET quote_accepted_at=1,advance_confirmed_at=1 WHERE id='prj_gate'");
+      await expect(activateProject(managerUser,"prj_gate",db)).rejects.toThrow(/missing accepted quotation/);
+      await execute(db,`INSERT INTO quotations(id,org_id,project_id,version_number,title,total_amount_minor,required_advance_minor,status,accepted_by_user_id,accepted_at,created_by_user_id,created_at) VALUES ('quote_gate',?,'prj_gate',1,'Accepted quote',1000,500,'ACCEPTED',?,1,?,1)`,[orgId,mainClientUser.id,managerUser.id]);
+      await expect(activateProject(managerUser,"prj_gate",db)).rejects.toThrow(/required advance payment/);
+      const gateReceipt=await FinanceService.reportReceipt(db,mainClientUser,{projectId:'prj_gate',amountMinor:500,receivedDate:'2026-11-24',paymentMethod:'BANK_TRANSFER'});
+      await FinanceService.confirmReceipt(db,adminUser,{receiptId:gateReceipt.receiptId});
+      const actRes=await activateProject(managerUser,"prj_gate",db);expect(actRes.status).toBe('ACTIVE');
       const activeProj = await queryFirst<any>(db, "SELECT status, activated_at FROM projects WHERE id = 'prj_gate'");
       expect(activeProj.status).toBe("ACTIVE");
       expect(activeProj.activated_at).toBeGreaterThan(0);

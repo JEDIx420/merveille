@@ -1,3 +1,4 @@
+import { publicError, errorStatus } from "@/server/http/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getSessionPrincipal } from "@/server/auth/session";
@@ -25,8 +26,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: true, projects });
   } catch (err: any) {
     return NextResponse.json(
-      { error: err.message, code: err.code || "FORBIDDEN" },
-      { status: 403 }
+      { error: publicError(err), code: err.code || "FORBIDDEN" },
+      { status: errorStatus(err) },
     );
   }
 }

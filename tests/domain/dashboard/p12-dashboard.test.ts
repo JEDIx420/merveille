@@ -13,7 +13,7 @@ describe("Phase 12: Role Dashboards, Waiting-on-you, and Owner Performance", () 
     id: "usr_owner_p12",
     email: "owner.p12@merveilledesigns.com",
     name: "Vikram Owner",
-    role: "OWNER",
+    role: "OWNER", roles: ["OWNER"],
     orgId,
     projectMemberships: [{ projectId, projectRole: "DIRECTOR" }],
   };
@@ -22,7 +22,7 @@ describe("Phase 12: Role Dashboards, Waiting-on-you, and Owner Performance", () 
     id: "usr_admin_p12",
     email: "admin.p12@merveilledesigns.com",
     name: "Anita Admin",
-    role: "ADMIN",
+    role: "ADMIN", roles: ["ADMIN"],
     orgId,
     projectMemberships: [{ projectId, projectRole: "FINANCE" }],
   };
@@ -31,25 +31,25 @@ describe("Phase 12: Role Dashboards, Waiting-on-you, and Owner Performance", () 
     id: "usr_mgr_p12",
     email: "manager.p12@merveilledesigns.com",
     name: "Mohan Manager",
-    role: "MANAGER",
+    role: "MANAGER", roles: [],
     orgId,
-    projectMemberships: [{ projectId, projectRole: "PROJECT_MANAGER" }],
+    projectMemberships: [{ projectId, projectRole: "MANAGER" }],
   };
 
   const staffUser: UserPrincipal = {
     id: "usr_staff_p12",
     email: "staff.p12@merveilledesigns.com",
     name: "Suresh Staff",
-    role: "STAFF",
+    role: "STAFF", roles: [],
     orgId,
-    projectMemberships: [{ projectId, projectRole: "ARCHITECT" }],
+    projectMemberships: [{ projectId, projectRole: "TEAM_MEMBER" }],
   };
 
   const consultantUser: UserPrincipal = {
     id: "usr_cons_p12",
     email: "structural.p12@cons.com",
     name: "Cyrus Structural",
-    role: "CONSULTANT",
+    role: "CONSULTANT", roles: [],
     orgId,
     projectMemberships: [{ projectId, projectRole: "CONSULTANT" }],
   };
@@ -58,16 +58,16 @@ describe("Phase 12: Role Dashboards, Waiting-on-you, and Owner Performance", () 
     id: "usr_client_p12",
     email: "client.p12@gmail.com",
     name: "Dr. K. R. Nambiar",
-    role: "MAIN_CLIENT",
+    role: "MAIN_CLIENT", roles: [],
     orgId,
-    projectMemberships: [{ projectId, projectRole: "MAIN_CLIENT" }],
+    projectMemberships: [{ projectId, projectRole: "MAIN_CLIENT", contractualAuthority: true }],
   };
 
   const clientRepUser: UserPrincipal = {
     id: "usr_rep_p12",
     email: "rep.p12@gmail.com",
     name: "Rahul Representative",
-    role: "CLIENT_REP",
+    role: "CLIENT_REP", roles: [],
     orgId,
     projectMemberships: [{ projectId, projectRole: "CLIENT_REP" }],
   };

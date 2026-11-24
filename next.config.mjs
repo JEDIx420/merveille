@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  distDir: process.env.MERVEILLE_UI_DIST || ".next",
   poweredByHeader: false,
   async headers() {
     return [

@@ -1,173 +1,138 @@
-/**
- * Session and Principal resolution from Cloudflare Access JWT or local synthetic credentials.
- */
-
-import { NextRequest } from "next/server";
-import { UserPrincipal, resolveSyntheticPrincipal } from "./principal";
-import { validateAccessJwt } from "./jwt";
+import { UserPrincipal, UserRole } from "./principal";
+import { validateAccessJwt, AccessJwtPayload } from "./jwt";
 import { query, queryFirst } from "../db";
-
 export interface ResolvedAuth {
   principal: UserPrincipal | null;
   status: "AUTHENTICATED" | "UNAUTHENTICATED" | "DISABLED" | "UNREGISTERED";
   error?: string;
   email?: string;
 }
+export function assertSameOrigin(request: Request, env: CloudflareEnv) {
+  if (["GET", "HEAD", "OPTIONS"].includes(request.method)) return;
+  const origin = request.headers.get("origin");
 
-/**
- * Resolve authenticated principal from NextRequest.
- */
+  if (
+    !env.APP_ORIGIN ||
+    !origin || origin !== new URL(env.APP_ORIGIN).origin
+  )
+    throw new Error("CROSS_ORIGIN_DENIED");
+  // OpenNext may normalize the internal Request URL; the configured browser Origin is authoritative.
+}
+export async function verifiedIdentity(
+  request: Request,
+  env: CloudflareEnv,
+): Promise<AccessJwtPayload | null> {
+  try {
+    assertSameOrigin(request, env);
+  } catch {
+    return null;
+  }
+  const result = await validateAccessJwt(
+    request.headers.get("cf-access-jwt-assertion"),
+    env,
+  );
+  return result.valid && result.payload ? result.payload : null;
+}
 export async function getSessionPrincipal(
-  request: NextRequest | Request,
-  env: CloudflareEnv
+  request: Request,
+  env: CloudflareEnv,
 ): Promise<ResolvedAuth> {
-  const headers = request.headers;
-  // NextRequest provides cookies helper; standard Request can read Cookie header
-  const cookies =
-    "cookies" in request && typeof (request as any).cookies?.get === "function"
-      ? (request as NextRequest).cookies
-      : {
-          get: (name: string) => {
-            const raw = headers.get("cookie") || "";
-            const match = raw.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
-            return match ? { value: decodeURIComponent(match[1]) } : undefined;
-          },
-        };
-
-  // 1. Check Cloudflare Access JWT Assertion first
-  const jwt = headers.get("cf-access-jwt-assertion");
-  if (jwt) {
-    const jwtResult = await validateAccessJwt(jwt, env);
-    if (!jwtResult.valid || !jwtResult.payload) {
-      return {
-        principal: null,
-        status: "UNAUTHENTICATED",
-        error: jwtResult.error || "Invalid Access Assertion",
-      };
-    }
-
-    // Lookup user in D1 by email
-    const email = jwtResult.payload.email.toLowerCase().trim();
-    return await loadPrincipalByEmail(email, env.DB, false);
+  const identity = await verifiedIdentity(request, env);
+  if (!identity) return { principal: null, status: "UNAUTHENTICATED" };
+  const binding = await queryFirst<{ user_id: string }>(
+    env.DB,
+    "SELECT user_id FROM identities WHERE provider='cloudflare_access' AND issuer=? AND subject=?",
+    [identity.iss, identity.sub],
+  );
+  if (!binding) return { principal: null, status: "UNREGISTERED" };
+  const result = await loadPrincipalById(binding.user_id, env.DB);
+  if (result.principal) result.principal.authenticatedAt = identity.iat * 1000;
+  return result;
+}
+export async function loadPrincipalById(
+  id: string,
+  db: D1Database,
+): Promise<ResolvedAuth> {
+  const user = await queryFirst<any>(db, "SELECT * FROM users WHERE id=?", [
+    id,
+  ]);
+  if (!user || user.status !== "ACTIVE")
+    return {
+      principal: null,
+      status: user?.status === "DISABLED" ? "DISABLED" : "UNREGISTERED",
+    };
+  const org = await queryFirst<any>(
+    db,
+    "SELECT m.org_id FROM organization_memberships m JOIN organizations o ON o.id=m.org_id WHERE m.user_id=? AND m.is_active=1 AND o.status='ACTIVE'",
+    [id],
+  );
+  if (!org) return { principal: null, status: "DISABLED" };
+  const granted = await query<{ role: UserRole }>(
+    db,
+    "SELECT role FROM role_assignments WHERE user_id=? AND org_id=? AND revoked_at IS NULL AND scope='GLOBAL'",
+    [id, org.org_id],
+  );
+  const intake = await queryFirst<any>(
+    db,
+    "SELECT id FROM role_assignments WHERE user_id=? AND org_id=? AND scope='INTAKE' AND revoked_at IS NULL",
+    [id, org.org_id],
+  );
+  const roles = granted.map((r) =>
+    r.role === "STAFF" ? "TEAM_MEMBER" : r.role,
+  ) as UserRole[];
+  const members = await query<any>(
+    db,
+    "SELECT m.*,p.main_client_user_id FROM project_memberships m JOIN projects p ON p.id=m.project_id AND p.org_id=m.org_id WHERE m.user_id=? AND m.org_id=? AND m.is_active=1",
+    [id, org.org_id],
+  );
+  const grouped = new Map<string, any>();
+  for (const m of members) {
+    const current = grouped.get(m.project_id) ?? {
+      projectId: m.project_id,
+      projectRole: m.project_role,
+      roles: [],
+      financeAccess: false,
+      financeAuthor: false,
+      invoiceIssue: false,
+      contractualAuthority: false,
+    };
+    current.roles.push(
+      m.project_role === "STAFF" ? "TEAM_MEMBER" : m.project_role,
+    );
+    current.financeAccess ||= !!m.finance_access;
+    current.financeAuthor ||= !!m.finance_author;
+    current.invoiceIssue ||= !!m.invoice_issue;
+    current.contractualAuthority ||=
+      m.project_role === "MAIN_CLIENT" && m.main_client_user_id === id;
+    grouped.set(m.project_id, current);
   }
-
-  // 2. Fallback to synthetic auth ONLY in local development
-  if (env.APP_ENV === "local" || env.ALLOW_SYNTHETIC_AUTH === "true") {
-    const synthetic = resolveSyntheticPrincipal(headers, cookies, env);
-    if (synthetic) {
-      // Check if D1 has a record for this synthetic user
-      const existing = await queryFirst<{ id: string; status: string }>(
-        env.DB,
-        "SELECT id, status FROM users WHERE id = ? OR email = ?",
-        [synthetic.id, synthetic.email]
-      );
-
-      if (existing && existing.status === "DISABLED") {
-        return {
-          principal: null,
-          status: "DISABLED",
-          error: "Account has been deactivated by administrator.",
-          email: synthetic.email,
-        };
-      }
-
-      return {
-        principal: synthetic,
-        status: "AUTHENTICATED",
-        email: synthetic.email,
-      };
-    }
-  }
-
+  // role is retained for legacy presentation only; no default grants are created.
   return {
-    principal: null,
-    status: "UNAUTHENTICATED",
+    principal: {
+      id: user.id,
+      email: user.email,
+      name: user.display_name,
+      orgId: org.org_id,
+      roles,
+      intakeAccess:
+        !!intake || roles.includes("TEAM_MEMBER") || roles.includes("MANAGER"),
+      role: roles[0] ?? members[0]?.project_role ?? "CLIENT_REP",
+      projectMemberships: [...grouped.values()],
+    },
+    status: "AUTHENTICATED",
   };
 }
-
-/**
- * Load principal and active permissions from D1.
- */
+/** Used by controlled recovery tooling, never as a request identity binding. */
 export async function loadPrincipalByEmail(
   email: string,
   db: D1Database,
-  isSynthetic = false
 ): Promise<ResolvedAuth> {
-  const user = await queryFirst<{
-    id: string;
-    email: string;
-    display_name: string;
-    status: string;
-  }>(db, "SELECT id, email, display_name, status FROM users WHERE lower(email) = ?", [
-    email.toLowerCase().trim(),
-  ]);
-
-  if (!user) {
-    return {
-      principal: null,
-      status: "UNREGISTERED",
-      email,
-    };
-  }
-
-  if (user.status === "DISABLED") {
-    return {
-      principal: null,
-      status: "DISABLED",
-      error: "Account has been deactivated by administrator.",
-      email,
-    };
-  }
-
-  // Fetch organization membership
-  const orgMem = await queryFirst<{ org_id: string }>(
+  const user = await queryFirst<any>(
     db,
-    "SELECT org_id FROM organization_memberships WHERE user_id = ? AND is_active = 1",
-    [user.id]
+    "SELECT id FROM users WHERE lower(email)=?",
+    [email.toLowerCase().trim()],
   );
-
-  const orgId = orgMem?.org_id || "org_merveille_main";
-
-  // Fetch active global roles
-  const roles = await query<{ role: string }>(
-    db,
-    "SELECT role FROM role_assignments WHERE user_id = ? AND revoked_at IS NULL",
-    [user.id]
-  );
-
-  // Highest priority role or default STAFF
-  const roleList = roles.map((r) => r.role);
-  let primaryRole: any = "STAFF";
-  if (roleList.includes("OWNER")) primaryRole = "OWNER";
-  else if (roleList.includes("ADMIN")) primaryRole = "ADMIN";
-  else if (roleList.includes("MANAGER")) primaryRole = "MANAGER";
-  else if (roleList.includes("CONSULTANT")) primaryRole = "CONSULTANT";
-  else if (roleList.includes("MAIN_CLIENT")) primaryRole = "MAIN_CLIENT";
-  else if (roleList.includes("CLIENT_REP")) primaryRole = "CLIENT_REP";
-
-  // Fetch project memberships
-  const projectMems = await query<{ project_id: string; project_role: string }>(
-    db,
-    "SELECT project_id, project_role FROM project_memberships WHERE user_id = ? AND is_active = 1",
-    [user.id]
-  );
-
-  const principal: UserPrincipal = {
-    id: user.id,
-    email: user.email,
-    name: user.display_name,
-    role: primaryRole,
-    orgId,
-    projectMemberships: projectMems.map((pm) => ({
-      projectId: pm.project_id,
-      projectRole: pm.project_role,
-    })),
-    isSynthetic,
-  };
-
-  return {
-    principal,
-    status: "AUTHENTICATED",
-    email: user.email,
-  };
+  return user
+    ? loadPrincipalById(user.id, db)
+    : { principal: null, status: "UNREGISTERED" };
 }

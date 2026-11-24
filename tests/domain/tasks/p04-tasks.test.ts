@@ -24,7 +24,7 @@ describe("Phase P04: Tasks, Manager Deadlines, Reopening, and Internal Evidence"
     email: "admin@merveilledesigns.com",
     name: "Operations Admin",
     orgId,
-    role: "ADMIN",
+    role: "ADMIN", roles: ["ADMIN"],
     projectMemberships: [],
     isSynthetic: false,
   };
@@ -34,8 +34,8 @@ describe("Phase P04: Tasks, Manager Deadlines, Reopening, and Internal Evidence"
     email: "manager@merveilledesigns.com",
     name: "Project Manager",
     orgId,
-    role: "MANAGER",
-    projectMemberships: [{ projectId }],
+    role: "MANAGER", roles: [],
+    projectMemberships: [{ projectId, projectRole: "MANAGER" }],
     isSynthetic: false,
   };
 
@@ -44,8 +44,8 @@ describe("Phase P04: Tasks, Manager Deadlines, Reopening, and Internal Evidence"
     email: "architect.staff@merveilledesigns.com",
     name: "Staff Architect",
     orgId,
-    role: "STAFF",
-    projectMemberships: [{ projectId }],
+    role: "STAFF", roles: [],
+    projectMemberships: [{ projectId, projectRole: "STAFF" }],
     isSynthetic: false,
   };
 
@@ -54,8 +54,8 @@ describe("Phase P04: Tasks, Manager Deadlines, Reopening, and Internal Evidence"
     email: "structural@engineers.example",
     name: "Structural Consultant",
     orgId,
-    role: "CONSULTANT",
-    projectMemberships: [{ projectId }],
+    role: "CONSULTANT", roles: [],
+    projectMemberships: [{ projectId, projectRole: "CONSULTANT" }],
     isSynthetic: false,
   };
 
@@ -64,8 +64,8 @@ describe("Phase P04: Tasks, Manager Deadlines, Reopening, and Internal Evidence"
     email: "client@clientfamily.example",
     name: "Client Owner",
     orgId,
-    role: "MAIN_CLIENT",
-    projectMemberships: [{ projectId }],
+    role: "MAIN_CLIENT", roles: [],
+    projectMemberships: [{ projectId, projectRole: "MAIN_CLIENT", contractualAuthority: true }],
     isSynthetic: false,
   };
 

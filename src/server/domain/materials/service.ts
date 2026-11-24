@@ -1,13 +1,20 @@
+import { assertProjectOrganisation } from "../../auth/policy";
 /**
  * Client References, Material Selections, and Execution Readiness Domain Service.
  * Enforces client reference scoping, representative suggestions vs authoritative
  * main-client selections, internal pricing note confidentiality, and commercial
- * change gate compliance before execution readiness (AC-042, AC-043).
+ * change gate compliance before execution readiness.
  */
 
-import { UserPrincipal } from "@/server/auth/principal";
-import { assertProjectAccess, AuthorizationError, canReadInternalNotes } from "@/server/auth/policy";
+import { UserPrincipal, hasCapability } from "@/server/auth/principal";
+import {
+  assertProjectAccess,
+  AuthorizationError,
+  canReadInternalNotes,
+  canAcceptContractualDecisions,
+} from "@/server/auth/policy";
 import { query, queryFirst, execute } from "@/server/db";
+import { ArchiveService } from "../archive/service";
 
 export type SelectionStatus =
   | "DRAFT"
@@ -68,17 +75,7 @@ export class MaterialsService {
    * Helper to determine if an actor is the authorized MAIN_CLIENT for a project.
    */
   static isMainClient(principal: UserPrincipal, projectId: string): boolean {
-    const membership = principal.projectMemberships?.find((m) => m.projectId === projectId);
-    if (principal.role === "CLIENT_REP" || membership?.projectRole === "CLIENT_REP") {
-      return false; // Representatives can never act as main client
-    }
-    if (principal.role === "MAIN_CLIENT" || membership?.projectRole === "MAIN_CLIENT") {
-      return true;
-    }
-    if (principal.role === "ADMIN" || principal.role === "OWNER") {
-      return true;
-    }
-    return false;
+    return canAcceptContractualDecisions(principal, projectId);
   }
 
   // ---------------------------------------------------------------------------
@@ -88,17 +85,36 @@ export class MaterialsService {
   static async addReference(
     db: D1Database,
     principal: UserPrincipal,
-    params: AddReferenceParams
+    params: AddReferenceParams,
   ) {
     assertProjectAccess(principal, params.projectId);
+    await assertProjectOrganisation(db, principal, params.projectId);
+    await ArchiveService.assertProjectNotArchived(db, params.projectId);
 
     if (!params.caption || params.caption.trim().length === 0) {
-      throw new AuthorizationError("Reference caption is required", "INVALID_INPUT");
+      throw new AuthorizationError(
+        "Reference caption is required",
+        "INVALID_INPUT",
+      );
     }
 
     if (params.fileId) {
-      const file = await queryFirst<any>(db, "SELECT * FROM files WHERE id = ?", [params.fileId]);
-      if (!file) throw new AuthorizationError("File not found", "NOT_FOUND");
+      const file = await queryFirst<any>(
+        db,
+        "SELECT * FROM files WHERE id = ?",
+        [params.fileId],
+      );
+      if (
+        !file ||
+        file.org_id !== principal.orgId ||
+        file.project_id !== params.projectId ||
+        file.status !== "READY" ||
+        file.is_internal_only
+      )
+        throw new AuthorizationError(
+          "A completed shared file from this project is required.",
+          "INVALID_INPUT",
+        );
     }
 
     const refId = generateId("ref");
@@ -121,7 +137,7 @@ export class MaterialsService {
         params.roomArea || null,
         params.category || null,
         now,
-      ]
+      ],
     );
 
     return {
@@ -133,7 +149,11 @@ export class MaterialsService {
     };
   }
 
-  static async getReference(db: D1Database, principal: UserPrincipal, referenceId: string) {
+  static async getReference(
+    db: D1Database,
+    principal: UserPrincipal,
+    referenceId: string,
+  ) {
     const ref = await queryFirst<any>(
       db,
       `SELECT r.*, u.display_name as uploader_name, f.file_name, f.size_bytes as file_size
@@ -141,11 +161,14 @@ export class MaterialsService {
        JOIN users u ON r.uploaded_by_user_id = u.id
        LEFT JOIN files f ON r.file_id = f.id
        WHERE r.id = ?`,
-      [referenceId]
+      [referenceId],
     );
 
     if (!ref) throw new AuthorizationError("Reference not found", "NOT_FOUND");
     assertProjectAccess(principal, ref.project_id);
+    await assertProjectOrganisation(db, principal, ref.project_id);
+    if (ref.org_id !== principal.orgId)
+      throw new AuthorizationError("Reference not found", "NOT_FOUND");
 
     const comments = await query<any>(
       db,
@@ -154,14 +177,19 @@ export class MaterialsService {
        JOIN users u ON c.user_id = u.id
        WHERE c.reference_id = ?
        ORDER BY c.created_at ASC`,
-      [referenceId]
+      [referenceId],
     );
 
     return { ...ref, comments };
   }
 
-  static async listReferences(db: D1Database, principal: UserPrincipal, projectId: string) {
+  static async listReferences(
+    db: D1Database,
+    principal: UserPrincipal,
+    projectId: string,
+  ) {
     assertProjectAccess(principal, projectId);
+    await assertProjectOrganisation(db, principal, projectId);
 
     return await query<any>(
       db,
@@ -171,20 +199,26 @@ export class MaterialsService {
        LEFT JOIN files f ON r.file_id = f.id
        WHERE r.project_id = ?
        ORDER BY r.created_at DESC`,
-      [projectId]
+      [projectId],
     );
   }
 
   static async addReferenceComment(
     db: D1Database,
     principal: UserPrincipal,
-    params: { referenceId: string; commentText: string }
+    params: { referenceId: string; commentText: string },
   ) {
-    const ref = await queryFirst<any>(db, "SELECT project_id FROM client_references WHERE id = ?", [
-      params.referenceId,
-    ]);
+    const ref = await queryFirst<any>(
+      db,
+      "SELECT * FROM client_references WHERE id = ?",
+      [params.referenceId],
+    );
     if (!ref) throw new AuthorizationError("Reference not found", "NOT_FOUND");
     assertProjectAccess(principal, ref.project_id);
+    await assertProjectOrganisation(db, principal, ref.project_id);
+    if (ref.org_id !== principal.orgId)
+      throw new AuthorizationError("Reference not found", "NOT_FOUND");
+    await ArchiveService.assertProjectNotArchived(db, ref.project_id);
 
     if (!params.commentText || params.commentText.trim().length === 0) {
       throw new AuthorizationError("Comment text is required", "INVALID_INPUT");
@@ -197,7 +231,13 @@ export class MaterialsService {
       db,
       `INSERT INTO client_reference_comments (id, reference_id, user_id, comment_text, created_at)
        VALUES (?, ?, ?, ?, ?)`,
-      [commentId, params.referenceId, principal.id, params.commentText.trim(), now]
+      [
+        commentId,
+        params.referenceId,
+        principal.id,
+        params.commentText.trim(),
+        now,
+      ],
     );
 
     return { id: commentId, referenceId: params.referenceId, createdAt: now };
@@ -210,28 +250,61 @@ export class MaterialsService {
   static async createSelectionItem(
     db: D1Database,
     principal: UserPrincipal,
-    params: CreateSelectionItemParams
+    params: CreateSelectionItemParams,
   ) {
     assertProjectAccess(principal, params.projectId);
+    await assertProjectOrganisation(db, principal, params.projectId);
+    await ArchiveService.assertProjectNotArchived(db, params.projectId);
 
     // Only internal practice staff can create/frame selection items (SCR-13)
-    if (!["STAFF", "MANAGER", "ADMIN", "OWNER"].includes(principal.role)) {
+    if (
+      !hasCapability(principal, "TEAM_MEMBER", params.projectId) &&
+      !hasCapability(principal, "MANAGER", params.projectId)
+    ) {
       throw new AuthorizationError(
         "Only practice staff can frame material selection decision items",
-        "FORBIDDEN"
+        "FORBIDDEN",
       );
     }
 
     if (!params.title || params.title.trim().length === 0) {
-      throw new AuthorizationError("Selection title is required", "INVALID_INPUT");
+      throw new AuthorizationError(
+        "Selection title is required",
+        "INVALID_INPUT",
+      );
     }
     if (!params.question || params.question.trim().length === 0) {
-      throw new AuthorizationError("Decision question is required", "INVALID_INPUT");
+      throw new AuthorizationError(
+        "Decision question is required",
+        "INVALID_INPUT",
+      );
     }
     if (!params.options || params.options.length === 0) {
-      throw new AuthorizationError("At least one option must be provided", "INVALID_INPUT");
+      throw new AuthorizationError(
+        "At least one option must be provided",
+        "INVALID_INPUT",
+      );
     }
 
+    for (const option of params.options ?? []) {
+      if (option.fileId) {
+        const file = await queryFirst<any>(
+          db,
+          "SELECT id FROM files WHERE id=? AND org_id=? AND project_id=? AND status='READY' AND is_internal_only=0",
+          [option.fileId, principal.orgId, params.projectId],
+        );
+        if (!file)
+          throw new AuthorizationError(
+            "A completed shared file from this project is required.",
+            "INVALID_INPUT",
+          );
+      }
+      if (!Number.isSafeInteger(option.costImplicationMinor ?? 0))
+        throw new AuthorizationError(
+          "Material cost must use integer minor units.",
+          "INVALID_INPUT",
+        );
+    }
     const itemId = generateId("msi");
     const now = Date.now();
 
@@ -253,7 +326,7 @@ export class MaterialsService {
         principal.id,
         now,
         now,
-      ]
+      ],
     );
 
     for (const opt of params.options) {
@@ -276,7 +349,7 @@ export class MaterialsService {
           opt.scheduleImplicationDays || 0,
           opt.isRecommended ? 1 : 0,
           now,
-        ]
+        ],
       );
     }
 
@@ -284,24 +357,32 @@ export class MaterialsService {
   }
 
   /**
-   * Record representative or consultant suggestion / comment (AC-042).
+   * Record representative or consultant suggestion / comment.
    * Note: This does NOT select the option or authorize work.
    */
   static async recordSuggestion(
     db: D1Database,
     principal: UserPrincipal,
-    params: RecordSuggestionParams
+    params: RecordSuggestionParams,
   ) {
     const item = await queryFirst<any>(
       db,
       "SELECT * FROM material_selection_items WHERE id = ?",
-      [params.selectionItemId]
+      [params.selectionItemId],
     );
-    if (!item) throw new AuthorizationError("Selection item not found", "NOT_FOUND");
+    if (!item)
+      throw new AuthorizationError("Selection item not found", "NOT_FOUND");
     assertProjectAccess(principal, item.project_id);
+    await assertProjectOrganisation(db, principal, item.project_id);
+    await ArchiveService.assertProjectNotArchived(db, item.project_id);
+    if (item.org_id !== principal.orgId)
+      throw new AuthorizationError("Record not found", "NOT_FOUND");
 
     if (!params.commentText || params.commentText.trim().length === 0) {
-      throw new AuthorizationError("Comment / suggestion text is required", "INVALID_INPUT");
+      throw new AuthorizationError(
+        "Comment / suggestion text is required",
+        "INVALID_INPUT",
+      );
     }
 
     const suggestionId = generateId("mss");
@@ -320,7 +401,7 @@ export class MaterialsService {
         params.suggestionType || "SUGGESTION",
         params.commentText.trim(),
         now,
-      ]
+      ],
     );
 
     return {
@@ -333,37 +414,56 @@ export class MaterialsService {
   }
 
   /**
-   * Binding material selection (AC-042, AC-043).
+   * Binding material selection.
    * ONLY MAIN_CLIENT can make binding selections.
    * Representatives cannot select or overwrite previous selections.
    */
   static async selectOption(
     db: D1Database,
     principal: UserPrincipal,
-    params: SelectOptionParams
+    params: SelectOptionParams,
   ) {
     const item = await queryFirst<any>(
       db,
       "SELECT * FROM material_selection_items WHERE id = ?",
-      [params.selectionItemId]
+      [params.selectionItemId],
     );
-    if (!item) throw new AuthorizationError("Selection item not found", "NOT_FOUND");
+    if (!item)
+      throw new AuthorizationError("Selection item not found", "NOT_FOUND");
     assertProjectAccess(principal, item.project_id);
+    await assertProjectOrganisation(db, principal, item.project_id);
+    await ArchiveService.assertProjectNotArchived(db, item.project_id);
+    if (item.org_id !== principal.orgId)
+      throw new AuthorizationError("Record not found", "NOT_FOUND");
 
-    // Enforce MAIN_CLIENT authority (AC-042, AC-043)
+    // Enforce MAIN_CLIENT authority
     if (!this.isMainClient(principal, item.project_id)) {
       throw new AuthorizationError(
         "Only the main client has authority to make binding material decisions",
-        "MAIN_CLIENT_SELECTION_REQUIRED"
+        "MAIN_CLIENT_SELECTION_REQUIRED",
       );
     }
 
+    const authority = await queryFirst<any>(
+      db,
+      "SELECT main_client_user_id FROM projects WHERE id=? AND org_id=?",
+      [item.project_id, principal.orgId],
+    );
+    if (authority?.main_client_user_id !== principal.id)
+      throw new AuthorizationError(
+        "Main-client authority changed",
+        "FORBIDDEN",
+      );
     const option = await queryFirst<any>(
       db,
       "SELECT * FROM material_selection_options WHERE id = ? AND selection_item_id = ?",
-      [params.optionId, params.selectionItemId]
+      [params.optionId, params.selectionItemId],
     );
-    if (!option) throw new AuthorizationError("Option not found for this selection item", "NOT_FOUND");
+    if (!option)
+      throw new AuthorizationError(
+        "Option not found for this selection item",
+        "NOT_FOUND",
+      );
 
     const now = Date.now();
 
@@ -373,7 +473,7 @@ export class MaterialsService {
        SET status = 'SELECTED', selected_option_id = ?, selected_by_user_id = ?,
            selected_at = ?, updated_at = ?
        WHERE id = ?`,
-      [params.optionId, principal.id, now, now, params.selectionItemId]
+      [params.optionId, principal.id, now, now, params.selectionItemId],
     );
 
     return {
@@ -386,63 +486,74 @@ export class MaterialsService {
   }
 
   /**
-   * Mark selection item ready for execution (AC-043).
+   * Mark selection item ready for execution.
    * Only MANAGER, ADMIN, OWNER.
    * If selected option has cost implication > 0, an AUTHORIZED change request is MANDATORY.
    */
   static async markReadyForExecution(
     db: D1Database,
     principal: UserPrincipal,
-    selectionItemId: string
+    selectionItemId: string,
   ) {
     const item = await queryFirst<any>(
       db,
       "SELECT * FROM material_selection_items WHERE id = ?",
-      [selectionItemId]
+      [selectionItemId],
     );
-    if (!item) throw new AuthorizationError("Selection item not found", "NOT_FOUND");
+    if (!item)
+      throw new AuthorizationError("Selection item not found", "NOT_FOUND");
     assertProjectAccess(principal, item.project_id);
+    await assertProjectOrganisation(db, principal, item.project_id);
+    await ArchiveService.assertProjectNotArchived(db, item.project_id);
+    if (item.org_id !== principal.orgId)
+      throw new AuthorizationError("Record not found", "NOT_FOUND");
 
-    if (!["MANAGER", "ADMIN", "OWNER"].includes(principal.role)) {
+    if (!hasCapability(principal, "MANAGER", item.project_id)) {
       throw new AuthorizationError(
         "Only project managers can record execution readiness",
-        "FORBIDDEN"
+        "FORBIDDEN",
       );
     }
 
     if (item.status !== "SELECTED") {
       throw new AuthorizationError(
         "Item must have a binding selection before being marked ready for execution",
-        "INVALID_STATE"
+        "INVALID_STATE",
       );
     }
 
     const option = await queryFirst<any>(
       db,
       "SELECT * FROM material_selection_options WHERE id = ?",
-      [item.selected_option_id]
+      [item.selected_option_id],
     );
-    if (!option) throw new AuthorizationError("Selected option not found", "NOT_FOUND");
+    if (!option)
+      throw new AuthorizationError("Selected option not found", "NOT_FOUND");
 
-    // Commercial gate: Added cost enters change process; selection alone doesn't authorise work (AC-043)
+    // Commercial gate: Added cost enters change process; selection alone doesn't authorise work
     if (option.cost_implication_minor > 0) {
       if (!item.change_request_id) {
         throw new AuthorizationError(
           "Cost-impacting selection requires an authorized change request before execution readiness",
-          "CHANGE_REQUEST_REQUIRED"
+          "CHANGE_REQUEST_REQUIRED",
         );
       }
 
       const cr = await queryFirst<any>(
         db,
         "SELECT status FROM change_requests WHERE id = ?",
-        [item.change_request_id]
+        [item.change_request_id],
       );
 
-      if (!cr || (cr.status !== "AUTHORIZED" && cr.status !== "IN_PROGRESS" && cr.status !== "COMPLETED")) {
+      if (
+        !cr ||
+        (cr.status !== "AUTHORIZED" &&
+          cr.status !== "IN_PROGRESS" &&
+          cr.status !== "COMPLETED")
+      ) {
         throw new AuthorizationError(
           "Cannot mark selection ready for execution: linked change request is not authorized",
-          "CHANGE_REQUEST_NOT_AUTHORIZED"
+          "CHANGE_REQUEST_NOT_AUTHORIZED",
         );
       }
     }
@@ -451,7 +562,7 @@ export class MaterialsService {
     await execute(
       db,
       "UPDATE material_selection_items SET status = 'READY_FOR_EXECUTION', updated_at = ? WHERE id = ?",
-      [now, selectionItemId]
+      [now, selectionItemId],
     );
 
     return { id: selectionItemId, status: "READY_FOR_EXECUTION" };
@@ -463,23 +574,46 @@ export class MaterialsService {
   static async linkChangeRequest(
     db: D1Database,
     principal: UserPrincipal,
-    params: { selectionItemId: string; changeRequestId: string }
+    params: { selectionItemId: string; changeRequestId: string },
   ) {
     const item = await queryFirst<any>(
       db,
       "SELECT * FROM material_selection_items WHERE id = ?",
-      [params.selectionItemId]
+      [params.selectionItemId],
     );
-    if (!item) throw new AuthorizationError("Selection item not found", "NOT_FOUND");
+    if (!item)
+      throw new AuthorizationError("Selection item not found", "NOT_FOUND");
     assertProjectAccess(principal, item.project_id);
+    await assertProjectOrganisation(db, principal, item.project_id);
+    await ArchiveService.assertProjectNotArchived(db, item.project_id);
+    if (item.org_id !== principal.orgId)
+      throw new AuthorizationError("Record not found", "NOT_FOUND");
 
+    if (!hasCapability(principal, "MANAGER", item.project_id))
+      throw new AuthorizationError(
+        "Only the assigned manager can link additional work",
+      );
+    const change = await queryFirst<any>(
+      db,
+      "SELECT id FROM change_requests WHERE id=? AND project_id=? AND org_id=?",
+      [params.changeRequestId, item.project_id, principal.orgId],
+    );
+    if (!change)
+      throw new AuthorizationError(
+        "Change request belongs to another project",
+        "INVALID_INPUT",
+      );
     await execute(
       db,
       "UPDATE material_selection_items SET change_request_id = ?, updated_at = ? WHERE id = ?",
-      [params.changeRequestId, Date.now(), params.selectionItemId]
+      [params.changeRequestId, Date.now(), params.selectionItemId],
     );
 
-    return { success: true, selectionItemId: params.selectionItemId, changeRequestId: params.changeRequestId };
+    return {
+      success: true,
+      selectionItemId: params.selectionItemId,
+      changeRequestId: params.changeRequestId,
+    };
   }
 
   /**
@@ -488,20 +622,25 @@ export class MaterialsService {
   static async requestChanges(
     db: D1Database,
     principal: UserPrincipal,
-    params: { selectionItemId: string; reason: string }
+    params: { selectionItemId: string; reason: string },
   ) {
     const item = await queryFirst<any>(
       db,
       "SELECT * FROM material_selection_items WHERE id = ?",
-      [params.selectionItemId]
+      [params.selectionItemId],
     );
-    if (!item) throw new AuthorizationError("Selection item not found", "NOT_FOUND");
+    if (!item)
+      throw new AuthorizationError("Selection item not found", "NOT_FOUND");
     assertProjectAccess(principal, item.project_id);
+    await assertProjectOrganisation(db, principal, item.project_id);
+    await ArchiveService.assertProjectNotArchived(db, item.project_id);
+    if (item.org_id !== principal.orgId)
+      throw new AuthorizationError("Record not found", "NOT_FOUND");
 
     if (!this.isMainClient(principal, item.project_id)) {
       throw new AuthorizationError(
         "Only the main client can request alternative material choices",
-        "MAIN_CLIENT_SELECTION_REQUIRED"
+        "MAIN_CLIENT_SELECTION_REQUIRED",
       );
     }
 
@@ -509,7 +648,7 @@ export class MaterialsService {
     await execute(
       db,
       "UPDATE material_selection_items SET status = 'CHANGES_REQUESTED', updated_at = ? WHERE id = ?",
-      [now, params.selectionItemId]
+      [now, params.selectionItemId],
     );
 
     if (params.reason) {
@@ -530,7 +669,7 @@ export class MaterialsService {
   static async getSelectionItem(
     db: D1Database,
     principal: UserPrincipal,
-    selectionItemId: string
+    selectionItemId: string,
   ) {
     const item = await queryFirst<any>(
       db,
@@ -539,10 +678,14 @@ export class MaterialsService {
        LEFT JOIN users u ON m.responsible_manager_id = u.id
        LEFT JOIN users s ON m.selected_by_user_id = s.id
        WHERE m.id = ?`,
-      [selectionItemId]
+      [selectionItemId],
     );
-    if (!item) throw new AuthorizationError("Selection item not found", "NOT_FOUND");
+    if (!item)
+      throw new AuthorizationError("Selection item not found", "NOT_FOUND");
     assertProjectAccess(principal, item.project_id);
+    await assertProjectOrganisation(db, principal, item.project_id);
+    if (item.org_id !== principal.orgId)
+      throw new AuthorizationError("Record not found", "NOT_FOUND");
 
     const options = await query<any>(
       db,
@@ -551,7 +694,7 @@ export class MaterialsService {
        LEFT JOIN files f ON o.file_id = f.id
        WHERE o.selection_item_id = ?
        ORDER BY o.is_recommended DESC, o.created_at ASC`,
-      [selectionItemId]
+      [selectionItemId],
     );
 
     const suggestions = await query<any>(
@@ -561,7 +704,7 @@ export class MaterialsService {
        JOIN users u ON s.user_id = u.id
        WHERE s.selection_item_id = ?
        ORDER BY s.created_at ASC`,
-      [selectionItemId]
+      [selectionItemId],
     );
 
     // Enforce confidentiality: internal_notes are hidden from clients and consultants (AC-042, SCR-13)
@@ -581,9 +724,10 @@ export class MaterialsService {
   static async listSelectionItems(
     db: D1Database,
     principal: UserPrincipal,
-    projectId: string
+    projectId: string,
   ) {
     assertProjectAccess(principal, projectId);
+    await assertProjectOrganisation(db, principal, projectId);
     const canSeeInternal = canReadInternalNotes(principal, projectId);
 
     const items = await query<any>(
@@ -594,7 +738,7 @@ export class MaterialsService {
        LEFT JOIN users s ON m.selected_by_user_id = s.id
        WHERE m.project_id = ?
        ORDER BY m.created_at DESC`,
-      [projectId]
+      [projectId],
     );
 
     return items.map((it) => ({
