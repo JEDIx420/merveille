@@ -325,6 +325,7 @@ export async function setupMigratedTestDb(): Promise<D1Database> {
     "0003_files_and_media.sql",
     "0004_tasks_and_deadlines.sql",
     "0005_drawing_register.sql",
+    "0006_updates_and_permits.sql",
   ];
 
   for (const file of files) {

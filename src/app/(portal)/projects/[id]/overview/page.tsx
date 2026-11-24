@@ -259,6 +259,20 @@ export default function ProjectOverviewPage({
         {/* Manager Actions Bar */}
         <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
           <a
+            href={`/projects/${projectId}/updates`}
+            className="btn-secondary"
+            style={{ textDecoration: "none" }}
+          >
+            Updates
+          </a>
+          <a
+            href={`/projects/${projectId}/permits`}
+            className="btn-secondary"
+            style={{ textDecoration: "none" }}
+          >
+            Permits & K-SMART
+          </a>
+          <a
             href={`/projects/${projectId}/drawings`}
             className="btn-secondary"
             style={{ textDecoration: "none" }}

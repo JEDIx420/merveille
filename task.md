@@ -10,7 +10,7 @@ Baseline: 24 November 2026. Application implementation has not started. Planning
 - [x] P03 — [Private documents and media](docs/implementation/phases/03-private-files.md) — [Evidence](docs/evidence/phase-03.md)
 - [x] P04 — [Tasks, deadlines and completion history](docs/implementation/phases/04-tasks.md) — [Evidence](docs/evidence/phase-04.md)
 - [x] P05 — [Drawing register, consultant approval and manager release](docs/implementation/phases/05-drawings.md) — [Evidence](docs/evidence/phase-05.md)
-- [ ] P06 — [Published updates, company notices and manual K-SMART records](docs/implementation/phases/06-updates-permits.md)
+- [x] P06 — [Published updates, company notices and manual K-SMART records](docs/implementation/phases/06-updates-permits.md) — [Evidence](docs/evidence/phase-06.md)
 - [ ] P07 — [Quotations, schedules, invoices and receipts](docs/implementation/phases/07-commercial-finance.md)
 - [ ] P08 — [Expenses, consultant fees, payroll and profit](docs/implementation/phases/08-accounting.md)
 - [ ] P09 — [References, materials and additional-work controls](docs/implementation/phases/09-client-decisions-changes.md)
@@ -22,9 +22,9 @@ Baseline: 24 November 2026. Application implementation has not started. Planning
 
 ## Current checkpoint
 
-- Current phase: P05 complete; commencing P06 (Published updates, company notices and manual K-SMART records).
-- Next action: Read docs/implementation/phases/06-updates-permits.md and implement published updates, manager approval gate for client-visible updates, company notices with targeting, manual K-SMART practice records with explicit practice attribution, SCR-05 updates screen, and SCR-12 permits screen.
-- Completed application tests: AC-064 (P00), AC-001 through AC-008 (P01), AC-009 through AC-012 (P02), AC-056 through AC-060 (P03), AC-013 through AC-015 (P04), AC-016 through AC-021 (P05). Evidence in docs/evidence/phase-00.md through docs/evidence/phase-05.md.
+- Current phase: P06 complete; commencing P07 (Quotations, schedules, invoices and receipts).
+- Next action: Read docs/implementation/phases/07-commercial-finance.md and implement quotations, payment schedules, invoices (staff draft -> manager approve -> staff issue), receipts, full commercial activation gate, and SCR-10 project finance.
+- Completed application tests: AC-064 (P00), AC-001 through AC-008 (P01), AC-009 through AC-012 (P02), AC-056 through AC-060 (P03), AC-013 through AC-015 (P04), AC-016 through AC-021 (P05), AC-022 through AC-026 (P06). Evidence in docs/evidence/phase-00.md through docs/evidence/phase-06.md.
 - Deployed environments: local workerd emulated environment active with local D1 database migrations.
 - Blockers: None for local implementation. External Access IDP and Meta Cloud API credentials not required for local operations.
 

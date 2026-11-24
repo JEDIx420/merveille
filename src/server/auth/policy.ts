@@ -165,3 +165,36 @@ export function canReadInternalNotes(
 
   return true;
 }
+
+/**
+ * Project update and announcement publication permission.
+ * Managers/Admins/Owners only.
+ */
+export function canPublishProjectUpdates(
+  principal: UserPrincipal | null | undefined,
+  projectId: string
+): boolean {
+  if (!principal) return false;
+  if (!canAccessProject(principal, projectId)) return false;
+  return (
+    principal.role === "MANAGER" ||
+    principal.role === "ADMIN" ||
+    principal.role === "OWNER"
+  );
+}
+
+/**
+ * Company announcement management permission.
+ * Managers/Admins/Owners only.
+ */
+export function canManageCompanyAnnouncements(
+  principal: UserPrincipal | null | undefined
+): boolean {
+  if (!principal) return false;
+  return (
+    principal.role === "MANAGER" ||
+    principal.role === "ADMIN" ||
+    principal.role === "OWNER"
+  );
+}
+
