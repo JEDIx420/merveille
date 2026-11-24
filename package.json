@@ -10,6 +10,10 @@
     "preview": "wrangler dev",
     "test": "vitest run",
     "test:watch": "vitest",
+    "deploy:staging": "opennextjs-cloudflare build && wrangler deploy --env staging",
+    "deploy:production": "opennextjs-cloudflare build && wrangler deploy --env production",
+    "migrate:staging": "wrangler d1 migrations apply DB --env staging",
+    "migrate:production": "wrangler d1 migrations apply DB --env production",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "check:handoff": "node scripts/check-handoff.mjs"

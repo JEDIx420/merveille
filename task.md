@@ -18,13 +18,15 @@ Baseline: 24 November 2026. Application implementation has not started. Planning
 - [x] P11 — [In-portal notifications, WhatsApp and escalation](docs/implementation/phases/11-notifications.md) — [Evidence](docs/evidence/phase-11.md)
 - [x] P12 — [Role dashboards, waiting-on-you and owner performance](docs/implementation/phases/12-overviews-performance.md) — [Evidence](docs/evidence/phase-12.md)
 - [x] P13 — [Archive, audit exports and recovery](docs/implementation/phases/13-archive-recovery.md) — [Evidence](docs/evidence/phase-13.md)
-- [ ] P14 — [Integrated verification, staging and launch readiness](docs/implementation/phases/14-release-readiness.md)
+- [x] P14 — [Integrated verification, staging and launch readiness](docs/implementation/phases/14-release-readiness.md) — [Evidence](docs/evidence/phase-14.md)
 
 ## Current checkpoint
 
-- Current phase: P13 complete; commencing P14 (Integrated verification, staging and launch readiness).
-- Next action: Read docs/implementation/phases/14-release-readiness.md, execute integrated verification covering full release gates (AC-061 through AC-063, AC-065, AC-067 through AC-069), verify end-to-end multi-role isolation, environment secret separation, migration and rollback reconciliation, documented integration blocker visibility (Meta WhatsApp / external credentials), responsive mobile and desktop layout integrity, and update walkthrough.md with launch commands and deployment runbook.
-- Completed application tests: AC-064 (P00), AC-001 through AC-008 (P01), AC-009 through AC-012 (P02), AC-056 through AC-060 (P03), AC-013 through AC-015 (P04), AC-016 through AC-021 (P05), AC-022 through AC-026 (P06), AC-010 and AC-027 through AC-033 (P07), AC-034 through AC-038 (P08), AC-039 through AC-043 (P09), AC-044, AC-045, AC-070 (P10), AC-046 through AC-050 (P11), AC-051 through AC-053 (P12), AC-054, AC-055, AC-066 (P13). Evidence in docs/evidence/phase-00.md through docs/evidence/phase-13.md.
+- Current phase: Complete product implementation verified (P00 through P14 fully satisfied).
+- Next action: Ready for production deployment and handover. Maintain release branch and execute operational runbook when live credentials (Cloudflare Access production audience, Meta WhatsApp tokens) are provided.
+- Completed application tests: AC-064 (P00), AC-001 through AC-008 (P01), AC-009 through AC-012 (P02), AC-056 through AC-060 (P03), AC-013 through AC-015 (P04), AC-016 through AC-021 (P05), AC-022 through AC-026 (P06), AC-010 and AC-027 through AC-033 (P07), AC-034 through AC-038 (P08), AC-039 through AC-043 (P09), AC-044, AC-045, AC-070 (P10), AC-046 through AC-050 (P11), AC-051 through AC-053 (P12), AC-054, AC-055, AC-066 (P13), AC-061, AC-062, AC-063, AC-065, AC-067, AC-068, AC-069 (P14). Evidence in docs/evidence/phase-00.md through docs/evidence/phase-14.md.
+- Deployed environments: local workerd emulated environment active with local D1 database migrations; staging and production deploy scripts configured (`npm run deploy:staging`, `npm run deploy:production`).
+- Blockers: None for local application operations. External Cloudflare Access IdP and Meta WhatsApp live credentials documented in docs/implementation/operational-inputs.md for live deployment.
 - Deployed environments: local workerd emulated environment active with local D1 database migrations.
 - Blockers: None for local implementation. External Access IDP and Meta Cloud API credentials not required for local operations.
 
