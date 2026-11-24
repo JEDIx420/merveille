@@ -8,6 +8,7 @@ import { UserPrincipal } from "@/server/auth/principal";
 import { assertProjectAccess, AuthorizationError } from "@/server/auth/policy";
 import { query, queryFirst, execute } from "@/server/db";
 import { recordAuditEvent } from "../identity/service";
+import { ArchiveService } from "../archive/service";
 
 export type DrawingDiscipline =
   | "ARCHITECTURAL"
@@ -58,6 +59,7 @@ export async function createDrawing(
   db: D1Database
 ) {
   assertProjectAccess(actor, input.projectId);
+  await ArchiveService.assertProjectNotArchived(db, input.projectId);
 
   if (actor.role === "CONSULTANT" || actor.role === "MAIN_CLIENT" || actor.role === "CLIENT_REP") {
     throw new AuthorizationError("Only architectural practice members can create drawing records.", "FORBIDDEN");
@@ -100,6 +102,7 @@ export async function createDrawingVersion(
   if (!drawing) throw new AuthorizationError("Drawing record not found.", "NOT_FOUND");
 
   assertProjectAccess(actor, drawing.project_id);
+  await ArchiveService.assertProjectNotArchived(db, drawing.project_id);
 
   if (actor.role === "CONSULTANT" || actor.role === "MAIN_CLIENT" || actor.role === "CLIENT_REP") {
     throw new AuthorizationError("Only design staff can submit drawing versions.", "FORBIDDEN");
@@ -182,6 +185,7 @@ export async function submitDrawingForReview(
   if (!drawing) throw new AuthorizationError("Drawing not found.", "NOT_FOUND");
 
   assertProjectAccess(actor, drawing.project_id);
+  await ArchiveService.assertProjectNotArchived(db, drawing.project_id);
 
   // Check that at least one required consultant was defined
   const reviewsCount = await queryFirst<{ count: number }>(
@@ -333,6 +337,7 @@ export async function releaseDrawingVersion(
   if (!drawing) throw new AuthorizationError("Drawing not found.", "NOT_FOUND");
 
   assertProjectAccess(actor, drawing.project_id);
+  await ArchiveService.assertProjectNotArchived(db, drawing.project_id);
 
   // Idempotency: If already released as current, return immediately (AC-021)
   if (version.status === "RELEASED" && drawing.current_released_version_id === version.id) {
@@ -434,6 +439,7 @@ export async function withdrawDrawing(
 
   if (!drawing) throw new AuthorizationError("Drawing not found.", "NOT_FOUND");
   assertProjectAccess(actor, drawing.project_id);
+  await ArchiveService.assertProjectNotArchived(db, drawing.project_id);
 
   const now = Date.now();
 

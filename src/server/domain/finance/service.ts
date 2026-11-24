@@ -12,6 +12,7 @@ import {
   canPublishProjectUpdates,
   AuthorizationError,
 } from "../../auth/policy";
+import { ArchiveService } from "../archive/service";
 
 export type ScheduleTriggerType =
   | "DATE_ONLY"
@@ -156,6 +157,7 @@ export class FinanceService {
     params: CreateQuotationParams
   ) {
     assertProjectAccess(principal, params.projectId);
+    await ArchiveService.assertProjectNotArchived(db, params.projectId);
 
     const maxVerRow = (await db
       .prepare(
@@ -411,6 +413,7 @@ export class FinanceService {
     params: DraftInvoiceParams
   ) {
     assertProjectAccess(principal, params.projectId);
+    await ArchiveService.assertProjectNotArchived(db, params.projectId);
 
     let subtotalMinor = 0;
     const items = params.lineItems.map((li) => {

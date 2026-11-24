@@ -17,14 +17,14 @@ Baseline: 24 November 2026. Application implementation has not started. Planning
 - [x] P10 — [Site issue and snag tracking](docs/implementation/phases/10-site-issues.md) — [Evidence](docs/evidence/phase-10.md)
 - [x] P11 — [In-portal notifications, WhatsApp and escalation](docs/implementation/phases/11-notifications.md) — [Evidence](docs/evidence/phase-11.md)
 - [x] P12 — [Role dashboards, waiting-on-you and owner performance](docs/implementation/phases/12-overviews-performance.md) — [Evidence](docs/evidence/phase-12.md)
-- [ ] P13 — [Archive, audit exports and recovery](docs/implementation/phases/13-archive-recovery.md)
+- [x] P13 — [Archive, audit exports and recovery](docs/implementation/phases/13-archive-recovery.md) — [Evidence](docs/evidence/phase-13.md)
 - [ ] P14 — [Integrated verification, staging and launch readiness](docs/implementation/phases/14-release-readiness.md)
 
 ## Current checkpoint
 
-- Current phase: P12 complete; commencing P13 (Archive, audit exports and recovery).
-- Next action: Read docs/implementation/phases/13-archive-recovery.md, docs/workflows/archive-and-access.md, and docs/screens/19-archive.md; implement project archive lifecycle state transitions with explicit archive reasons, preserving permitted external access for clients and consultants to released drawings and published updates while denying drafts/internal data (AC-054); enforce strict read-only protection blocking operational mutations (new tasks, drawings, updates, invoices, quotes) while archived, but allowing ADMIN-confirmed settlements of existing unpaid invoices without forgiving balances or reopening (AC-055); implement controlled manager project reopening with mandatory reason, membership recheck, and reminder resumption; implement project audit SQL and file bundle exports to private R2 storage with SHA-256 verification (AC-066).
-- Completed application tests: AC-064 (P00), AC-001 through AC-008 (P01), AC-009 through AC-012 (P02), AC-056 through AC-060 (P03), AC-013 through AC-015 (P04), AC-016 through AC-021 (P05), AC-022 through AC-026 (P06), AC-010 and AC-027 through AC-033 (P07), AC-034 through AC-038 (P08), AC-039 through AC-043 (P09), AC-044, AC-045, AC-070 (P10), AC-046 through AC-050 (P11), AC-051 through AC-053 (P12). Evidence in docs/evidence/phase-00.md through docs/evidence/phase-12.md.
+- Current phase: P13 complete; commencing P14 (Integrated verification, staging and launch readiness).
+- Next action: Read docs/implementation/phases/14-release-readiness.md, execute integrated verification covering full release gates (AC-061 through AC-063, AC-065, AC-067 through AC-069), verify end-to-end multi-role isolation, environment secret separation, migration and rollback reconciliation, documented integration blocker visibility (Meta WhatsApp / external credentials), responsive mobile and desktop layout integrity, and update walkthrough.md with launch commands and deployment runbook.
+- Completed application tests: AC-064 (P00), AC-001 through AC-008 (P01), AC-009 through AC-012 (P02), AC-056 through AC-060 (P03), AC-013 through AC-015 (P04), AC-016 through AC-021 (P05), AC-022 through AC-026 (P06), AC-010 and AC-027 through AC-033 (P07), AC-034 through AC-038 (P08), AC-039 through AC-043 (P09), AC-044, AC-045, AC-070 (P10), AC-046 through AC-050 (P11), AC-051 through AC-053 (P12), AC-054, AC-055, AC-066 (P13). Evidence in docs/evidence/phase-00.md through docs/evidence/phase-13.md.
 - Deployed environments: local workerd emulated environment active with local D1 database migrations.
 - Blockers: None for local implementation. External Access IDP and Meta Cloud API credentials not required for local operations.
 

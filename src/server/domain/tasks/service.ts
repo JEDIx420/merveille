@@ -8,6 +8,7 @@ import { UserPrincipal } from "@/server/auth/principal";
 import { assertProjectAccess, AuthorizationError, canReadInternalNotes } from "@/server/auth/policy";
 import { query, queryFirst, execute } from "@/server/db";
 import { recordAuditEvent } from "../identity/service";
+import { ArchiveService } from "../archive/service";
 
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 export type TaskStatus =
@@ -101,6 +102,7 @@ export async function createTask(
   db: D1Database
 ) {
   assertTaskAccess(actor, input.projectId);
+  await ArchiveService.assertProjectNotArchived(db, input.projectId);
 
   if (!input.title || input.title.trim().length === 0) {
     throw new AuthorizationError("Task title is required.", "INVALID_INPUT");

@@ -8,6 +8,7 @@
 import { UserPrincipal } from "@/server/auth/principal";
 import { assertProjectAccess, AuthorizationError, canReadInternalNotes } from "@/server/auth/policy";
 import { query, queryFirst, execute } from "@/server/db";
+import { ArchiveService } from "../archive/service";
 
 export type SnagSeverity = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
@@ -73,6 +74,7 @@ export class SnagsService {
     params: ReportSnagParams
   ) {
     assertProjectAccess(principal, params.projectId);
+    await ArchiveService.assertProjectNotArchived(db, params.projectId);
 
     if (!params.title || params.title.trim().length === 0) {
       throw new AuthorizationError("Snag title is required", "INVALID_INPUT");

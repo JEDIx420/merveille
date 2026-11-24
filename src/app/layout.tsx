@@ -117,6 +117,54 @@ export default function RootLayout({
                   <span>Projects</span>
                 </a>
                 <a
+                  href="/waiting"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                    padding: "0.625rem 0.875rem",
+                    borderRadius: "6px",
+                    color: "var(--merveille-foreground)",
+                    textDecoration: "none",
+                    fontSize: "0.875rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  <span>Waiting on you</span>
+                </a>
+                <a
+                  href="/archive"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                    padding: "0.625rem 0.875rem",
+                    borderRadius: "6px",
+                    color: "var(--merveille-foreground)",
+                    textDecoration: "none",
+                    fontSize: "0.875rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  <span>Archive</span>
+                </a>
+                <a
+                  href="/finance"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                    padding: "0.625rem 0.875rem",
+                    borderRadius: "6px",
+                    color: "var(--merveille-foreground)",
+                    textDecoration: "none",
+                    fontSize: "0.875rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  <span>Finance</span>
+                </a>
+                <a
                   href="/enquiries"
                   style={{
                     display: "flex",

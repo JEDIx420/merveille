@@ -12,6 +12,7 @@ import {
   canManageCompanyAnnouncements,
   AuthorizationError,
 } from "../../auth/policy";
+import { ArchiveService } from "../archive/service";
 
 export interface CreateProjectUpdateParams {
   projectId: string;
@@ -61,6 +62,7 @@ export class UpdatesService {
     params: CreateProjectUpdateParams
   ) {
     assertProjectAccess(principal, params.projectId);
+    await ArchiveService.assertProjectNotArchived(db, params.projectId);
 
     if (!canReadInternalNotes(principal, params.projectId)) {
       throw new AuthorizationError(
@@ -149,6 +151,7 @@ export class UpdatesService {
     }
 
     assertProjectAccess(principal, update.project_id);
+    await ArchiveService.assertProjectNotArchived(db, update.project_id);
     if (!canReadInternalNotes(principal, update.project_id)) {
       throw new AuthorizationError(
         "Clients and consultants cannot edit updates",
@@ -305,6 +308,8 @@ export class UpdatesService {
         "FORBIDDEN"
       );
     }
+
+    await ArchiveService.assertProjectNotArchived(db, version.project_id);
 
     const now = Date.now();
 
