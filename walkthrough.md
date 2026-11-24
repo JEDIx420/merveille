@@ -1,25 +1,32 @@
-# Handoff walkthrough
+# Implementation Walkthrough & Application Status
 
-## Current deliverable
+## Current Deliverable & Baseline
 
-This repository contains the Merveille Designs build handoff: confirmed product rules, role permissions, individual workflow and screen specifications, visual identity, technical architecture, operations planning, ordered implementation phases and acceptance scenarios.
+The Merveille Designs operations and client portal application is being implemented from the authoritative repository specification on feature branch `implement/merveille-portal`.
 
-The existing Merveille Designs logo and profile rendition are preserved unchanged from its Refrens profile, with source URLs and SHA-256 hashes in assets/brand. The earlier generated artwork has been removed from the active tree. The static visual specimen is an aesthetic reference with synthetic data.
+The confirmed company identity, brand assets in `assets/brand/`, and tokens are preserved exactly.
 
-## Application status
+## Application Status by Phase
 
-- Runtime application: not implemented.
-- Cloudflare resources: not provisioned by this handoff.
-- Live Access/WhatsApp integration: not configured or tested.
-- Database migrations and business tests: not yet implemented.
-- Production deployment: not performed.
+- **P00 — Runtime foundation and compatibility:** **COMPLETED & VERIFIED (AC-064)**
+  - Runtime: Next.js 15.5.29 App Router on Cloudflare Workers via `@opennextjs/cloudflare` 1.20.18 and Wrangler 4.167.0.
+  - Architecture decision recorded in [ADR 0001](docs/architecture/decisions/0001-runtime.md) documenting the vinext Rolldown/Vite 8 build blocker and selecting OpenNext.
+  - Local bindings verified in `workerd`: D1 database relational operations, private R2 object storage streaming, HTTP cookies/headers, and test-only synthetic principal auth.
+  - Branded layout shell active with complete desktop logo and mobile profile branding, accessible contrast tokens, and responsive design.
+  - Evidence: [docs/evidence/phase-00.md](docs/evidence/phase-00.md).
+- **P01 — Identity, invitations and permission foundation:** **COMPLETED & VERIFIED (AC-001–AC-008)**
+  - Applied D1 migration `0001_identity_and_permissions.sql` containing organizations, users, identities, role assignments, invitations, client accounts, project memberships, and immutable audit events.
+  - Implemented Cloudflare Access JWT validation with RS256 algorithm check, issuer, audience, exp, and nbf verification.
+  - Implemented central authorization policy with deny-by-default, cross-project protection, intentional consultant financial visibility, representative non-escalation, and admin/owner separation of profit and performance.
+  - Built identity domain services (`inviteUser`, `acceptInvitation`, `disableUser`, `reassignMainClient`, `listPeople`).
+  - Implemented `/login` (SCR-01), `/invite/accept` (SCR-01), `/access-denied`, `/people` (SCR-18), and `/people/:id` (SCR-18).
+  - Evidence: [docs/evidence/phase-01.md](docs/evidence/phase-01.md).
+- **P02 — Client portfolios, project records and enquiry intake:** In Progress.
+- **P02–P14:** Pending dependency order.
 
-## Handoff checks
+## Verification Commands
 
-The preparation agent validates relative links, phase dependency order, requirement coverage, acceptance references, rule/skill format, JSON examples and brand assets. Exact verification results are recorded in the [handoff verification report](docs/quality/handoff-verification.md) after final review.
-
-These checks assess the specification package only. Implementation starts at P00 through [START_HERE.md](START_HERE.md).
-
-## Updating this file during implementation
-
-Replace this status with actual phase outcomes as the app is built. Link code/commit, actual local and staged checks, screenshots, operational prerequisites and remaining limitations. Do not leave “not implemented” here after implementation, and do not replace it with a success claim without evidence.
+- Unit & integration tests: `npm test`
+- Build Next.js & Worker: `npm run build && npm run build:worker`
+- Local `workerd` preview: `npm run preview`
+- Handoff link & requirement integrity: `node scripts/check-handoff.mjs`

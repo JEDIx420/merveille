@@ -6,6 +6,8 @@
 export type UserRole =
   | "OWNER"
   | "ADMIN"
+  | "MANAGER"
+  | "TEAM_MEMBER"
   | "STAFF"
   | "CONSULTANT"
   | "MAIN_CLIENT"
