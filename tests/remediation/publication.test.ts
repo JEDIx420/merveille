@@ -7,7 +7,11 @@ import {
   submitConsultantReview,
   releaseDrawingVersion,
 } from "@/server/domain/drawings/service";
-import { getFileForDownload, listProjectFiles } from "@/server/files/service";
+import {
+  getFileForDownload,
+  deleteFile,
+  listProjectFiles,
+} from "@/server/files/service";
 let db: D1Database, bucket: R2Bucket;
 const p = (role: string, id = role) =>
   ({
@@ -188,5 +192,98 @@ it("failed release rolls back previous release and all writes; concurrent releas
   ).toBe(1);
 });
 
-it('safe preview is explicit, range suffixes are correct, and invalid ranges fail',async()=>{const {v,file}=await version('range');await approve(v);await releaseDrawingVersion(manager,{versionId:v.id,expectedCurrentVersionId:null},db);const download=await getFileForDownload(client,file,db,bucket);expect(download.headers.get('content-disposition')).toContain('attachment');const preview=await getFileForDownload(client,file,db,bucket,'bytes=-2',true);expect(preview.status).toBe(206);expect(preview.headers.get('content-range')).toBe('bytes 1-2/3');expect(preview.headers.get('content-disposition')).toContain('inline');expect(preview.headers.get('content-security-policy')).toContain('sandbox');expect(await new Response(preview.body).text()).toBe('DF');await expect(getFileForDownload(client,file,db,bucket,'bytes=4-5',true)).rejects.toThrow();});
-it('raw receipt evidence does not inherit manager or owner operational visibility',async()=>{const {file}=await version('bank');await db.prepare("UPDATE files SET reference_type='GENERAL',is_referenced=0 WHERE id=?").bind(file).run();await db.prepare("INSERT INTO receipts(id,org_id,project_id,currency,amount_minor,allocated_minor,unallocated_minor,received_date,payment_method,status,reported_by_user_id,evidence_file_id,created_at) VALUES('bank-receipt','org_merveille_main','p','INR',100,0,100,'2026-11-24','BANK_TRANSFER','REPORTED',?,?,1)").bind(staff.id,file).run();await expect(getFileForDownload(manager,file,db,bucket)).rejects.toThrow();const owner={...manager,roles:['OWNER'],projectMemberships:[]};await expect(getFileForDownload(owner,file,db,bucket)).rejects.toThrow();expect((await getFileForDownload(staff,file,db,bucket)).status).toBe(200);});
+it("safe preview is explicit, range suffixes are correct, and invalid ranges fail", async () => {
+  const { v, file } = await version("range");
+  await approve(v);
+  await releaseDrawingVersion(
+    manager,
+    { versionId: v.id, expectedCurrentVersionId: null },
+    db,
+  );
+  const download = await getFileForDownload(client, file, db, bucket);
+  expect(download.headers.get("content-disposition")).toContain("attachment");
+  const preview = await getFileForDownload(
+    client,
+    file,
+    db,
+    bucket,
+    "bytes=-2",
+    true,
+  );
+  expect(preview.status).toBe(206);
+  expect(preview.headers.get("content-range")).toBe("bytes 1-2/3");
+  expect(preview.headers.get("content-disposition")).toContain("inline");
+  expect(preview.headers.get("content-security-policy")).toContain("sandbox");
+  expect(await new Response(preview.body).text()).toBe("DF");
+  await expect(
+    getFileForDownload(client, file, db, bucket, "bytes=4-5", true),
+  ).rejects.toThrow();
+});
+it("raw receipt evidence does not inherit manager or owner operational visibility", async () => {
+  const { file } = await version("bank");
+  await db
+    .prepare(
+      "UPDATE files SET reference_type='GENERAL',is_referenced=0 WHERE id=?",
+    )
+    .bind(file)
+    .run();
+  await db
+    .prepare(
+      "INSERT INTO receipts(id,org_id,project_id,currency,amount_minor,allocated_minor,unallocated_minor,received_date,payment_method,status,reported_by_user_id,evidence_file_id,created_at) VALUES('bank-receipt','org_merveille_main','p','INR',100,0,100,'2026-11-24','BANK_TRANSFER','REPORTED',?,?,1)",
+    )
+    .bind(staff.id, file)
+    .run();
+  await expect(getFileForDownload(manager, file, db, bucket)).rejects.toThrow();
+  const owner = { ...manager, roles: ["OWNER"], projectMemberships: [] };
+  await expect(getFileForDownload(owner, file, db, bucket)).rejects.toThrow();
+  expect((await getFileForDownload(staff, file, db, bucket)).status).toBe(200);
+});
+
+it("shared client-reference evidence is readable by permitted project contacts, while unlinked uploads remain private", async () => {
+  await db
+    .prepare(
+      "INSERT INTO files(id,org_id,project_id,uploaded_by_user_id,file_class,file_name,mime_type,size_bytes,storage_key,status,is_internal_only,is_referenced,created_at) VALUES('reference-file','org_merveille_main','p',?,'PDF','Reference.pdf','application/pdf',3,'reference-file','READY',0,1,1)",
+    )
+    .bind(staff.id)
+    .run();
+  await bucket.put("reference-file", "PDF");
+  await expect(
+    getFileForDownload(client, "reference-file", db, bucket),
+  ).rejects.toThrow();
+  await db
+    .prepare(
+      "INSERT INTO client_references(id,org_id,project_id,uploaded_by_user_id,file_id,caption,created_at) VALUES('reference','org_merveille_main','p',?,'reference-file','Fictional shared reference',1)",
+    )
+    .bind(staff.id)
+    .run();
+  expect(
+    (await getFileForDownload(client, "reference-file", db, bucket)).status,
+  ).toBe(200);
+});
+
+it("retention derives from actual parent records and archive blocks deletion before R2 is touched", async () => {
+  await db
+    .prepare(
+      "INSERT INTO files(id,org_id,project_id,uploaded_by_user_id,file_class,file_name,mime_type,size_bytes,storage_key,status,is_referenced,created_at) VALUES('retained','org_merveille_main','p',?,'PDF','Reference.pdf','application/pdf',3,'retained','READY',0,1)",
+    )
+    .bind(staff.id)
+    .run();
+  await bucket.put("retained", "PDF");
+  await db
+    .prepare(
+      "INSERT INTO client_references(id,org_id,project_id,uploaded_by_user_id,file_id,caption,created_at) VALUES('retention-parent','org_merveille_main','p',?,'retained','Retained fictional reference',1)",
+    )
+    .bind(staff.id)
+    .run();
+  await expect(deleteFile(manager, "retained", db, bucket)).rejects.toThrow(
+    "retained project record",
+  );
+  expect(await bucket.head("retained")).not.toBeNull();
+  await db
+    .prepare("UPDATE projects SET is_archived=1,status='ARCHIVED' WHERE id='p'")
+    .run();
+  await expect(deleteFile(manager, "retained", db, bucket)).rejects.toThrow(
+    "read-only",
+  );
+  expect(await bucket.head("retained")).not.toBeNull();
+});

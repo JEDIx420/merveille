@@ -740,6 +740,48 @@ export async function deleteFile(
 
   assertProjectAccess(actor, file.project_id);
 
+  const project = await queryFirst<any>(
+    db,
+    "SELECT org_id,is_archived FROM projects WHERE id=?",
+    [file.project_id],
+  );
+  if (!project || project.org_id !== actor.orgId)
+    throw new AuthorizationError("Project not found.", "NOT_FOUND");
+  if (project.is_archived)
+    throw new AuthorizationError(
+      "Archived files are retained and read-only.",
+      "PROJECT_ARCHIVED_READ_ONLY",
+    );
+  const parents = [
+    ["drawing_versions", "file_id"],
+    ["drawing_versions", "cad_file_id"],
+    ["update_attachments", "file_id"],
+    ["receipts", "evidence_file_id"],
+    ["expenses", "evidence_file_id"],
+    ["consultant_bills", "evidence_file_id"],
+    ["ksmart_observation_files", "file_id"],
+    ["snag_attachments", "file_id"],
+    ["client_references", "file_id"],
+    ["material_selection_options", "file_id"],
+    ["task_comments", "attachment_file_id"],
+    ["project_internal_notes", "attachment_file_id"],
+  ];
+  const linked = await queryFirst(
+    db,
+    parents
+      .map(
+        ([table, column]) =>
+          `SELECT 1 AS linked FROM ${table} WHERE ${column}=?`,
+      )
+      .join(" UNION ALL ") + " LIMIT 1",
+    parents.map(() => fileId),
+  );
+  if (linked)
+    throw new AuthorizationError(
+      "This file belongs to a retained project record.",
+      "FILE_RETAINED_PROTECTED",
+    );
+
   // Retained files cannot be deleted (AC-060)
   if (
     file.is_referenced === 1 ||

@@ -23,8 +23,16 @@ export async function validateAttachment(
       "Choose a completed file from this project.",
       "INVALID_FILE",
     );
-  const bankParent=await queryFirst(db,'SELECT id FROM receipts WHERE evidence_file_id=?',[fileId]);
-  if(bankParent && purpose!=='RECEIPT')throw new AuthorizationError('Payment verification evidence cannot be republished as project content.','FILE_PURPOSE_CONFLICT');
+  const bankParent = await queryFirst(
+    db,
+    "SELECT id FROM receipts WHERE evidence_file_id=?",
+    [fileId],
+  );
+  if (bankParent && purpose !== "RECEIPT")
+    throw new AuthorizationError(
+      "Payment verification evidence cannot be republished as project content.",
+      "FILE_PURPOSE_CONFLICT",
+    );
   if (
     file.is_referenced &&
     file.reference_type &&
@@ -54,10 +62,26 @@ export async function canReadFile(
   } catch {
     return false;
   }
-  const receipt=await queryFirst<any>(db,'SELECT reported_by_user_id FROM receipts WHERE evidence_file_id=? AND org_id=?',[file.id,actor.orgId]);
-  if(receipt)return hasCapability(actor,'ADMIN')||receipt.reported_by_user_id===actor.id;
-  const cost=await queryFirst<any>(db,'SELECT submitted_by_user_id FROM expenses WHERE evidence_file_id=? AND org_id=? UNION SELECT submitted_by_user_id FROM consultant_bills WHERE evidence_file_id=? AND org_id=?',[file.id,actor.orgId,file.id,actor.orgId]);
-  if(cost)return hasCapability(actor,'ADMIN')||hasCapability(actor,'MANAGER',file.project_id)||cost.submitted_by_user_id===actor.id;
+  const receipt = await queryFirst<any>(
+    db,
+    "SELECT reported_by_user_id FROM receipts WHERE evidence_file_id=? AND org_id=?",
+    [file.id, actor.orgId],
+  );
+  if (receipt)
+    return (
+      hasCapability(actor, "ADMIN") || receipt.reported_by_user_id === actor.id
+    );
+  const cost = await queryFirst<any>(
+    db,
+    "SELECT submitted_by_user_id FROM expenses WHERE evidence_file_id=? AND org_id=? UNION SELECT submitted_by_user_id FROM consultant_bills WHERE evidence_file_id=? AND org_id=?",
+    [file.id, actor.orgId, file.id, actor.orgId],
+  );
+  if (cost)
+    return (
+      hasCapability(actor, "ADMIN") ||
+      hasCapability(actor, "MANAGER", file.project_id) ||
+      cost.submitted_by_user_id === actor.id
+    );
   if (canReadInternalNotes(actor, file.project_id)) {
     // Payroll and raw bank evidence do not inherit internal operational visibility.
     if (
@@ -122,6 +146,18 @@ export async function canReadFile(
     [file.id, file.project_id],
   );
   if (snag) return true;
+  const reference = await queryFirst(
+    db,
+    "SELECT id FROM client_references WHERE file_id=? AND org_id=? AND project_id=?",
+    [file.id, actor.orgId, file.project_id],
+  );
+  if (reference) return true;
+  const material = await queryFirst(
+    db,
+    `SELECT o.id FROM material_selection_options o JOIN material_selection_items m ON m.id=o.selection_item_id WHERE o.file_id=? AND m.org_id=? AND m.project_id=? AND m.status!='DRAFT'`,
+    [file.id, actor.orgId, file.project_id],
+  );
+  if (material) return true;
   // Unpublished unlinked files stay private to their uploader, never all project members.
   return file.uploaded_by_user_id === actor.id && !file.is_referenced;
 }

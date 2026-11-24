@@ -22,7 +22,8 @@ const principal = {
   id: "review_manager",
   name: "Review manager",
   email: "review@example.invalid",
-  roles: [],
+  roles: ["TEAM_MEMBER"],
+  intakeAccess:true,
   role: "MANAGER",
   orgId: "org_review",
   projectMemberships: [
@@ -236,6 +237,8 @@ await page.route("**/api/**", async (route) => {
             }
           : principal,
     };
+  if(url.pathname==='/api/enquiries/prj_review')d={enquiry:{id:'prj_review',contact_name:'Fictional enquiry contact',contact_email:'enquiry@example.invalid',contact_phone:null,site_location:'Fictional site',requirements_text:'A courtyard home with shared living spaces.',status:'NEW',created_at:1795521600000,revision:1},studies:[]};
+  if(url.pathname==='/api/archive')d={projects:[]};
   if (url.pathname === "/api/dashboard/overview")
     d = {
       principal,
@@ -413,6 +416,7 @@ for (const size of process.env.BROWSER_SCOPE === "actions"
       !process.env.BROWSER_ROUTES ||
       process.env.BROWSER_ROUTES.split(",").includes(path),
   )) {
+    mode=path.startsWith('/people')||path==='/finance'?'admin':path==='/performance'?'owner':'manager';
     await visit(base + path);
     await page.waitForTimeout(100);
     console.log(size.width, path);
@@ -429,6 +433,7 @@ for (const size of process.env.BROWSER_SCOPE === "actions"
       width: size.width,
       overflow,
       heading,
+      healthyView: !!heading && heading !== 'Unable to open this page',
       fontLoaded: await page.evaluate(() =>
         document.fonts.check("400 15px Inter"),
       ),
@@ -719,6 +724,7 @@ if (
   results.some(
     (r) =>
       r.overflow ||
+      r.healthyView === false ||
       r.fontLoaded === false ||
       r.controlsReadable === false ||
       r.contained === false ||
