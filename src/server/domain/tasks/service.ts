@@ -22,6 +22,7 @@ export interface CreateTaskInput {
   projectId: string;
   stageId?: string;
   changeRequestId?: string;
+  snagId?: string;
   title: string;
   description?: string;
   priority?: TaskPriority;
@@ -115,14 +116,15 @@ export async function createTask(
 
   await execute(
     db,
-    `INSERT INTO tasks (id, org_id, project_id, stage_id, change_request_id, title, description, priority, status, creator_user_id, assignee_user_id, original_due_date, effective_due_date, reopen_count, revision, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, ?)`,
+    `INSERT INTO tasks (id, org_id, project_id, stage_id, change_request_id, snag_id, title, description, priority, status, creator_user_id, assignee_user_id, original_due_date, effective_due_date, reopen_count, revision, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, ?)`,
     [
       taskId,
       actor.orgId,
       input.projectId,
       input.stageId || null,
       input.changeRequestId || null,
+      input.snagId || null,
       input.title.trim(),
       input.description || null,
       input.priority || "MEDIUM",
@@ -266,6 +268,25 @@ export async function startTask(actor: UserPrincipal, taskId: string, db: D1Data
         "Cannot start task linked to unauthorized change request. Manager authorization and payment confirmation required.",
         "CHANGE_REQUEST_NOT_AUTHORIZED"
       );
+    }
+  }
+
+  if (task.snag_id) {
+    const snag = await queryFirst<any>(db, "SELECT * FROM snags WHERE id = ?", [task.snag_id]);
+    if (snag && snag.is_charged_work) {
+      if (!snag.change_request_id) {
+        throw new AuthorizationError(
+          "Charged snag remediation requires an authorized change request before starting work",
+          "CHANGE_REQUEST_REQUIRED"
+        );
+      }
+      const cr = await queryFirst<any>(db, "SELECT status FROM change_requests WHERE id = ?", [snag.change_request_id]);
+      if (!cr || (cr.status !== "AUTHORIZED" && cr.status !== "IN_PROGRESS" && cr.status !== "COMPLETED")) {
+        throw new AuthorizationError(
+          "Charged snag remediation work remains blocked until change request is authorized and paid",
+          "CHANGE_REQUEST_NOT_AUTHORIZED"
+        );
+      }
     }
   }
 

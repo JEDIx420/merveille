@@ -14,7 +14,7 @@ Baseline: 24 November 2026. Application implementation has not started. Planning
 - [x] P07 — [Quotations, schedules, invoices and receipts](docs/implementation/phases/07-commercial-finance.md) — [Evidence](docs/evidence/phase-07.md)
 - [x] P08 — [Expenses, consultant fees, payroll and profit](docs/implementation/phases/08-accounting.md) — [Evidence](docs/evidence/phase-08.md)
 - [x] P09 — [References, materials and additional-work controls](docs/implementation/phases/09-client-decisions-changes.md) — [Evidence](docs/evidence/phase-09.md)
-- [ ] P10 — [Site issue and snag tracking](docs/implementation/phases/10-site-issues.md)
+- [x] P10 — [Site issue and snag tracking](docs/implementation/phases/10-site-issues.md) — [Evidence](docs/evidence/phase-10.md)
 - [ ] P11 — [In-portal notifications, WhatsApp and escalation](docs/implementation/phases/11-notifications.md)
 - [ ] P12 — [Role dashboards, waiting-on-you and owner performance](docs/implementation/phases/12-overviews-performance.md)
 - [ ] P13 — [Archive, audit exports and recovery](docs/implementation/phases/13-archive-recovery.md)
@@ -22,9 +22,9 @@ Baseline: 24 November 2026. Application implementation has not started. Planning
 
 ## Current checkpoint
 
-- Current phase: P09 complete; commencing P10 (Site issue and snag tracking).
-- Next action: Read docs/implementation/phases/10-site-issues.md, docs/workflows/snag-and-issue-management.md, and docs/screens/15-snags-issues.md; implement site issues and snags, location/photo evidence, staff resolution vs manager verification gate (AC-044), client/consultant visibility boundaries with internal remediation cost notes hidden (AC-045), and charged snag remediation obeying change gates (AC-070).
-- Completed application tests: AC-064 (P00), AC-001 through AC-008 (P01), AC-009 through AC-012 (P02), AC-056 through AC-060 (P03), AC-013 through AC-015 (P04), AC-016 through AC-021 (P05), AC-022 through AC-026 (P06), AC-010 and AC-027 through AC-033 (P07), AC-034 through AC-038 (P08), AC-039 through AC-043 (P09). Evidence in docs/evidence/phase-00.md through docs/evidence/phase-09.md.
+- Current phase: P10 complete; commencing P11 (In-portal notifications, WhatsApp and escalation).
+- Next action: Read docs/implementation/phases/11-notifications.md, docs/workflows/notifications.md, and docs/integrations/whatsapp.md; implement outbox queue persistence, due reminders with Asia/Kolkata timezone policies (AC-046), dispatch-time eligibility check suppressing obsolete messages (AC-047), idempotent retries and webhook deduplication without double-sending (AC-048), safe WhatsApp payload formatting without raw docs/salaries (AC-049), and signature verification (AC-050) using local synthetic WhatsApp adapter.
+- Completed application tests: AC-064 (P00), AC-001 through AC-008 (P01), AC-009 through AC-012 (P02), AC-056 through AC-060 (P03), AC-013 through AC-015 (P04), AC-016 through AC-021 (P05), AC-022 through AC-026 (P06), AC-010 and AC-027 through AC-033 (P07), AC-034 through AC-038 (P08), AC-039 through AC-043 (P09), AC-044, AC-045, AC-070 (P10). Evidence in docs/evidence/phase-00.md through docs/evidence/phase-10.md.
 - Deployed environments: local workerd emulated environment active with local D1 database migrations.
 - Blockers: None for local implementation. External Access IDP and Meta Cloud API credentials not required for local operations.
 

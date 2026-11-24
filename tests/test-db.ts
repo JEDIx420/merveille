@@ -329,6 +329,7 @@ export async function setupMigratedTestDb(): Promise<D1Database> {
     "0007_commercial_finance.sql",
     "0008_accounting_and_ledger.sql",
     "0009_client_decisions_and_changes.sql",
+    "0010_site_issues_and_snags.sql",
   ];
 
   for (const file of files) {
