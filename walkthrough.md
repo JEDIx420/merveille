@@ -8,6 +8,17 @@ The company identity, verified Refrens business baseline, brand assets in `asset
 
 ---
 
+## Live Deployment Information
+
+- **Live Public URL:** [https://merveille-web.rhelo-bible.workers.dev](https://merveille-web.rhelo-bible.workers.dev)
+- **Runtime Environment:** Cloudflare Workers with Static Assets (`workerd`)
+- **Remote Persistence:** Cloudflare D1 Database (`merveille-db`, `02c9d47f-8f7d-46fe-934b-73808c7a5d3d`)
+- **Remote Storage:** Cloudflare R2 Bucket (`merveille-files`)
+- **Live Verification Spike:** [https://merveille-web.rhelo-bible.workers.dev/api/runtime/spike](https://merveille-web.rhelo-bible.workers.dev/api/runtime/spike)
+- **Interactive Switch Role / Login:** [https://merveille-web.rhelo-bible.workers.dev/login](https://merveille-web.rhelo-bible.workers.dev/login)
+
+---
+
 ## Application Scope and Phase Delivery
 
 ### P00 — Runtime Foundation and Compatibility
