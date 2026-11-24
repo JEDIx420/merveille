@@ -1,6 +1,6 @@
 # Navigation, routes and language
 
-Use one responsive application with role-adaptive navigation. Shared routes return only information allowed for the signed-in person. Do not implement a hidden “client mode” switch that changes presentation while leaving privileged data loaded in the browser.
+Follow [03 — Premium interface](../remediation/03-premium-interface.md). Use one responsive application with capability-aware navigation for the actual signed-in Google identity. No visible or hidden persona/view/role switcher, demo login or impersonation. Shared routes return only permitted information; ordinary project switching and administrator access editing remain available.
 
 ## Global navigation
 
@@ -16,13 +16,13 @@ Use one responsive application with role-adaptive navigation. Shared routes retu
 | Archive | Users with archived-project membership | Historical projects and permitted downloads. |
 | Notifications | All signed-in users | Portal messages, WhatsApp preferences and delivery status where permitted. |
 
-Use a stable charcoal left navigation on desktop with the complete square company logo. On small screens, pair the published square profile image with the readable name “Merveille Designs.” Keep the logo’s original colours and proportions. On mobile, show a compact header with project switcher and a navigation drawer; keep Overview, Projects and Waiting on you readily available without cramming all destinations into a bottom bar. Never show inaccessible admin entries as enticing disabled links.
+Use a light neutral desktop sidebar and compact 40–48px unchanged square logo beside readable “Merveille Designs” text. On mobile, use a 64px top bar and accessible drawer so content starts immediately below it. Keep Overview, Projects and Waiting on you readily available. Show the actual account and sign-out; never show inaccessible admin entries as disabled invitations to explore. The Overview link targets the real overview, not `/` runtime diagnostics.
 
 ## Project shell
 
-Route prefix: `/projects/:projectId`. Header contains project title, code, phase, archive status if applicable and a client/site descriptor appropriate to the viewer. Sections: Overview, Tasks, Drawings, Updates, Permits, Finance, Selections, Changes and Site issues. Hide sections without authorised content/actions rather than leaking counts. Less-used sections can move to “More” on small screens.
+Route prefix: `/projects/:projectId`. Header contains project title, code, phase, archive status if applicable and a client/site descriptor appropriate to the viewer. Sections: Overview, Tasks, Drawings, Updates, Permits, Finance, Materials & references, Changes and Site issues. Reconcile existing Materials/Selections routes without losing behavior or deep links. Hide sections without authorised content/actions rather than leaking counts. Less-used sections can move to “More” on small screens.
 
-Internal notes and drafts must be visibly labelled inside the internal experience. Client-facing previews show the exact externally visible fields and attachments; the preview is not a permission mechanism.
+Internal notes and drafts must be visibly labelled inside the internal experience. An update publication preview may show only that record’s intended external fields and attachments. It is not a whole-app role preview or identity switch; server audience checks remain authoritative.
 
 ## Content rules
 

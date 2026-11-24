@@ -1,14 +1,14 @@
 # Architecture overview
 
-Status: implementation specification, not an implemented system. Technical sources checked 24 November 2026. Read [product requirements](../product/requirements.md) and [permissions](../product/roles-and-permissions.md) before coding.
+Status: architecture contract for the existing foundation, with open integration/verification work. Follow the [current remediation plan](../remediation/README.md), [product requirements](../product/requirements.md) and [permissions](../product/roles-and-permissions.md). Technical source notes below were checked 24 November 2026; they do not prove deployed readiness.
 
 ## Decision
 
 Build one responsive, online application using Next.js App Router conventions and TypeScript, deployed to Cloudflare Workers. Keep application data in D1 and private R2. Use a separate background Worker for reminders and durable job handling. The initial scale is approximately 30 projects and 10–15 concurrent users; total registered identities may be higher because clients and their representatives have individual logins.
 
-**The frontend deployment recommendation changed:** Cloudflare's current [Next.js guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/) recommends **vinext for new applications**. The [OpenNext guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/opennext/) remains available for compatibility cases. The initial builder must verify and pin a supported Next.js/React/vinext/Vite/Wrangler combination before adding business features. This is a compatibility spike, not permission to silently substitute a different product framework.
+The implemented runtime uses Next.js App Router and the OpenNext Cloudflare adapter, as recorded in [ADR 0001](decisions/0001-runtime.md). Preserve that foundation during remediation. The original P00 exploration of vinext is historical; a visual redesign does not require restarting it or migrating adapters. Verify the existing build in workerd and change runtime only for a demonstrated compatibility issue with a new recorded decision.
 
-The [vinext project README](https://github.com/cloudflare/vinext) describes active development and remaining compatibility gaps; it reimplements the Next.js API surface rather than consuming `next build` output. Keep the Phase 0 evidence and OpenNext fallback meaningful, especially for font/image handling and newer App Router features. The application is ordinary React/Next.js-style UI. An in-product ChatGPT assistant, autonomous drawing approval, and AI access to project documents are not part of the confirmed scope. AI-assisted implementation does not imply a runtime AI dependency.
+An in-product ChatGPT assistant, autonomous drawing approval and AI access to project documents remain outside the confirmed scope. AI-assisted implementation does not imply a runtime AI dependency.
 
 ## System boundaries
 
@@ -31,7 +31,7 @@ The diagram expresses logical boundaries. The webhook can share a deployment wit
 
 | Responsibility | Chosen building block | Rules |
 |---|---|---|
-| UI, server rendering, business commands | Next.js conventions on a Cloudflare Worker via verified vinext scaffold | One server-side domain service layer; route handlers and server actions share it |
+| UI, server rendering, business commands | Existing Next.js App Router on a Cloudflare Worker via OpenNext | One server-side domain service layer; route handlers and server actions share it |
 | Login | Cloudflare Access | Invite-only application accounts; validate JWT; D1 remains the permission authority |
 | Relational records | D1 | Prepared SQL, migrations, scoped queries, transactional commands, integer money |
 | Documents/media | Private R2 | No public project bucket, immutable version objects, authenticated download gate |
@@ -42,7 +42,9 @@ The diagram expresses logical boundaries. The webhook can share a deployment wit
 
 Wrangler configuration and generated binding types are the deployment source of truth. Access applications/policies and Meta sender registration also need setup; **Wrangler alone does not create every identity policy or external messaging account**. Record these dependencies in [environment setup](../operations/environments.md).
 
-## Compatibility spike and adapter exit criterion
+## Historical compatibility spike and adapter exit criterion
+
+The existing ADR records the choice. Retain the following as original evaluation criteria, not a new remediation stage.
 
 The builder creates a disposable scaffold or isolated branch, then demonstrates these capabilities in the Workers runtime:
 

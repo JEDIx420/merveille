@@ -40,7 +40,7 @@ Record these in private deployment configuration, not public issue bodies:
 4. WhatsApp Business sender, approved templates, test numbers, recipient opt-in process and external messaging budget.
 5. Operational retention/backup owner, export destination, recovery objectives and file-size expectations using actual sample files.
 
-These are launch configuration gates. They do not prevent building a realistic local/staging implementation with fake identities, synthetic financial records and fake WhatsApp delivery.
+These are launch configuration gates. They do not prevent independent local implementation with isolated identity fixtures, synthetic financial records and fake WhatsApp delivery. Hosted staging/preview uses real invited Google accounts or remains fail-closed; there is no deployed fake identity or role-switching mode. See [the current identity contract](../remediation/02-identity-and-real-user-testing.md).
 
 ## Secret setup and isolation
 

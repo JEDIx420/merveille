@@ -1,5 +1,7 @@
 # Roles, authority and permissions
 
+The current [real-account contract](../remediation/02-identity-and-real-user-testing.md) adds Google sign-in, Jay’s one-time private-email bootstrap, multiple admins, invitation/edge admission and real-person UAT. No role/view switcher or deployed synthetic identities are allowed. The capabilities and business authority below remain unchanged.
+
 ## Model
 
 Roles are named capability bundles. A person may hold multiple bundles, but project membership and record sensitivity still constrain every action. A person who is a manager on Project A and a client representative on Project B does not carry Project A's authority into Project B.

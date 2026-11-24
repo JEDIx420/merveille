@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "product": "Merveille Designs",
   "baselineDate": "2026-11-24",
-  "kind": "implementation-specification",
+  "kind": "historical-implementation-specification",
   "phases": [
     {
       "id": "P00",
@@ -247,5 +247,7 @@
         "AC-069"
       ]
     }
-  ]
+  ],
+  "activeManifest": "docs/remediation/manifest.json",
+  "status": "Retained P00\u2013P14 reference; follow active remediation R00\u2013R05. Prior completion claims require re-verification."
 }

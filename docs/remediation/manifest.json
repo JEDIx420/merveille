@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "product": "Merveille Designs",
+  "kind": "active-remediation-plan",
+  "recordedDate": "2026-11-24",
+  "applicationBranch": "implement/merveille-portal",
+  "auditedSourceCommit": "813ef8b765045b95ff713665a3217e4487491d75",
+  "entryPoint": "docs/remediation/README.md",
+  "historicalManifest": "docs/implementation/manifest.json",
+  "status": "Instructions prepared; application remediation not started by this documentation change.",
+  "dependencyPolicy": "Implementation and local-verification contracts unlock independent downstream work. A blocked hosted/provider check remains explicit and blocks real onboarding/release, not unrelated implementation. See stage exit gates.",
+  "stages": [
+    {
+      "id": "R00",
+      "title": "Baseline and demo/diagnostic containment",
+      "dependsOn": [],
+      "file": "docs/remediation/05-delivery-and-acceptance.md",
+      "read": [
+        "docs/remediation/01-product-amendment.md",
+        "docs/remediation/04-functional-repairs.md"
+      ],
+      "implementation": "not-started",
+      "localVerification": "not-started",
+      "hostedVerification": "not-started",
+      "teamAcceptance": "not-started",
+      "evidence": [],
+      "blockers": []
+    },
+    {
+      "id": "R01",
+      "title": "Real Google accounts and administrator access",
+      "dependsOn": [
+        "R00"
+      ],
+      "file": "docs/remediation/05-delivery-and-acceptance.md",
+      "read": [
+        "docs/remediation/02-identity-and-real-user-testing.md",
+        "docs/remediation/04-functional-repairs.md"
+      ],
+      "implementation": "not-started",
+      "localVerification": "not-started",
+      "hostedVerification": "not-started",
+      "teamAcceptance": "not-started",
+      "evidence": [],
+      "blockers": []
+    },
+    {
+      "id": "R02",
+      "title": "Shared premium interface and reference screens",
+      "dependsOn": [
+        "R00",
+        "R01"
+      ],
+      "file": "docs/remediation/05-delivery-and-acceptance.md",
+      "read": [
+        "docs/remediation/03-premium-interface.md"
+      ],
+      "implementation": "not-started",
+      "localVerification": "not-started",
+      "hostedVerification": "not-started",
+      "teamAcceptance": "not-started",
+      "evidence": [],
+      "blockers": [],
+      "parallelWith": [
+        "R03"
+      ],
+      "integrationGate": "Complete R03 F02\u2013F04 dependencies before declaring corrected drawing/finance reference workflows verified. Continue R03 when these block R02; R03 does not depend on R02."
+    },
+    {
+      "id": "R03",
+      "title": "Functional integrity and operational services",
+      "dependsOn": [
+        "R00",
+        "R01"
+      ],
+      "file": "docs/remediation/05-delivery-and-acceptance.md",
+      "read": [
+        "docs/remediation/04-functional-repairs.md"
+      ],
+      "implementation": "not-started",
+      "localVerification": "not-started",
+      "hostedVerification": "not-started",
+      "teamAcceptance": "not-started",
+      "evidence": [],
+      "blockers": [],
+      "parallelWith": [
+        "R02"
+      ]
+    },
+    {
+      "id": "R04",
+      "title": "Complete route and interaction migration",
+      "dependsOn": [
+        "R02",
+        "R03"
+      ],
+      "file": "docs/remediation/05-delivery-and-acceptance.md",
+      "read": [
+        "docs/remediation/03-premium-interface.md",
+        "docs/remediation/04-functional-repairs.md"
+      ],
+      "implementation": "not-started",
+      "localVerification": "not-started",
+      "hostedVerification": "not-started",
+      "teamAcceptance": "not-started",
+      "evidence": [],
+      "blockers": []
+    },
+    {
+      "id": "R05",
+      "title": "Real-person UAT and release handoff",
+      "dependsOn": [
+        "R01",
+        "R02",
+        "R03",
+        "R04"
+      ],
+      "file": "docs/remediation/05-delivery-and-acceptance.md",
+      "read": [
+        "docs/remediation/02-identity-and-real-user-testing.md",
+        "docs/remediation/05-delivery-and-acceptance.md"
+      ],
+      "implementation": "not-started",
+      "localVerification": "not-started",
+      "hostedVerification": "not-started",
+      "teamAcceptance": "not-started",
+      "evidence": [],
+      "blockers": []
+    }
+  ]
+}

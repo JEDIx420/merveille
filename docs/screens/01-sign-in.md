@@ -8,9 +8,11 @@ Give each person their own identity and return them to permitted work. Access is
 
 ## Layout and fields
 
-A quiet two-panel desktop composition: brand mark and short product purpose, then a compact sign-in panel. On mobile show only the functional panel and small wordmark. The architecture default is Cloudflare Access hosted email verification for invited identities. Merveille Designs may show a branded continue/help gateway; Access owns the email/verification UI. Do not build a competing password or custom OTP form inside Merveille Designs. If Access redirects before the application renders, that is the expected authentication boundary. Invitation acceptance identifies the invited address, intended role and project scope only after validating the token/session.
+Use the compact [AuthShell](../remediation/03-premium-interface.md): white/cool-gray surface, unchanged 40–48px logo and readable company name at the top, a focused sign-in panel and clear help/recovery states. No dominant brand panel, demo user, role selector or impersonation control.
 
-**Primary action:** “Continue” or the precise configured provider action; invitation flow uses “Accept invitation.” No social-provider buttons that are not configured. Do not offer public account creation.
+Follow [Google through Access](../remediation/02-identity-and-real-user-testing.md) for individually invited Gmail/Workspace users. The old hosted email-OTP default is superseded. “Continue with Google” invokes the configured real provider; if Access intercepts first, use its appropriately branded login and avoid a second application sign-in loop. Do not build custom password/OTP forms. Invitation acceptance discloses its intended identity/grants only after verified token/session checks.
+
+**Primary action:** “Continue with Google”; invitation flow uses “Accept invitation.” No inactive provider buttons or public registration. Explain wrong-account, expired-link and pending-access-setup states. A pending verified user may access the narrowly scoped acceptance/bootstrap flow without already holding business-data access.
 
 ## Interactions and service contract
 
@@ -20,7 +22,7 @@ A signed-in person with no project membership gets a helpful no-access screen ra
 
 ## States and mobile
 
-Inherit [shared states](../design/interaction-patterns.md). Verification feedback does not disclose whether an arbitrary address belongs to a user. Invalid, expired, already-used and revoked invitations show safe explanations and a contact-admin path. Keep keyboard focus inside the sign-in step; verification inputs must support paste and accessible labels. No private content appears behind the sign-in overlay.
+Inherit [shared states](../design/interaction-patterns.md). Verification feedback does not disclose whether an arbitrary address belongs to a user. Invalid, expired, already-used and revoked invitations show safe explanations and a contact-admin path. Keep keyboard focus understandable across the provider round-trip and acceptance form; controls need accessible labels. No private content appears behind the sign-in overlay.
 
 ## Acceptance criteria
 
@@ -29,3 +31,5 @@ Inherit [shared states](../design/interaction-patterns.md). Verification feedbac
 - A user cannot change roles by editing invitation URL/form fields.
 - After sign-in, an unauthorised deep link remains denied.
 - Keyboard, mobile and recovery/error states are demonstrated without real credentials in screenshots.
+
+- Real invited Google sign-in, wrong-account rejection, one-time bootstrap and no deployed role/view switching are verified under the current identity contract.

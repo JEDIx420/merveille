@@ -2,7 +2,7 @@
 
 ## Execution contract
 
-Build the full agreed product through the ordered phases below. This sequence is an engineering delivery plan, not a reduction of scope. Documentation/assets are prepared; application phases are unstarted.
+**Historical build sequence.** The foundation has been implemented, with verification gaps. The active work is [R00–R05 remediation](../remediation/README.md). Use the phases below as detailed feature/reference contracts; do not restart P00 or trust historical completion labels without current evidence.
 
 Read [START_HERE.md](../../START_HERE.md) first. Each phase has a standalone implementation file. [manifest.json](manifest.json) contains dependency and acceptance IDs; [task.md](../../task.md) records real progress. The [acceptance catalogue](../quality/acceptance.md) defines observable completion.
 
@@ -30,13 +30,13 @@ Read [START_HERE.md](../../START_HERE.md) first. Each phase has a standalone imp
 
 Each phase delivers server authorisation, database changes, domain transitions, UI, failure states and targeted tests. Avoid generating every screen with mock data before implementing core permissions and state. Reuse the shell and design tokens, then connect real vertical slices.
 
-All named code paths are implementation targets, not existing modules. Refine the scaffold if the runtime requires it and document the decision. Keep the domain, database, file, notification and UI boundaries visible.
+The original paths were proposed implementation targets. Inspect current modules before repairing them; preserve the existing scaffold and clear domain, database, file, notification and UI boundaries.
 
 P02 introduces project/intake records; P03 connects evidence files; P07 completes quotation/advance activation. The project remains blocked from activation until real commercial records exist. Likewise earlier phases record outbox events but P11 owns delivery. Do not claim those later integrations complete prematurely.
 
 ## Decision checkpoints
 
-1. **P00:** runtime/version evidence and exact local commands. Current documentation recommends vinext but labels it beta; compatibility determines the final pinned selection.
+1. **P00 (historical):** runtime/version evidence and local commands. The recorded runtime decision selected Next/OpenNext; retain it during remediation unless a demonstrated incompatibility requires a new ADR.
 2. **P01:** identity invitation/provisioning and real Access checks in staging. Total registered identities, not concurrent users, drive external identity configuration needs.
 3. **P07–P08:** agreed currency, accounting basis, invoice/period settings and opening balances before live commercial use. Synthetic local data is sufficient for implementation.
 4. **P11:** authorised provider sender, opt-in/templates and test recipient before real WhatsApp delivery. Fake local delivery is explicit.

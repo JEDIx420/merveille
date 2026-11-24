@@ -1,64 +1,46 @@
-# Start here — build Merveille Designs
+# Start here — improve the existing Merveille Designs application
 
-This is the implementation agent's entry point. The repository is a planning handoff, not a partially working app. Follow the sequence below; carry work forward through the phase manifest instead of inventing a new scope.
+The app exists on **`implement/merveille-portal`**. The current assignment is remediation: premium consistent UI, real Google accounts/admin access and reliable business workflows. Do not start from a fresh Next scaffold or repeat P00.
 
-Starting from an empty folder? Use the [Antigravity kickoff prompt](docs/implementation/antigravity-kickoff.md). The [skills and tools guide](docs/implementation/skills-and-tools.md) covers cloning, the selected upstream skills and project-local installation. Read the contract below before scaffolding or applying a skill's generic defaults.
+## 1. Open the right code
 
-## 1. Understand the contract
+Inspect the folder, remote, branch and local changes. For a genuinely empty folder:
 
-Read these files, in order:
+```bash
+git clone --branch implement/merveille-portal https://github.com/JEDIx420/merveille.git .
+```
 
-1. [Repository instructions](AGENTS.md).
-2. [Product brief](docs/product/brief.md).
-3. [Requirements and decision history](docs/product/requirements.md).
-4. [Role and information permissions](docs/product/roles-and-permissions.md).
-5. [Architecture](docs/architecture/overview.md).
-6. [Design system](docs/design/design-system.md).
-7. [Implementation roadmap](docs/implementation/roadmap.md).
-8. [Current task state](task.md).
+For an existing checkout, fetch and inspect the remote implementation branch, then resume it or a feature branch based on it. Preserve local work; do not reset or overwrite it. If this checkout contains only planning files, follow [NEXT_AGENT.md](NEXT_AGENT.md) to the existing application. The [skills and tools guide](docs/implementation/skills-and-tools.md) covers setup without rebuilding the foundation.
 
-Then read the selected phase's prerequisite documents and screen/workflow specifications. Do not load every page into context at once. The indexes are intentionally small; detailed behaviour lives in individual files.
+## 2. Read the current contract
 
-## 2. Select the next ready phase
+1. [AGENTS.md](AGENTS.md) and [task.md](task.md).
+2. [Current work order](docs/remediation/README.md).
+3. Its ordered documents: [product amendment](docs/remediation/01-product-amendment.md), [real accounts](docs/remediation/02-identity-and-real-user-testing.md), [premium interface](docs/remediation/03-premium-interface.md), [functional repairs](docs/remediation/04-functional-repairs.md), [delivery and acceptance](docs/remediation/05-delivery-and-acceptance.md).
+4. [Active manifest](docs/remediation/manifest.json).
+5. The applicable [requirements](docs/product/requirements.md), [permissions](docs/product/roles-and-permissions.md), [screen](docs/screens/README.md) and [workflow](docs/workflows/README.md) files for the stage.
 
-[manifest.json](docs/implementation/manifest.json) is the machine-readable dependency order. [Phase files](docs/implementation/roadmap.md) contain implementation steps, target areas, acceptance checks and evidence requirements.
+The current amendment supersedes older warm/gold design and demo/fresh-build instructions. Unchanged business rules remain binding. P00–P14 and their evidence are reference history, not automatic release proof.
 
-- Start at **P00** on a fresh checkout.
-- A phase is ready when all dependencies have verified evidence.
-- Dependency readiness means each predecessor's stated exit gate and evidence are satisfied. Foundation checks may cover only the policy/runtime portion of a later end-to-end acceptance case; leave the full case pending until its actual endpoints and integrations have been exercised. Follow each phase's documented evidence scope.
-- Complete a vertical slice: authorised server behaviour, persistence, accessible UI, error states and meaningful tests.
-- Only then mark the phase complete in [task.md](task.md) and add its evidence record.
-- Continue automatically to the next ready phase while work is authorised. Ask only when a genuinely missing decision or access blocks the next step.
+## 3. Begin R00, then continue
 
-The manifest defines phase dependencies, not permission to deploy production or send live messages. Use the current user's authorisation and the [operational inputs](docs/implementation/operational-inputs.md).
+Check actual application/test/configuration state and run the documentation checker. Remove unsafe diagnostic/deployed fixture entry points, then implement genuine identity and shared design foundations. Follow R00–R05 dependencies; parallelize independent work only after shared contracts agree.
 
-## 3. Preserve these final decisions
+Preserve the current Next/OpenNext runtime and Cloudflare/Wrangler resources. Use reviewed project-local skills only where useful. Do not migrate frameworks or install every marketplace skill to solve a design problem.
 
-- Drawing content: team preparation/review, consultant approval, **manager release**. No client drawing-approval step.
-- Main client remains the final contractual decision-maker for quotations and additional work. Representatives have separate identities and cannot impersonate that authority.
-- Manager approval precedes publication of ordinary updates.
-- Invoice working interpretation: staff draft, manager approval, staff issue. Manager alone changes schedules; admin confirms receipt.
-- Work activation requires accepted quotation and confirmed advance. Extra work also needs its agreed estimate/payment and manager approval.
-- Consultants intentionally see the assigned project's client quotation and payment history, never internal discussions, payroll or profit.
-- Salaries/profit require ADMIN capability; individual staff performance requires OWNER capability. Do not collapse those distinctions.
-- K-SMART is manual status/document capture. The app does not determine government permission to build.
-- Online-only. WhatsApp plus portal reminders. No checkout, offline queue, handover-pack generator or unrequested AI chat feature.
-- Archived permitted records stay available to authorised clients and consultants.
+## 4. Keep the latest experience explicit
 
-## 4. First implementation action
+- Neutral white, cool gray and graphite interface; compact original Merveille Designs logo at the top.
+- No role/view switcher, demo login or deployed impersonation.
+- Jay bootstrapped once as initial ADMIN from a privately supplied exact Google email; multiple admins and admin-managed invitations/roles/projects.
+- Real Google accounts for the team's approximately three initial testers; no permanent user cap.
+- Consultant drawing approval followed by manager final release; no client drawing approval. Internal discussions remain private.
+- Keep all existing commercial, financial, site and archive rules in AGENTS.md.
 
-Run the handoff checker, inspect the actual checkout and begin [P00](docs/implementation/phases/00-foundation.md). Complete the [skill/tool bootstrap](docs/implementation/skills-and-tools.md), preserving the requested Wrangler workflow. Validate the runtime in workerd with real local D1/R2 bindings before committing to framework versions. Record the adapter choice and pinned versions in an ADR.
+## 5. Verify and leave a resumable checkpoint
 
-The infrastructure examples are **examples**, not deploy-ready files. Do not copy fictitious account IDs into production or claim a service exists because a configuration skeleton names it.
+The coding agent owns terminal/build/regression checks and actual rendered browser review. Team UAT is a short browser walkthrough with real accounts and fictional business records. Use meaningful permission, money, concurrency and file checks; screenshots or source-string tests alone are insufficient.
 
-## 5. Resume correctly
+Update task.md, the active manifest and evidence with changed paths, build/commit, actual results, blocked inputs and the next exact action. Continue without routine permission loops. Missing credentials block only their dependent integration; never substitute demo access or fake success.
 
-Before stopping, update task.md with completed steps, outstanding acceptance IDs, blockers, commands run and the next exact action. Use [the evidence template](docs/quality/evidence-template.md).
-
-On resumption, inspect the actual code and test evidence before trusting a checked box. If evidence is missing or stale, reopen that task. Keep the product's confirmed decisions unless the user changes them.
-
-## 6. Definition of completion
-
-All phases verified; all required acceptance cases mapped to executable evidence; all role-specific screens usable; critical permission and money paths tested; real staging integration checks completed; recovery exercised; production prerequisites documented; release reviewed against [the release checklist](docs/quality/release-checklist.md).
-
-Do not describe the product as complete while it still relies on mock handlers, fake payment confirmation, public document URLs, skipped permission checks or unverified production integrations.
+Completion means the entire route inventory and required workflows are implemented and verified, real account onboarding works, and outstanding hosted/team gates are honestly recorded. See [delivery and acceptance](docs/remediation/05-delivery-and-acceptance.md).

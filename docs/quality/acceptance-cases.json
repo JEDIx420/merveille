@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "baselineDate": "2026-11-24",
-  "status": "Specification only; no application tests have been run.",
+  "status": "Legacy cases remain not-run in this register. Historical implementation evidence requires re-verification through R00\u2013R05; this documentation update runs no application tests.",
   "cases": [
     {
       "id": "AC-001",

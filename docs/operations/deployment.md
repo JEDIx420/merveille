@@ -18,7 +18,7 @@ Avoid implicit deployment from `dev`, `test` or a default install hook. Separate
 
 ## 3. Verify locally
 
-Exercise the actual Workers runtime, not only Next.js's Node dev server. Migrate an empty local D1 database and an existing-data fixture. Verify D1 transactional guards, foreign keys, R2 chunking/ranges, fake Access identities restricted to local mode, and queue retries. Use synthetic demo projects with each role, project overlaps, private updates, consultant financial access, superseded drawings and an archived project.
+Exercise the actual Workers runtime, not only Next.js's Node dev server. Migrate an empty local D1 database and an existing-data fixture. Verify D1 transactional guards, foreign keys, R2 chunking/ranges, identity fixtures confined to the isolated automated test harness, and queue retries. Use synthetic demo projects with each role, project overlaps, private updates, consultant financial access, superseded drawings and an archived project.
 
 Local verification should include visual checks on desktop and a narrow mobile viewport, keyboard navigation, empty/loading/forbidden/error states, file progress and the primary end-to-end domain journeys. The required journeys are those in the implementation and workflow specs, not simply a successful homepage render.
 

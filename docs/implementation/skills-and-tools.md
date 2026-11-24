@@ -7,28 +7,27 @@ Checked 24 November 2026. Start with [START_HERE.md](../../START_HERE.md) and [A
 Inspect the current directory, including hidden entries, before cloning. If it is genuinely empty, run:
 
 ```bash
-git clone https://github.com/JEDIx420/merveille.git .
-git switch -c implement/merveille-portal
+git clone --branch implement/merveille-portal https://github.com/JEDIx420/merveille.git .
 node scripts/check-handoff.mjs
 ```
 
-If the folder already contains the checkout, inspect `git status` and its remote, then resume the existing implementation branch. If it contains unrelated work, preserve that work and use a new `merveille` subdirectory. Never erase a folder, reset a branch or overwrite local changes to make these instructions fit. Do not scaffold a framework into the checkout until you have read the plan; its documentation and brand assets must survive scaffolding.
+If the folder already contains the checkout, inspect `git status` and its remote, then resume the existing implementation branch. If it contains unrelated work, preserve that work and use a new `merveille` subdirectory. Never erase a folder, reset a branch or overwrite local changes to make these instructions fit. The application already exists. Do not scaffold it again or create a same-named branch from the planning-only main branch. Follow [the current remediation work order](../remediation/README.md).
 
-Verify Git, Node and the package manager already installed on the laptop. The currently documented Skills CLI requires Node 22.20 or later. Choose a Node release also supported by the runtime packages selected in P00, then record and pin the actual versions. Use project-local dependencies and the repository's chosen package manager. Do not change the user's global tools or IDE permissions as a shortcut.
+Verify Git, Node and the package manager already installed on the laptop. The currently documented Skills CLI requires Node 22.20 or later. Use the existing runtime/lockfile and a compatible Node version; inspect the recorded runtime ADR and package engines before changing versions. Use project-local dependencies and the repository's chosen package manager. Do not change the user's global tools or IDE permissions as a shortcut.
 
 ## Curated skill set
 
-Install the following selected skills after inspecting their current source. There is no need to install an entire marketplace or every skill in a collection.
+First inspect any already installed, pinned project-local skills. Reuse valid reviewed installations; install only missing or necessary skills after inspecting their source. There is no need to install an entire marketplace, update every tool or download every skill in a collection.
 
 | Source repository | Exact skill name | Use in this project |
 | --- | --- | --- |
-| `cloudflare/skills` | `wrangler` | P00 onward: local bindings, generated types, environments, Wrangler configuration and controlled deployment commands |
+| `cloudflare/skills` | `wrangler` | Current remediation: local bindings, generated types, environments, Wrangler configuration and controlled deployment commands |
 | `cloudflare/skills` | `workers-best-practices` | Workers runtime behaviour, private file streaming, D1/R2 bindings, background jobs, secrets and runtime tests |
-| `anthropics/skills` | `frontend-design` | Implement the approved Merveille Designs identity and premium, restrained responsive interfaces |
+| `anthropics/skills` | `frontend-design` | Implement the current neutral premium interface, shared components and complete responsive workflows |
 | `vercel-labs/agent-skills` | `web-design-guidelines` | Review implemented components for keyboard access, focus, forms, responsive layout and interaction quality |
 | `microsoft/playwright-cli` | `playwright-cli` | Inspect actual local/staging screens, exercise role-specific journeys and collect browser evidence |
 
-The maintainer-owned sources, inspected instructions and remaining review scope are listed in [the source record](../references/antigravity-skill-sources.md). These external skills have **not** been installed by this planning handoff.
+The maintainer-owned sources, inspected instructions and remaining review scope are listed in [the source record](../references/antigravity-skill-sources.md). The original planning handoff did not install these external skills. Inspect the implementation checkout rather than assuming they are now present or absent.
 
 ### Discover, inspect, then install a pinned selection
 
@@ -41,7 +40,7 @@ npx skills add vercel-labs/agent-skills --list
 npx skills add microsoft/playwright-cli --list
 ```
 
-Read each selected `SKILL.md` and its bundled references, scripts and agent configuration before activating it. Obtain source snapshots outside the project's skill-discovery directory for that inspection. Select an exact CLI version and full source commit for each reviewed repository; do not claim that a review of today's main branch covers a later download. Record those versions and the inspected files in the P00 evidence.
+Read each selected `SKILL.md` and its bundled references, scripts and agent configuration before activating it. Obtain source snapshots outside the project's skill-discovery directory for that inspection. Select an exact CLI version and full source commit for each reviewed repository; do not claim that a review of today's main branch covers a later download. Record those versions and the inspected files in the current remediation stage evidence.
 
 The commands below are templates using variables that the agent must first populate with those reviewed versions/commits. The CLI supports `owner/repo@ref`, a selected `--skill`, and the `antigravity` agent target. Project scope is the default; `--copy` gives the repository concrete files. Preserve `.agents/skills/build-merveille` and the upstream licence notices.
 
@@ -61,11 +60,9 @@ If a skill cannot be downloaded, record the limitation, use the official documen
 
 The user explicitly chose **Wrangler**. Current Cloudflare skills describe a newer `cf` CLI as a default for some new projects, but the Wrangler skill expressly applies when the user requests Wrangler. Keep a pinned local Wrangler dependency and the repository's documented environment separation. Do not introduce `cloudflare.config.ts`, change deployment tooling or move hosting/storage because a downloaded skill's generic quickstart does so.
 
-P00 evaluates the currently recommended vinext runtime in workerd and records the actual compatibility result. Its beta status means that a browser-only development preview is insufficient. Exercise SSR, cookies/headers, a mutation and real local D1/R2 bindings. Use the documented OpenNext alternative only for an evidenced blocker, with a recorded ADR; do not mix adapters. Follow [P00](phases/00-foundation.md), [architecture](../architecture/overview.md) and the [Cloudflare source record](../references/cloudflare-sources.md).
+The existing application selected Next.js/OpenNext in [ADR 0001](../architecture/decisions/0001-runtime.md). Keep that adapter and the pinned Wrangler workflow. Verify SSR, cookies/headers, mutations and local D1/R2 in the actual Workers-compatible build as affected by changes. The user's request is to improve the existing foundation; no vinext migration or repeated framework-selection spike is needed. If a real runtime incompatibility appears, document it and make the smallest supported fix before considering a new ADR.
 
-Cloudflare also publishes a `migrate-to-vinext` skill in `cloudflare/vinext`. This is **conditional**, not part of the initial five-skill setup: its first check requires `next` in an existing `package.json`. Do not invoke it against the empty folder or treat a migration recipe as a fresh-app generator. If P00 produces a Next scaffold and migration is appropriate, review that skill and install only `migrate-to-vinext` from a pinned source commit.
-
-The inspected vinext migration instructions distinguish a default `cf` configuration path from `--legacy-wrangler-cloudflare-init`. Verify the exact supported Wrangler path in the pinned runtime's help and official documentation before changing files. If the Wrangler-compatible setup fails the P00 gate, record the failure and evaluate the documented OpenNext fallback. Do not silently switch the user's infrastructure CLI.
+Do not install or run a migration skill merely because a generic Cloudflare quickstart prefers a different framework or CLI. Frontend skills must follow [03 — Premium interface](../remediation/03-premium-interface.md): neutral palette, unchanged compact logo, shared CSS Modules/components and no role/view switcher.
 
 ## Browser tools and visual quality
 
@@ -80,11 +77,11 @@ npx --no-install playwright cli --help
 
 If that interface is unavailable, keep the pinned Playwright test runner and Antigravity's available browser capability while checking the official CLI documentation. Do not install a global tool merely because an example starts with `npm install -g`.
 
-Exercise synthetic users with separate roles and project memberships. Check desktop and phone layouts, keyboard navigation, loading/empty/error states, private downloads and forbidden actions. Keep authentication state, cookies and real customer data out of screenshots committed to Git. Browser inspection complements executable domain and permission tests; it cannot establish correct server authorization by itself.
+Use isolated fixtures for developer regression tests only. Hosted UAT uses actual invited Google accounts with explicit capability/project grants; no deployed demo identities, persona switches or impersonation. Check desktop and phone layouts, keyboard navigation, loading/empty/error states, private downloads and forbidden actions. Keep authentication state, cookies and real customer data out of screenshots committed to Git. Browser inspection complements executable domain and permission tests; it cannot establish correct server authorization by itself.
 
 ## Continue through the entire implementation
 
-Use the next dependency-ready phase in [manifest.json](manifest.json). For each phase, read its specified screen/workflow files, implement the complete server/persistence/UI behaviour, run its acceptance cases, record actual evidence and make a focused commit. Continue without requesting permission after every phase. Keep `task.md`, `implementation_plan.md` and `walkthrough.md` accurate enough for another session to resume.
+Use the next dependency-ready stage in [the remediation manifest](../remediation/manifest.json), R00–R05. The original P00–P14 manifest is historical reference. For each stage, read its specified screen/workflow files, implement the complete server/persistence/UI behaviour, verify its actual acceptance gates, record evidence and make a focused commit. Continue without requesting permission after every phase. Keep `task.md`, `implementation_plan.md` and `walkthrough.md` accurate enough for another session to resume.
 
 Missing Cloudflare credentials, WhatsApp setup or a final operational value should block only dependent integration checks. Complete independent local work, maintain explicit `blocked` states and prepare exact setup instructions. Never replace a blocked real integration with a fabricated pass. Production deployment and live WhatsApp delivery follow the user's actual authorization and [operational inputs](operational-inputs.md); downloading a skill grants neither.
 

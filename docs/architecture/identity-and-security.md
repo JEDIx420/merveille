@@ -4,9 +4,9 @@ Status: required implementation controls. The [role matrix](../product/roles-and
 
 ## Identity provider decision
 
-Use **Cloudflare Access** in front of the web hostname. External clients, representatives and consultants may use Access email one-time PIN. Staff may use a configured organizational identity provider; require a stronger authentication policy for ADMIN/OWNER actions when that IdP is available. Do not claim email OTP is MFA. Cloudflare documents [OTP for approved email identities](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/) and [self-hosted application protection](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/).
+Use **Google sign-in through Cloudflare Access** for exact invited personal Gmail and Google Workspace identities, as specified in [02 — Real accounts](../remediation/02-identity-and-real-user-testing.md). The older external email-OTP/alternate organizational-IdP default is superseded. Require the selected Google login method and exact approved email admission; do not allow any-Gmail or domain-wide signup. No mailbox scopes are required.
 
-The deployment setup must validate total registered users, Access licensing, email deliverability, production hostname ownership, identity recovery and the staff authentication policy. Ten concurrent users is not the same as ten registered Access identities. These are operational inputs, not reasons to replace the specified Cloudflare backend.
+Configure the actual protected hostnames, Google OAuth application, Access audience/policy and invitation admission synchronization. Validate provider/account limits for the actual registered identity count; concurrent users do not define that count. Jay’s exact email and any extra OWNER/MANAGER grants are private setup inputs. One-time bootstrap, last-admin protection and identity recovery follow document 02.
 
 The application's invitation is the source of membership intent. It stores the recipient's normalized email, organization, requested roles, project grants, expiry, inviter and status. It does not send passwords or add the first visitor as admin. Public self-registration is disabled.
 
@@ -16,7 +16,7 @@ Every protected request validates `Cf-Access-Jwt-Assertion` using a maintained W
 
 Map the verified identity to a D1 user and an active organization membership. Bind a new identity to an invitation only through the intended verified email and an explicit, auditable acceptance path. Once linked, use provider issuer and subject as the identity key. Do not grant roles from a client-side user object, arbitrary email-domain match, or unverified header.
 
-Disable public `workers.dev` and preview routes in production or protect them equivalently. A valid Access gate on the custom hostname does not protect an alternate origin hostname. The Worker still validates assertions. A development-only identity fixture must be available solely in local non-deployed mode and impossible to enable with a browser header or query string.
+Disable public `workers.dev` and preview routes in production or protect them equivalently. A valid Access gate on the custom hostname does not protect an alternate origin hostname. The Worker still validates assertions. Identity fixtures are confined to an isolated automated test harness. Deployed code, including previews, has no synthetic identity fallback, runtime enable flag, demo-login route or role/view switcher.
 
 ## Invitation and removal lifecycle
 
@@ -31,7 +31,7 @@ Restrict the provisioning Worker to configured Access application and policy IDs
 
 ## Authorization model
 
-Use explicit capabilities plus project membership. OWNER, ADMIN, MANAGER, TEAM_MEMBER, CONSULTANT, MAIN_CLIENT and CLIENT_REP are role bundles; a person may hold more than one. OWNER-only performance and ADMIN-only salary/profit are separate capabilities even if the same human initially has both.
+Use explicit capabilities plus active organization membership and applicable global/project scope. OWNER, ADMIN, MANAGER, TEAM_MEMBER, CONSULTANT, MAIN_CLIENT and CLIENT_REP are role bundles; a person may hold more than one. OWNER-only performance and ADMIN-only salary/profit are separate capabilities even if the same human initially has both.
 
 The authorization decision receives principal, organization, project, resource visibility, action and lifecycle state. It returns allow/deny and a safe reason code. Deny by default. A global role does not automatically grant access to every project unless its documented scope explicitly says so.
 

@@ -2,7 +2,7 @@
 
 ## Canonical entry points
 
-Read [START_HERE.md](../../START_HERE.md). [AGENTS.md](../../AGENTS.md) contains repository-wide rules; [GEMINI.md](../../GEMINI.md) and [agent.md](../../agent.md) are short compatibility pointers. The detailed phase plan is in the [roadmap](roadmap.md).
+Read [START_HERE.md](../../START_HERE.md). [AGENTS.md](../../AGENTS.md) contains repository-wide rules; [GEMINI.md](../../GEMINI.md) and [agent.md](../../agent.md) are short compatibility pointers. The active plan is [docs/remediation](../remediation/README.md), with R00–R05 dependencies. The [original roadmap](roadmap.md) is historical specification; the existing application must not be scaffolded again.
 
 The repository-local build-merveille skill lives under .agents/skills/build-merveille and can be invoked by a compatible Antigravity installation. The root documents remain usable by any implementation agent. No personal skill installation, IDE account setting or global tool permission is changed by this repository.
 
@@ -17,7 +17,7 @@ task.md, implementation_plan.md and walkthrough.md are checked-in continuity doc
 ## The execution loop
 
 1. Inspect repository status, instructions and task state.
-2. Select the next ready manifest phase.
+2. Select the next ready stage in docs/remediation/manifest.json; do not restart P00.
 3. Read its required source specifications.
 4. Implement complete server/domain/UI behaviour.
 5. Verify the phase's named acceptance cases and the shared permission boundary.
@@ -28,7 +28,7 @@ Do not stop after a polished static dashboard. Do not silently substitute mock s
 
 ## Handling uncertainty
 
-Confirmed product decisions are fixed unless the user changes them. Engineering defaults are labelled in the requirements register and may be improved with a recorded reason. Operational inputs are requested only when necessary to enable real use; local development proceeds with clearly synthetic fixtures.
+Confirmed product decisions are fixed unless the user changes them. Engineering defaults are labelled in the requirements register and may be improved with a recorded reason. Operational inputs are requested only when necessary to enable real use; isolated automated tests may use fixtures. Hosted UAT uses real invited Google accounts, without demo logins or role/view switching. Ask privately for Jay’s exact email at bootstrap setup; do not infer it.
 
 ## Session checkpoint
 

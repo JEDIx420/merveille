@@ -1,12 +1,13 @@
 # Operational inputs and production gates
 
-These inputs configure the build; they do not reopen confirmed product decisions. The product requirements contain the canonical OPS register. Implement and test with explicit synthetic defaults, then replace them through authorised configuration before the affected live feature is enabled.
+These inputs configure the build; they do not reopen confirmed product decisions. Follow the current [real-account setup contract](../remediation/02-identity-and-real-user-testing.md). Synthetic fixtures are limited to isolated developer tests; deployed environments use verified invited Google identities or remain fail-closed.
 
 | Input | Needed for | Work that can proceed meanwhile |
 | --- | --- | --- |
 | Cloudflare account, zone/domain, resource ownership, plan and budget | Real environments and Access provisioning | Local Worker/D1/R2 development |
 | Total invited identities and workforce IdP/MFA policy | Access configuration and costs | D1 memberships/policies with local fixtures |
-| Initial named admin/owner, managers and consultant disciplines | Real authorisation assignments | Role matrix and invitation lifecycle |
+| Jay’s exact Google email privately; tester emails; separately approved OWNER/MANAGER grants | One-time ADMIN bootstrap and real authorization assignments | Role matrix, bootstrap and invitation lifecycle in isolated tests |
+| Google OAuth/Access audience and exact-email policy; canonical origins; admission-sync credential; invitation delivery mode | Actual Google sign-in and usable admin invitations | Authentication verification, copied-link UI, reconciliation and failure states |
 | Firm legal invoice details and authorised contacts | Issued quotations/invoices | Configurable templates and verified Merveille Designs logo |
 | Currency, tax/rounding rules, invoice numbering and correction policy | Live invoice issue | Deterministic synthetic arithmetic |
 | Chart of accounts, period basis, revenue/cost allocation and opening balances | Trusted accounts/profit reports | Journal engine and reconciliation fixtures |

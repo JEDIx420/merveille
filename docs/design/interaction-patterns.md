@@ -1,6 +1,6 @@
 # Interaction patterns and shared screen contract
 
-Every screen specification inherits this contract. Implement these states explicitly; do not substitute a generic toast for a failed financial or approval action.
+Apply the current [premium interface contract](../remediation/03-premium-interface.md) first; it supersedes older palette/shell defaults. Real people use their own Google accounts, without demo/view switching. Every screen specification inherits this interaction contract. Implement these states explicitly; do not substitute a generic toast for a failed financial or approval action.
 
 ## Brand and orientation
 

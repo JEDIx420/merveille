@@ -1,5 +1,7 @@
 # Requirements and decision provenance
 
+The latest [product amendment](../remediation/01-product-amendment.md) and [current work order](../remediation/README.md) extend this baseline. Stable requirement IDs remain in use; old visual/demo/start-from-zero instructions are superseded.
+
 ## How to read this document
 
 Stable requirement IDs are the shared vocabulary for design, implementation and acceptance. Keep an ID when wording improves; mark a requirement superseded when a real decision changes it. Never silently change a confirmed rule to make implementation easier.
@@ -39,6 +41,12 @@ The provenance column may include more than one label where a confirmed outcome 
 | DEC-018 | Waiting-on-you and snags included; generated handover pack excluded. | C: discovery answers | Deliver focused actions and site issue closure without a handover-pack generator. |
 | DEC-019 | Client can see appropriate company updates. | C: original request; D: controlled optional announcement module | Announcements need explicit audience and publication controls. |
 | DEC-020 | Preserve the existing Merveille Designs gold/charcoal logo from its public Refrens profile; no generated replacement identity. | C: explicit brand correction, verified source | Source files, hashes and usage rules are recorded in assets/brand. |
+| DEC-021 | Improve the existing implementation as the foundation; no fresh build. | C: latest remediation request | R00–R05 supersedes P00-first execution; preserve app/data/history. |
+| DEC-022 | Premium consistent UI; reject olive/green theme; compact existing logo at the top is sufficient branding. | C: latest request; D: exact neutral tokens/type | White/cool-gray/graphite target in docs/remediation/03; old warm/gold specimen is superseded. |
+| DEC-023 | Real individual Gmail/Google access; no view/role switcher or deployed demo login. | C: latest request; D: Google via existing Access boundary | Verify invited identities; no impersonation, open-domain signup or mailbox scopes. |
+| DEC-024 | Jay is the initial admin and can add another admin; admins assign team roles/project access. | C: latest request; O: exact email and optional grants | One-time protected bootstrap, multiple admins and audited invitation/access lifecycle; no guessed identity. |
+| DEC-025 | Approximately three real people test with administrator-assigned access. | C: latest request | Browser-only team UAT through their own accounts; not a permanent account limit; developer regression checks remain. |
+| DEC-026 | Put detailed update instructions and a short continuous-execution kickoff in the repository. | C: latest request | NEXT_AGENT.md and docs/remediation are the active entry; maintain honest checkpoints/evidence. |
 
 ## Engineering default register
 
@@ -79,8 +87,8 @@ The provenance column may include more than one label where a confirmed outcome 
 
 | ID | Requirement and acceptance boundary | Provenance |
 |---|---|---|
-| REQ-IAM-001 | Administrator can invite named people, assign permitted role bundles and project/section membership, suspend access and revoke invitations. OWNER capability alone does not grant access administration. | C DEC-003; D DEF-001 |
-| REQ-IAM-002 | Every user has an individual identity. A representative never impersonates the main client, and a consultant never inherits the entire internal team role. | C DEC-003/004 |
+| REQ-IAM-001 | Administrator can invite named Google-account users, assign permitted role bundles and project/section membership, suspend access and revoke invitations. Bootstrap Jay once from a privately supplied exact identity; support multiple admins. OWNER alone does not grant access administration. | C DEC-003/023/024; D DEF-001 and remediation identity contract |
+| REQ-IAM-002 | Every user has an individual verified invited Google identity. No deployed demo login, persona/view switcher or impersonation. Representatives never impersonate the main client; consultants never inherit the internal team role. | C DEC-003/004/023 |
 | REQ-IAM-003 | Enforce project isolation on every resource and derived result, including identifiers provided directly in requests. | D DEF-001 |
 | REQ-IAM-004 | Consultants see assigned drawing/site scopes and the assigned project's client quotation, invoices, schedule and payment history; exclude internal notes, expenses, payroll, profit and staff performance. | C DEC-004; D: client-facing financial presentation |
 | REQ-IAM-005 | Main client controls quotation acceptance, change acceptance and binding material decisions. Representatives can comment and provide references; financial access is an explicit additional grant. | C handoff; D DEF-002/005 |

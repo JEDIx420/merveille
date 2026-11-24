@@ -1,23 +1,11 @@
-# Design specification
+# Current design specification
 
-This is the private architecture practice portal for **Merveille Designs**. The experience should feel like a carefully organised studio: warm, precise and calm. It is an operational product, so beauty must make decisions easier to see and work easier to complete.
+The active target is a **white, cool-gray and graphite SaaS interface** for Merveille Designs, with the existing logo compactly displayed at the top. The user's latest correction supersedes the earlier warm-paper/gold/serif direction and dominant branded rail.
 
-Read in this order:
+Read [03 — Premium interface](../remediation/03-premium-interface.md) first. It defines tokens, typography, spacing, shared components, shells, three reference screens and all-route migration. Then use [design system](design-system.md), [interaction patterns](interaction-patterns.md), [navigation](navigation-and-content.md) and the relevant [screen contract](../screens/README.md).
 
-1. [Design system](design-system.md): colour, type, layout, components and accessibility.
-2. [Interaction patterns](interaction-patterns.md): approvals, file handling, form behaviour and every non-happy-path state.
-3. [Navigation and content](navigation-and-content.md): role-adaptive routes and language.
-4. [Screen specifications](../screens/README.md): implementation contracts for each screen.
+The [permission matrix](../product/roles-and-permissions.md) decides allowed actions. Navigation reflects the actual signed-in person's current grants; there is no role/view switcher. Preserve manager release, consultant review, internal privacy and separate ADMIN/OWNER authority.
 
-The [product requirements](../product/requirements.md) and [permission matrix](../product/roles-and-permissions.md) decide what a person may do. Design defaults here decide how to present that permitted work. Visual examples, if added, are not proof of functional implementation.
+[Brand assets](../../assets/brand/README.md) remain authoritative for the unchanged company name and logo. The [old visual specimen](visual-direction.html) is historical and must not be used as the redesign target. Runtime brand token files may still reflect the old implementation until the coding agent migrates them.
 
-Brand assets are catalogued in the [brand asset manifest](../../assets/brand/README.md). The [visual direction specimen](visual-direction.html) illustrates the style and is not the application. The existing logo and smaller published profile image come from the company’s [Refrens profile](https://www.refrens.com/merveille-designs). Both retain the original square charcoal background, gold artwork, company name and embedded tagline. Use the complete supplied image with `object-fit: contain`; do not crop, recolour, redraw or substitute a generated mark. The interface palette below is a proposed interpretation of the artwork, not an official brand manual.
-
-## Design review gates
-
-- Show the owner’s three priorities before secondary statistics: delayed tasks, pending approvals, upcoming deadlines.
-- A client sees released information and their next actions, without internal terminology or work queues.
-- A consultant can review the correct drawing version and see the assigned project’s client quotation/payment history; internal discussions remain inaccessible.
-- Salary/profit visibility requires ADMIN. Staff performance visibility requires OWNER. These are separate capabilities, even if one person holds both.
-- Review desktop at 1440 px, laptop at 1024 px, and mobile at 390 px; verify 320 px reflow and 200% text zoom.
-- Use real keyboard interaction and representative long names, file names, figures and empty states. Attractive screenshots alone do not satisfy the screen acceptance criteria.
+Review actual rendered screens at 1440×900, 1024×768 and 390×844, plus keyboard/zoom/reflow behavior. Use fictional business data, real invited accounts for hosted UAT, and meaningful permission tests. Every route needs correct loading, empty, error, forbidden and action states. A screenshot alone does not prove the workflow.
