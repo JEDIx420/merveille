@@ -1,6 +1,6 @@
 # Employee access and existing-project onboarding — 25 November 2026
 
-Source `02600a8`, branch `implement/merveille-portal`. Staging web version `e6ce3850-52aa-4e39-9ecd-ebdae6ca7654`, https://merveille-web-staging.rhelo-bible.workers.dev. User explicitly authorized both features, testing and deployment. No production changes or messages.
+Source `63f0719`, branch `implement/merveille-portal`. Staging web version `f6683fd4-8326-47ab-b305-ccd56ca407a4`, https://merveille-web-staging.rhelo-bible.workers.dev. User explicitly authorized both features, testing and deployment. No production changes or messages.
 
 ## Implemented
 
@@ -30,3 +30,5 @@ Fictional screenshots and machine results are in this directory. Private command
 ## Limits
 
 This implements direct project onboarding plus reconciliation guidance, not automatic import/posting of historical invoices or opening balances. Team onboarding with additional real accounts, full business UAT, continuous backup monitoring, real messaging/webhook and populated remote recovery remain the separately recorded R05 gates. No synthetic sign-in or role switching was introduced.
+
+Final permission review: live administrator predicates require GLOBAL scope, and duplicate-code preflight reads only the actor's organisation. Re-ran all 111 tests, typecheck, Worker build and all 11 workerd checks after the service change; a targeted assertion also denies stale principals after their stored ADMIN grant becomes project-scoped. Final source `63f0719`, version `f6683fd4-8326-47ab-b305-ccd56ca407a4`. UI is unchanged from the signed-in hosted review on the preceding version.

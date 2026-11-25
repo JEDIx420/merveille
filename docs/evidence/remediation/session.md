@@ -160,3 +160,5 @@ Actual commands/results: `npm test` 106 tests/22 files passed; `npm run typechec
 ## 25 November — employee access and ongoing project onboarding
 
 Source `02600a8`; deployed staging web `e6ce3850-52aa-4e39-9ecd-ebdae6ca7654`. Both user-requested flows implemented with existing approval/payment boundaries. Five new boundary/rollback/retry tests and a workerd check pass; total 111 tests and 11 workerd checks. Built fixture browser regression (114 records) and new three-viewport onboarding journeys passed. Additive migration 0022 and protected pre-migration export completed. Signed-in hosted forms verified; anonymous access remains blocked. No actual employee invitation or business record submitted remotely. See [verification and limitations](onboarding/verification.md).
+
+Final onboarding permission review deployed from `63f0719`, staging version `f6683fd4-8326-47ab-b305-ccd56ca407a4`: current GLOBAL administrator scope and organisation-scoped duplicate-code preflight. All 111 tests, typecheck, Worker build and 11 workerd checks passed again; UI unchanged from hosted review.
