@@ -145,7 +145,7 @@ export function AccountingForms({ onSaved }: { onSaved: () => void }) {
           ["close", "Close period"],
         ].map(([key, label]) => (
           <Button
-            secondary
+            secondary={key !== "expense"}
             key={key}
             onClick={() => {
               setMode(key);

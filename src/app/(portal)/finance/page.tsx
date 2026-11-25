@@ -199,28 +199,19 @@ export default function FirmFinancePage() {
   if (error) return <ErrorState message={error} retry={fetchFinancials} />;
   return (
     <div className={cx(["portal-container", layout.block2].join(" "))}>
-      <AccountingForms onSaved={fetchFinancials} />
       {/* Header */}
       <div className={cx(layout.block3)}>
         <div>
           <h1 className={cx(["text-display", layout.block4].join(" "))}>
-            Firm Operational Accounts
+            Finance
           </h1>
           <p className={cx(["text-muted", layout.block5].join(" "))}>
-            Ledger-balanced receivables, operational expenses, consultant
-            obligations, and protected executive reporting.
+            Income, expenses and consultant accounts for your practice.
           </p>
         </div>
 
-        <div className={cx(layout.block6)}>
-          <button
-            onClick={() => setShowExpenseModal(true)}
-            className={cx(["btn-secondary", layout.block7].join(" "))}
-          >
-            + Record Expense
-          </button>
-        </div>
       </div>
+      <AccountingForms onSaved={fetchFinancials} />
 
       {error && <div className={cx(layout.block8)}>{error}</div>}
 
@@ -293,7 +284,7 @@ export default function FirmFinancePage() {
             }}
             className={cx(layout.block13)}
           >
-            🔒 Payroll & Salaries ({payrollRecords.length})
+            Payroll & Salaries ({payrollRecords.length})
           </button>
         )}
       </div>
@@ -343,7 +334,7 @@ export default function FirmFinancePage() {
             {report.salariesMinor !== undefined && (
               <div className={cx(layout.block28)}>
                 <span className={cx(layout.block29)}>
-                  🔒 Salaries & Payroll (Admin)
+                  Salaries & Payroll (Admin)
                 </span>
                 <div className={cx(layout.block30)}>
                   {formatCurrency(report.salariesMinor)}
@@ -354,7 +345,7 @@ export default function FirmFinancePage() {
             {report.operatingProfitMinor !== undefined && (
               <div className={cx(layout.block31)}>
                 <span className={cx(layout.block32)}>
-                  🔒 Operating Profit (Admin)
+                  Operating Profit (Admin)
                 </span>
                 <div className={cx(layout.block33)}>
                   {formatCurrency(report.operatingProfitMinor)}
@@ -496,7 +487,7 @@ export default function FirmFinancePage() {
       {activeTab === "PAYROLL" && payrollRecords && (
         <div className={cx(layout.block54)}>
           <div className={cx(layout.block55)}>
-            🔒 <strong>Strictly Confidential (Admin Only):</strong> Payroll
+            <strong>Strictly Confidential (Admin Only):</strong> Payroll
             allocations and individual salaries are protected by operational
             permissions and isolated from staff, consultants, and non-admin
             owners.

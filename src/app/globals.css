@@ -71,7 +71,7 @@ input,
 textarea,
 select {
   min-height: 44px;
-  border: 1px solid var(--ui-control-border);
+  border: 1px solid #c6ccd5;
   border-radius: 8px;
   padding: 10px 12px;
   background: var(--ui-surface);
@@ -415,3 +415,11 @@ button svg {
 :root :is(input, select, textarea) {
   font-size: 16px;
 }
+
+/* Quiet, consistent controls; motion follows user input. */
+:is(input, select, textarea) { transition: border-color 150ms ease, box-shadow 150ms ease; }
+:is(input, select, textarea):hover { border-color: #98a2b3; }
+:is(input, select, textarea):focus-visible { border-color: var(--ui-focus); box-shadow: 0 0 0 3px #2563eb12; outline-offset: 1px; }
+:is(.btn-primary, .btn-secondary, .btn-danger) { transition: background-color 150ms ease, border-color 150ms ease, transform 100ms ease; }
+:is(.btn-primary, .btn-secondary, .btn-danger):active:not(:disabled) { transform: translateY(1px); }
+:is(.card, .surface-panel) { box-shadow: 0 2px 6px #10182803; }

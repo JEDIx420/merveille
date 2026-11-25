@@ -181,6 +181,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <img src={BRAND_CONFIG.logoPath} alt="" />
               Merveille Designs
             </Link>
+            <div className={styles.mobileActions}>
+            <Link href="/notifications" className="btn-secondary" aria-label="Notifications"><Inbox size={20} aria-hidden="true" /></Link>
             <button
               ref={menu}
               className="btn-secondary"
@@ -190,6 +192,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               {open ? <X size={20} /> : <Menu size={20} />}
             </button>
+            </div>
           </div>
           <header className={styles.topbar}>
             <p>Your project workspace</p>
@@ -199,7 +202,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           </header>
           <main className={styles.content} id="main-content">
-            {children}
+            <div key={path} className={styles.route}>{children}</div>
           </main>
         </div>
       </div>

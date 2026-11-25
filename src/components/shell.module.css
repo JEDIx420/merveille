@@ -14,7 +14,7 @@
   z-index: 30;
 }
 .identity {
-  height: 72px;
+  height: 68px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -40,7 +40,7 @@
   color: var(--ui-text-muted);
 }
 .nav {
-  padding: 24px 12px;
+  padding: 20px 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -88,7 +88,7 @@
   min-width: 0;
 }
 .topbar {
-  height: 72px;
+  height: 68px;
   background: white;
   border-bottom: 1px solid var(--ui-divider);
   padding: 0 32px;
@@ -111,9 +111,9 @@
   min-height: 44px;
 }
 .content {
-  max-width: 1440px;
+  max-width: 1360px;
   margin: auto;
-  padding: 32px;
+  padding: 28px 32px 48px;
   min-width: 0;
 }
 .mobileBar {
@@ -315,3 +315,14 @@
     font-size: 18px;
   }
 }
+
+.nav a, .projectNav a { transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease; }
+.nav a[aria-current="page"] { box-shadow: inset 3px 0 0 var(--ui-action); font-weight: 600; }
+.account span { display: block; color: var(--ui-text-muted); font-size: 12px; }
+.account a { font-size: 12px; text-decoration: none; }
+.account a:hover { text-decoration: underline; }
+.route { min-width: 0; animation: routeEnter 160ms ease-out; }
+@keyframes routeEnter { from { opacity: .65; } to { opacity: 1; } }
+
+.mobileActions { display: flex; gap: 8px; align-items: center; }
+@media (max-width: 1023px) { .body > .topbar { display: none; } .mobileActions :is(a, button) { padding: 10px; min-width: 44px; } }

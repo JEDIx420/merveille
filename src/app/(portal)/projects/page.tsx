@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { cx } from "@/components/utilities";
 import { readResponse } from "@/components/ui";
 import layout from "./page.module.css";
@@ -74,16 +75,15 @@ export default function ProjectsPage() {
       {/* Header */}
       <header className={cx(layout.block2)}>
         <div>
-          <h1 className={cx("text-display")}>Project Portfolio</h1>
+          <h1 className={cx("text-display")}>Projects</h1>
           <p className={cx(["text-muted", layout.block3].join(" "))}>
-            Active architectural commissions, stage timelines, and contractual
-            status.
+            Your commissions, current stages and project records.
           </p>
         </div>
         <div className={cx(layout.block4)}>
-          <a href="/enquiries/new" className={cx("btn-secondary")}>
-            + New Intake
-          </a>
+          <Link href="/enquiries/new" className={cx("btn-secondary")}>
+            New enquiry
+          </Link>
         </div>
       </header>
 
@@ -91,6 +91,7 @@ export default function ProjectsPage() {
       <div className={cx(["card", layout.block5].join(" "))}>
         <form onSubmit={handleSearchSubmit} className={cx(layout.block6)}>
           <input
+            aria-label="Search projects"
             type="search"
             placeholder="Search by code, title, or site location..."
             value={search}
@@ -110,6 +111,7 @@ export default function ProjectsPage() {
             value={stageFilter}
             onChange={(e) => setStageFilter(e.target.value)}
             className={cx(layout.block10)}
+            aria-label="Project stage"
             id="stageFilter"
           >
             {STAGES.map((s) => (
@@ -119,9 +121,10 @@ export default function ProjectsPage() {
             ))}
           </select>
 
-          <label className={cx(layout.block11)} htmlFor="stageFilter">
+          <label className={cx(layout.block11)} htmlFor="includeArchived">
             <input
               type="checkbox"
+              id="includeArchived"
               checked={includeArchived}
               onChange={(e) => setIncludeArchived(e.target.checked)}
             />
@@ -151,7 +154,7 @@ export default function ProjectsPage() {
               p.quote_accepted_at && p.advance_confirmed_at;
 
             return (
-              <a
+              <Link
                 key={p.id}
                 href={`/projects/${p.id}/overview`}
                 className={cx(["card", layout.block18].join(" "))}
@@ -215,7 +218,7 @@ export default function ProjectsPage() {
                     </span>
                   </div>
                 </div>
-              </a>
+              </Link>
             );
           })}
         </div>

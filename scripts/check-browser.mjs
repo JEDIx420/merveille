@@ -180,7 +180,7 @@ await page.route("**/api/**", async (route) => {
         ],
       },
     ],
-    invitations: [],
+    invitations: [{ id: "accepted_fixture", display_name: "Fictional accepted member", email: "accepted@example.invalid", status: "ACCEPTED", expires_at: 1, accepted_at: 2 }],
     items: [],
     files: [],
     drawings: [],
@@ -707,6 +707,16 @@ results.push({
   case: "interrupted tasks",
   visible: (await page.getByText(/Failed to fetch/).count()) > 0,
 });
+// Accepted link dates must not suggest that a live account is time-limited.
+fail = false;
+await visit(base + "/people");
+await page.getByText("Account active · no scheduled access expiry", {exact:true}).waitFor();
+results.push({case:"accepted invitation has ongoing access copy", visible: await page.getByText("Account active · no scheduled access expiry", {exact:true}).isVisible() && await page.getByText(/Invitation link expires/).count() === 0});
+await page.emulateMedia({reducedMotion:"reduce"});
+await page.getByRole("button", {name:"Invite person",exact:true}).click();
+results.push({case:"reduced motion disables route and dialog animation", visible: await page.locator("dialog").evaluate(el=>getComputedStyle(el).animationName === "none") && await page.locator("main > div").evaluate(el=>getComputedStyle(el).animationName === "none")});
+await page.getByRole("button", {name:"Close dialog",exact:true}).click();
+await page.emulateMedia({reducedMotion:"no-preference"});
 fs.writeFileSync(
   out + "/browser-results.json",
   JSON.stringify(

@@ -150,6 +150,11 @@ describe("Real identities and independent capabilities", () => {
       db,
     );
     const p = (await loadPrincipalById(user.userId, db)).principal!;
+    // The link deadline does not expire the accepted account or its ongoing grants.
+    await db.prepare("UPDATE invitations SET expires_at=1 WHERE id=?").bind(inv.invitationId).run();
+    const continuing = (await loadPrincipalById(user.userId, db)).principal!;
+    expect(continuing.id).toBe(user.userId);
+    expect(canAcceptContractualDecisions(continuing, "p1")).toBe(true);
     expect(canAcceptContractualDecisions(p, "p1")).toBe(true);
     expect(canAcceptContractualDecisions(p, "p2")).toBe(false);
     await expect(

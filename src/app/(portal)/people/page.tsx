@@ -214,9 +214,9 @@ export default function People() {
               )}
             </div>
             <section className={ui.panel}>
-              <h2>Invitations</h2>
-              <Button secondary disabled={busy} onClick={retryAdmission}>Refresh invitation access</Button>
-              {admissionNotice && <p role="status">{admissionNotice}</p>}
+              <div className={ui.sectionToolbar}><h2>Invitations</h2>
+              <Button secondary disabled={busy} onClick={retryAdmission}>Refresh invitation access</Button></div>
+              {admissionNotice && <p role="status" className={ui.successNotice}>{admissionNotice}</p>}
               {data.invitations?.length ? (
                 data.invitations.map((inv: any) => (
                   <div className={ui.row} key={inv.id}>
@@ -224,7 +224,7 @@ export default function People() {
                       <strong>{inv.display_name}</strong>
                       <p>{inv.email}</p>
                       <p className={ui.meta}>
-                        Expires {formatBusinessDate(inv.expires_at)}
+                        {inv.status === "ACCEPTED" ? "Account active · no scheduled access expiry" : `Invitation link expires ${formatBusinessDate(inv.expires_at)}`}
                       </p>
                       <Badge>
                         {inv.status === "PENDING" &&
@@ -309,8 +309,8 @@ export default function People() {
               setConfirm={setConfirm}
             />
             <p className={ui.meta}>
-              Invitation expires in 72 hours. Access setup and invitation
-              delivery are recorded separately.
+              The invitation link is valid for 72 hours. Once accepted, account
+              access continues until an administrator removes it.
             </p>
             <Button type="submit" disabled={busy}>
               {busy ? "Creating invitation…" : "Create invitation"}

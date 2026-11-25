@@ -1,7 +1,7 @@
 "use client";
 import { PermissionGate } from "@/components/permission-gate";
 import { cx } from "@/components/utilities";
-import { Dialog, readResponse } from "@/components/ui";
+import { Dialog, readResponse, PageHeader, ui } from "@/components/ui";
 import { useFeedback } from "@/components/ui";
 
 import { useState, useEffect } from "react";
@@ -260,22 +260,8 @@ export default function ArchivePage() {
   });
 
   return (
-    <div className={cx("space-y-8 max-w-7xl mx-auto px-4 sm:px-6 py-6")}>
-      {/* Header */}
-      <div className={cx("border-b border-border pb-5")}>
-        <h1
-          className={cx(
-            "text-2xl font-serif font-bold text-foreground tracking-tight",
-          )}
-        >
-          Archived Projects
-        </h1>
-        <p className={cx("mt-1 text-sm text-muted-foreground")}>
-          Move completed projects out of day-to-day work while retaining their
-          records for long-term access. Authorized clients, representatives, and
-          consultants retain access to permitted released drawings and updates.
-        </p>
-      </div>
+    <div className={ui.page}>
+      <PageHeader title="Archive" description="Completed projects and their retained drawings, updates and payment records." />
 
       {error && (
         <div
@@ -294,6 +280,7 @@ export default function ArchivePage() {
           <div className={cx("flex items-center gap-2")}>
             <input
               type="text"
+              aria-label="Search archived projects"
               placeholder="Search code, name, reason..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -312,7 +299,7 @@ export default function ArchivePage() {
           ) : filteredProjects.length === 0 ? (
             <div
               className={cx(
-                "p-8 text-center border border-dashed border-border rounded-lg",
+                "card p-8 text-center",
               )}
             >
               <p className={cx("text-sm font-medium text-foreground")}>

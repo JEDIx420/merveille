@@ -1,7 +1,7 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
   min-width: 0;
 }
 .header {
@@ -12,16 +12,17 @@
   flex-wrap: wrap;
 }
 .heading {
-  font-size: 28px;
-  line-height: 36px;
+  font-size: 26px;
+  line-height: 34px;
   letter-spacing: -0.6px;
   font-weight: 600;
   margin: 0;
 }
 .description {
   color: var(--ui-text-secondary);
-  margin-top: 8px;
-  max-width: 70ch;
+  margin-top: 6px;
+  max-width: 64ch;
+  font-size: 14px;
 }
 .panel {
   background: var(--ui-surface);
@@ -121,7 +122,7 @@
   justify-content: space-between;
 }
 .empty {
-  padding: 40px 24px;
+  padding: 28px 24px;
   text-align: center;
   color: var(--ui-text-secondary);
 }
@@ -131,7 +132,7 @@
   margin: 0 0 8px;
 }
 .empty p {
-  margin: 0 auto 16px;
+  margin: 0 auto 12px;
   max-width: 50ch;
 }
 .loading {
@@ -234,7 +235,7 @@
   border: 1px solid var(--ui-divider);
   border-radius: 12px;
   padding: 0;
-  max-width: min(720px, calc(100vw - 32px));
+  max-width: min(640px, calc(100vw - 32px));
   width: 100%;
   max-height: calc(100dvh - 32px);
   color: var(--ui-text);
@@ -242,7 +243,8 @@
   box-shadow: 0 24px 48px #10182825;
 }
 .dialog::backdrop {
-  background: #10182870;
+  background: #10182855;
+  backdrop-filter: blur(3px);
 }
 .dialogHeader {
   display: flex;
@@ -427,3 +429,25 @@
 /* Long architectural filenames must not push the download control out of view. */
 .previewToolbar strong { min-width: 0; overflow-wrap: anywhere; }
 .previewToolbar > a { flex-shrink: 0; }
+
+/* Interaction feedback shares the same rhythm across every screen. */
+.button { transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, transform 100ms ease; }
+.button:active:not(:disabled) { transform: translateY(1px); }
+.secondary { box-shadow: 0 1px 2px #10182805; }
+.secondary:hover { border-color: #c6ccd5; }
+.panel, .tableWrap { box-shadow: 0 2px 6px #10182803; }
+.table tbody tr { transition: background-color 140ms ease; }
+.table tbody tr:hover { background: #f9fafb; }
+.dialog[open] { animation: dialogEnter 180ms cubic-bezier(.2,.8,.2,1); }
+.dialogHeader { position: sticky; top: 0; background: white; z-index: 1; }
+.checkbox { min-height: 40px; gap: 10px; padding: 6px 0; font-size: 14px; line-height: 1.5; }
+.checkbox input { margin: 2px 0 0; }
+.form fieldset > p { margin: 0 0 12px; }
+.successNotice { margin: 12px 0; padding: 10px 14px; border-radius: 8px; background: var(--ui-success-bg); color: var(--ui-success); font-size: 13px; }
+.sectionToolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+.sectionToolbar h2 { margin: 0; }
+@keyframes dialogEnter { from { opacity: 0; transform: translateY(8px) scale(.99); } to { opacity: 1; transform: none; } }
+
+.priorityList > .empty { padding: 24px 0 8px; text-align: left; }
+.priorityList > .empty h3 { font-size: 14px; font-weight: 500; }
+.priorityList > .empty p { font-size: 13px; margin: 0; }
