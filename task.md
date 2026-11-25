@@ -15,15 +15,22 @@ Updated 25 November 2026. The application foundation exists on `implement/mervei
 
 Dependencies and exact contracts: [active manifest](docs/remediation/manifest.json), [delivery gates](docs/remediation/05-delivery-and-acceptance.md).
 
+## Appearance and celebrations checkpoint
+
+- Source `7c400dd`; protected staging web `f359c8b0-2da1-4c9c-ac7e-b17fc846925d`, all 23 migrations. Existing employee/onboarding work is preserved.
+- Dark-first complete app theme, Light/System controls and personal cross-device preferences implemented. Original media and logo retained. Eight preview effects and permission-aware committed business milestones implemented, with quiet external feedback, current-state filtering, atomic claims, cooldown, reduced motion and no sound.
+- Actual local checks: 120 tests/24 files; 12 actual workerd checks; typecheck/Workers build; 130 full browser checks per theme plus 25 focused reruns per theme. Both-theme screenshots reviewed, zero overflow/JS errors. [Feature contract](docs/design/appearance-and-celebrations.md) and [evidence](docs/evidence/remediation/appearance.json).
+- Hosted: migration/schema/index verified, deployment succeeded and new API ingress is Access protected/private. Real signed-in dark workspace and Appearance panel inspected. Chrome disconnected during attempted Light save; no hosted preference row was written at read-back. Actual signed-in save/reload and cross-device confirmation remain **unverified** until Chrome reconnects. No business records were created for visual demonstrations.
+
 ## Current checkpoint
 
-- Current branch: `implement/merveille-portal`. Existing logo, Next/OpenNext and Wrangler foundation preserved. Latest deployed web `f6683fd4-8326-47ab-b305-ccd56ca407a4`; jobs `de09aa26-c792-41d0-9b21-d91e7d6faa3b`.
+- Current branch: `implement/merveille-portal`. Existing logo, Next/OpenNext and Wrangler foundation preserved. Latest deployed web `f359c8b0-2da1-4c9c-ac7e-b17fc846925d`; jobs `de09aa26-c792-41d0-9b21-d91e7d6faa3b`.
 - Protected staging: https://merveille-web-staging.rhelo-bible.workers.dev. User completed Cloudflare One-time PIN login. Existing initial ADMIN retained; OWNER endpoint denied. Last-administrator removal denied with clear guidance and unchanged atomic guard. Google Cloud configuration is no longer required for team sign-in.
 - Explicitly approved single-policy Admin credential is installed only in web/jobs platform secrets. Temporary transfer file deleted. Unrelated policy GET denied 403; actual People & access refresh reported “Invitation access is up to date.” No broad/domain admission was added.
-- Actual local checks: typecheck, 106 tests/22 files, ten workerd checks through all 21 migrations, Worker build passed. Typed last-admin assertions passed in 10 authorization tests. Earlier built frontend passed 112 checks across 29 pages/three viewport sizes with fictional API fixtures; this is distinct from real team UAT.
+- Actual local checks: typecheck, 120 tests/24 files, twelve workerd checks through all 23 migrations, Worker build passed. Typed last-admin assertions passed in 10 authorization tests. Both-theme frontend passed 130 full checks per theme across the expanded route inventory/three viewport sizes with fictional API fixtures; this is distinct from real team UAT.
 - Hosted jobs: real scheduled execution outcome ok and outbox dispatched; portal disabled-recipient suppression/replay passed. Isolated no-ingress platform drill observed attempts 1/2, retry success, dead-letter pull and acknowledgement. Real WhatsApp/webhook integration remains unavailable and no message was sent.
 - Private D1/R2 backup transport, byte hash and isolated quarantined restore passed. Current remote snapshot has no populated business history; full populated remote business recovery remains unverified.
-- Next exact action: obtain other team members’ exact sign-in emails and explicit global/project roles privately, invite through People & access, then complete second-admin, role-boundary and business UAT with their own accounts. No demo/impersonation controls exist.
+- Next exact action: reconnect Chrome for real-account appearance save/reload confirmation, then obtain other team members’ exact sign-in emails and explicit global/project roles privately, invite through People & access, then complete second-admin, role-boundary and business UAT with their own accounts. No demo/impersonation controls exist.
 - Sister/company installation will use a separate Cloudflare account and fresh resources, secrets and bootstrap; cloning source alone does not transfer infrastructure. See [company setup](docs/operations/company-account-setup.md).
 - R05 remains open for team UAT, real provider/webhook tests, continuous backup implementation/configuration and populated remote recovery. See [actual evidence](docs/evidence/remediation/session.md) and [handoff](docs/operations/real-account-handoff.md). No production migration or WhatsApp send was performed.
 
@@ -42,7 +49,7 @@ Dependencies and exact contracts: [active manifest](docs/remediation/manifest.js
 
 ## Employee and existing-project onboarding
 
-- Source `63f0719`, deployed staging web `f6683fd4-8326-47ab-b305-ccd56ca407a4`. Add employee now explicitly assigns project roles and separate finance permissions; optional ADMIN/OWNER remain independent. Client/consultant invitations remain separate.
+- Source `63f0719`, deployed staging web `f359c8b0-2da1-4c9c-ac7e-b17fc846925d`. Add employee now explicitly assigns project roles and separate finance permissions; optional ADMIN/OWNER remain independent. Client/consultant invitations remain separate.
 - Projects → Add project → New enquiry / Existing project. ADMIN-only ongoing-project creation stores immutable reported stage/start/handover and scoped contacts/team in one guarded, retry-safe D1 batch. Setup pending does not grant commercial activation, historical approvals or ledger balances. A persistent checklist links People, original documents, finance reconciliation and manager activation.
 - Additive migration 0022 applied only to staging after a protected private D1 export. Existing history and Access settings preserved.
 - Actual checks: 111 tests/23 files, typecheck, Worker build, 11 local workerd checks through 22 migrations, existing 114 fixture browser records and dedicated final onboarding journeys at three viewport sizes passed. Hosted signed-in employee/project forms and actual account labels verified. Anonymous new routes remain behind Access. Real invitation/project submission was exercised only in isolated test data, not hosted real accounts.

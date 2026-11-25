@@ -735,7 +735,7 @@ await visit(base+'/overview');
 await page.waitForFunction(theme=>document.documentElement.dataset.theme===theme,appearance.theme);
 results.push({case:'chosen theme applied',visible:await page.evaluate(theme=>document.documentElement.dataset.theme===theme,appearance.theme)});
 await page.getByLabel('Appearance',{exact:true}).filter({visible:true}).click();
-await page.screenshot({path:out+'/appearance-desktop.png',fullPage:false});
+await page.screenshot({path:out+'/appearance-desktop.png',fullPage:false,animations:'disabled'});
 await page.getByRole('radio',{name:'Light',exact:true}).check();
 await page.waitForFunction(()=>document.documentElement.dataset.theme==='light');
 await page.getByRole('radio',{name:'Dark',exact:true}).check();
@@ -781,9 +781,9 @@ await page.setViewportSize({width:390,height:844});
 await page.getByLabel('Appearance',{exact:true}).filter({visible:true}).click();
 results.push({case:'mobile appearance popover stays inside viewport',visible:await page.getByRole('heading',{name:'Make it yours',exact:true}).evaluate(el=>{const r=el.parentElement.getBoundingClientRect();return r.left>=15&&r.right<=innerWidth-15&&r.bottom<=innerHeight;})});
 await page.getByRole('radio',{name:process.env.BROWSER_THEME==='light'?'Light':'Dark',exact:true}).check();
-await page.screenshot({path:out+'/appearance-mobile.png',fullPage:false});
+await page.screenshot({path:out+'/appearance-mobile.png',fullPage:false,animations:'disabled'});
 fs.writeFileSync(
-  out + "/browser-results.json",
+  out + (process.env.BROWSER_SCOPE === "actions" ? "/browser-results-actions.json" : "/browser-results.json"),
   JSON.stringify(
     {
       environment:

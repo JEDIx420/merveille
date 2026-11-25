@@ -49,7 +49,7 @@ No real client records, payroll, emails, credentials, tokens or production expor
 
 ## Interface and verification
 
-Follow [03 — Premium interface](docs/remediation/03-premium-interface.md): white/cool gray/graphite, compact existing logo at the top, readable sans-serif typography, shared CSS Modules/components and responsive shells. No olive/sage, warm-paper canvas, gold UI accents, giant branded rail or role selector. Original artwork and its gold remain unchanged; semantic status colors are allowed.
+Follow the latest [appearance and celebrations amendment](docs/design/appearance-and-celebrations.md): dark-first charcoal surfaces with polished Light/System alternatives, compact original logo, readable sans-serif type and shared responsive components. Earlier [03 — Premium interface](docs/remediation/03-premium-interface.md) remains the layout/workflow reference where unchanged. No olive/sage, warm-paper canvas, gold UI accents, giant branded rail or role selector. Original artwork and its gold remain unchanged; semantic status colors are allowed.
 
 Implement all routes, not only three attractive reference screens. Use actual browser review, truthful loading/error/empty states, meaningful file/photo previews and working keyboard/dialog behavior. Do not expose developer acceptance IDs or runtime jargon in product flows.
 

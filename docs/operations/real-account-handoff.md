@@ -8,7 +8,7 @@ The coding agent owns migration/build/regression commands. Jay and the pilot tea
 
 Staging deployment is explicitly authorized for R05. The operator created an isolated APAC D1 database (`merveille-data-staging`) and private R2 bucket (`merveille-files-staging`), and applied all 21 migrations. The remote reconciliation view reports zero errors. Existing preview/production resources were not modified.
 
-The protected staging origin is [merveille-web-staging.rhelo-bible.workers.dev](https://merveille-web-staging.rhelo-bible.workers.dev). Current Worker version is `3e003439-210c-42a3-9613-b4656648e7b9`. Production and old preview are unchanged. Preview URLs remain disabled; no custom Worker routes exist; the file bucket has no public managed domain.
+The protected staging origin is [merveille-web-staging.rhelo-bible.workers.dev](https://merveille-web-staging.rhelo-bible.workers.dev). Current Worker version is `f359c8b0-2da1-4c9c-ac7e-b17fc846925d`. Production and old preview are unchanged. Preview URLs remain disabled; no custom Worker routes exist; the file bucket has no public managed domain.
 
 `wrangler whoami` confirms the same account as the signed-in dashboard, explicitly pinned in Wrangler configuration. The dashboard shows the existing Zero Trust team `plain-dream-04be.cloudflareaccess.com`. Earlier OAuth API empty lists did not reflect the dashboard inventory; organization API is 403. Do not infer absent infrastructure from those limited API responses.
 
@@ -71,3 +71,5 @@ For changed Access subjects, use `scripts/recover-identity.mjs` only with authen
 Native-provider login, invitation sync, ADMIN/OWNER denial, last-admin guard, Cron, Queue suppression/replay, isolated retry/DLQ and private backup transport/quarantine passed. Second-admin delegation, distinct real-role business passes, real provider/webhook delivery populated remote business recovery, and scheduled backup/stale-success monitoring remain **pending**. Local implementation and tests are evidence for their stated scope only.
 
 The [current R05 gate audit](../evidence/remediation/r05-open-gates.md) separates passed checks, account inputs and unfinished operational coverage. An interrupted restore now quarantines destination seed accounts and consumes bootstrap before any object copy; this failure path is locally verified in actual workerd.
+
+Appearance now offers Dark/Light/System and personal celebration preferences. Verify real-account save/reload after Chrome reconnects, then cover role-aware milestones during team UAT. Preview controls are demonstrations only and do not prove hosted business transitions.

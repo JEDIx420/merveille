@@ -1,19 +1,20 @@
 {
-  "sourceCommit": "064f0d8",
-  "webVersion": "3e003439-210c-42a3-9613-b4656648e7b9",
+  "sourceCommit": "7c400dd",
+  "webVersion": "f359c8b0-2da1-4c9c-ac7e-b17fc846925d",
   "jobsVersion": "de09aa26-c792-41d0-9b21-d91e7d6faa3b",
   "local": {
-    "tests": 106,
-    "testFiles": 22,
-    "workerdChecks": 10,
-    "browserChecks": 114,
+    "tests": 120,
+    "testFiles": 24,
+    "workerdChecks": 12,
+    "browserChecks": 260,
     "invitationParsingCases": 3,
     "typecheck": "passed",
     "workerBuild": "passed",
-    "restoreCopyFailure": "passed: R2 copy failure leaves seed users/memberships/grants quarantined and bootstrap consumed in D1 transaction"
+    "restoreCopyFailure": "passed: R2 copy failure leaves seed users/memberships/grants quarantined and bootstrap consumed in D1 transaction",
+    "browserChecksPerTheme": 130
   },
   "hosted": {
-    "migrationCount": 21,
+    "migrationCount": 23,
     "queueConsumer": "passed: disabled-recipient suppression and replay",
     "cron": "passed: actual scheduled execution outcome ok; suppression outbox dispatched",
     "backup": {
@@ -48,7 +49,8 @@
       "cleanup": "passed: consumers detached, disposable probe Worker, two Queues and D1 removed; portal resources retained"
     },
     "continuousBackup": "not operational: scheduled export/copy and stale-success monitoring require implementation, dedicated credential and hosted evidence",
-    "uiRefinement": "passed: signed-in accepted account copy, invitation dialog, single finance action, readable project filter, compact mobile navigation and no overflow"
+    "uiRefinement": "passed: signed-in accepted account copy, invitation dialog, single finance action, readable project filter, compact mobile navigation and no overflow",
+    "appearance": "deployed; real dark view/settings inspected; real account save/reload unverified due Chrome connection loss"
   },
   "team": "remaining account emails/roles and UAT pending"
 }

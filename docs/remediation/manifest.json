@@ -7,7 +7,7 @@
   "auditedSourceCommit": "813ef8b765045b95ff713665a3217e4487491d75",
   "entryPoint": "docs/remediation/README.md",
   "historicalManifest": "docs/implementation/manifest.json",
-  "status": "Protected email-code staging and policy-scoped invitation sync verified; actual Cron, Queue retry/DLQ and private backup transport verified. Team role UAT, real messaging/webhook and populated remote business recovery remain open. Interrupted-restore quarantine repaired and verified; continuous backup automation/monitoring remains unimplemented and not release-ready. Screenshot-driven UI refinement deployed and verified; accepted invitation expiry clarified as link-only, with ongoing account access. Employee access and existing-project onboarding deployed from 63f0719; verified locally and hosted forms, commercial gates retained. See docs/evidence/remediation/onboarding/verification.md.",
+  "status": "Protected email-code staging and policy-scoped invitation sync verified; actual Cron, Queue retry/DLQ and private backup transport verified. Team role UAT, real messaging/webhook and populated remote business recovery remain open. Interrupted-restore quarantine repaired and verified; continuous backup automation/monitoring remains unimplemented and not release-ready. Screenshot-driven UI refinement deployed and verified; accepted invitation expiry clarified as link-only, with ongoing account access. Employee access and existing-project onboarding deployed from 63f0719; verified locally and hosted forms, commercial gates retained. See docs/evidence/remediation/onboarding/verification.md. Dark-first appearance and milestone celebrations implemented/deployed through migration 0023; 120 tests, 12 workerd and 130 browser checks per theme passed. Real preference save/reload confirmation pending Chrome reconnection.",
   "dependencyPolicy": "Implementation and local-verification contracts unlock independent downstream work. A blocked hosted/provider check remains explicit and blocks real onboarding/release, not unrelated implementation. See stage exit gates.",
   "stages": [
     {
@@ -156,7 +156,8 @@
         "docs/evidence/remediation/session.md",
         "docs/evidence/remediation/r05-operations.json",
         "docs/evidence/remediation/r05-open-gates.md",
-        "docs/evidence/remediation/onboarding/verification.md"
+        "docs/evidence/remediation/onboarding/verification.md",
+        "docs/evidence/remediation/appearance.json"
       ],
       "blockers": [
         "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding. Continuous backup scheduling and stale-success monitoring remain unimplemented/unverified."

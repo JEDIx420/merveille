@@ -1,0 +1,39 @@
+{
+  "sourceCommit": "7c400dd",
+  "webVersion": "f359c8b0-2da1-4c9c-ac7e-b17fc846925d",
+  "migration": "0023_appearance_and_celebrations.sql",
+  "local": {
+    "tests": 120,
+    "testFiles": 24,
+    "workerdChecks": 12,
+    "typecheck": "passed",
+    "workerBuild": "passed",
+    "fullBrowserChecks": {
+      "dark": 130,
+      "light": 130
+    },
+    "focusedBrowserReruns": {
+      "dark": 25,
+      "light": 25
+    },
+    "overflow": [],
+    "javascriptErrors": [],
+    "scope": "fictional isolated API/browser fixtures; actual local D1/R2 transaction and claim checks"
+  },
+  "hosted": {
+    "migration": "applied and read-back schema/index verified",
+    "noHistoricalBackfill": true,
+    "newApiIngress": "three endpoints 302 to Access, private/no-store",
+    "darkWorkspaceAndAppearancePanel": "visually inspected signed-in",
+    "preferenceSaveReload": "unverified: Chrome connection dropped during attempted Light selection; preference table read-back empty",
+    "businessDemonstrationWrites": "none"
+  },
+  "screenshots": {
+    "dark": "ui/experience-dark/",
+    "light": "ui/experience-light/"
+  },
+  "remaining": [
+    "Real-account save/reload and cross-device preference confirmation after Chrome reconnects",
+    "Actual team role/business milestone UAT remains separate from fixture tests"
+  ]
+}

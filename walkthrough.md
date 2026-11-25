@@ -36,3 +36,7 @@ Protected staging is deployed with all 21 migrations. Cloudflare email-code logi
 ## Employee and ongoing-project setup — 25 November
 
 Deployed on protected staging from `02600a8`. Use People & access → Add employee for explicit project roles/finance choices; clients and consultants have a separate invitation action. Projects → Add project now distinguishes New enquiry from Existing project. Existing-project onboarding records current context directly, then retains Setup pending until normal commercial checks and manager activation pass. Internal handover records never certify money or drawing approvals. See [actual verification](docs/evidence/remediation/onboarding/verification.md).
+
+## Appearance and celebrations
+
+Open Appearance in the header to choose Dark, Light or System, and Full, Reduced or Off celebrations. Expand Preview celebrations to try the eight effects without changing project or financial records. Confirmed task, project, payment, drawing and acceptance milestones use role-aware feedback; failed/pending operations do not celebrate. See [current behavior](docs/design/appearance-and-celebrations.md) and [verification limits](docs/evidence/remediation/appearance.json).

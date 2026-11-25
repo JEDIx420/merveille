@@ -1,5 +1,7 @@
 # Premium interface: implementation contract
 
+**25 November appearance amendment:** [Dark-first themes and permission-aware celebrations](../design/appearance-and-celebrations.md) supersedes earlier light-only defaults. Cloudflare-managed email-code sign-in remains the current identity method.
+
 ## 1. Direction and scope
 
 Improve the existing Merveille Designs application. Retain its Next.js, OpenNext, Cloudflare and Wrangler foundation and working domain behavior. This document supersedes older **interface** defaults involving warm paper, olive/sage, gold accents, serif display headings and a dominant branded rail. It does not replace the [product rules](../product/requirements.md), [permission model](../product/roles-and-permissions.md) or original artwork.

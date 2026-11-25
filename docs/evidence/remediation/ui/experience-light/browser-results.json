@@ -1,0 +1,1048 @@
+{
+  "environment": "http://localhost:3021; isolated browser-only API fixtures; no authentication bypass in app",
+  "results": [
+    {
+      "path": "/overview",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Overview",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Projects",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/new",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Add project",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/onboarding",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Courtyard House · project setup",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/waiting",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Waiting on you",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/archive",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Archive",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/enquiries",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Enquiries & Pipeline",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/enquiries/new",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Record Client Enquiry",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/enquiries/prj_review",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Fictional enquiry contact",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/finance",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Finance",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/performance",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Team Performance & Rework",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/notifications",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Notifications",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/people",
+      "width": 1440,
+      "overflow": false,
+      "heading": "People & access",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/people/review_manager",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Fictional team member",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/overview",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Courtyard House",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/tasks",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Project Tasks & Deadlines",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/drawings",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Drawings",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/documents",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Documents, Drawings & Site Media",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/updates",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Project Updates & Progress Feed",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/permits",
+      "width": 1440,
+      "overflow": false,
+      "heading": "K-SMART Permit Records",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/finance",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Commercial Finance & Invoicing",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/selections",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Materials, Selections & References",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/changes",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Change Requests & Extra Work",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/snags",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Site Issues & Snag Tracking",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/reviews",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Waiting on you",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/settings/notifications",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Notifications",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/materials",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Materials, Selections & References",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Overview",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/access-denied",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Access isn’t available",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/missing-route",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Page not found",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "case": "external client navigation",
+      "width": 1440,
+      "healthyView": true
+    },
+    {
+      "path": "/login",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Your projects, together."
+    },
+    {
+      "path": "/invite/accept",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Join Merveille Designs"
+    },
+    {
+      "path": "/login?setup=pending",
+      "width": 1440,
+      "overflow": false,
+      "heading": "Sign-in is being prepared"
+    },
+    {
+      "case": "setup pending has no sign-in loop",
+      "width": 1440,
+      "visible": true
+    },
+    {
+      "path": "/overview",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Overview",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Projects",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/new",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Add project",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/onboarding",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Courtyard House · project setup",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/waiting",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Waiting on you",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/archive",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Archive",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/enquiries",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Enquiries & Pipeline",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/enquiries/new",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Record Client Enquiry",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/enquiries/prj_review",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Fictional enquiry contact",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/finance",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Finance",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/performance",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Team Performance & Rework",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/notifications",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Notifications",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/people",
+      "width": 1024,
+      "overflow": false,
+      "heading": "People & access",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/people/review_manager",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Fictional team member",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/overview",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Courtyard House",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/tasks",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Project Tasks & Deadlines",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/drawings",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Drawings",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/documents",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Documents, Drawings & Site Media",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/updates",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Project Updates & Progress Feed",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/permits",
+      "width": 1024,
+      "overflow": false,
+      "heading": "K-SMART Permit Records",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/finance",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Commercial Finance & Invoicing",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/selections",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Materials, Selections & References",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/changes",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Change Requests & Extra Work",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/snags",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Site Issues & Snag Tracking",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/reviews",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Waiting on you",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/settings/notifications",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Notifications",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/materials",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Materials, Selections & References",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Overview",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/access-denied",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Access isn’t available",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/missing-route",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Page not found",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "case": "external client navigation",
+      "width": 1024,
+      "healthyView": true
+    },
+    {
+      "path": "/login",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Your projects, together."
+    },
+    {
+      "path": "/invite/accept",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Join Merveille Designs"
+    },
+    {
+      "path": "/login?setup=pending",
+      "width": 1024,
+      "overflow": false,
+      "heading": "Sign-in is being prepared"
+    },
+    {
+      "case": "setup pending has no sign-in loop",
+      "width": 1024,
+      "visible": true
+    },
+    {
+      "path": "/overview",
+      "width": 390,
+      "overflow": false,
+      "heading": "Overview",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects",
+      "width": 390,
+      "overflow": false,
+      "heading": "Projects",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/new",
+      "width": 390,
+      "overflow": false,
+      "heading": "Add project",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/onboarding",
+      "width": 390,
+      "overflow": false,
+      "heading": "Courtyard House · project setup",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/waiting",
+      "width": 390,
+      "overflow": false,
+      "heading": "Waiting on you",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/archive",
+      "width": 390,
+      "overflow": false,
+      "heading": "Archive",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/enquiries",
+      "width": 390,
+      "overflow": false,
+      "heading": "Enquiries & Pipeline",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/enquiries/new",
+      "width": 390,
+      "overflow": false,
+      "heading": "Record Client Enquiry",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/enquiries/prj_review",
+      "width": 390,
+      "overflow": false,
+      "heading": "Fictional enquiry contact",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/finance",
+      "width": 390,
+      "overflow": false,
+      "heading": "Finance",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/performance",
+      "width": 390,
+      "overflow": false,
+      "heading": "Team Performance & Rework",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/notifications",
+      "width": 390,
+      "overflow": false,
+      "heading": "Notifications",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/people",
+      "width": 390,
+      "overflow": false,
+      "heading": "People & access",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/people/review_manager",
+      "width": 390,
+      "overflow": false,
+      "heading": "Fictional team member",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/overview",
+      "width": 390,
+      "overflow": false,
+      "heading": "Courtyard House",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/tasks",
+      "width": 390,
+      "overflow": false,
+      "heading": "Project Tasks & Deadlines",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/drawings",
+      "width": 390,
+      "overflow": false,
+      "heading": "Drawings",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/documents",
+      "width": 390,
+      "overflow": false,
+      "heading": "Documents, Drawings & Site Media",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/updates",
+      "width": 390,
+      "overflow": false,
+      "heading": "Project Updates & Progress Feed",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/permits",
+      "width": 390,
+      "overflow": false,
+      "heading": "K-SMART Permit Records",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/finance",
+      "width": 390,
+      "overflow": false,
+      "heading": "Commercial Finance & Invoicing",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/selections",
+      "width": 390,
+      "overflow": false,
+      "heading": "Materials, Selections & References",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/changes",
+      "width": 390,
+      "overflow": false,
+      "heading": "Change Requests & Extra Work",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/snags",
+      "width": 390,
+      "overflow": false,
+      "heading": "Site Issues & Snag Tracking",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/reviews",
+      "width": 390,
+      "overflow": false,
+      "heading": "Waiting on you",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/settings/notifications",
+      "width": 390,
+      "overflow": false,
+      "heading": "Notifications",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/projects/prj_review/materials",
+      "width": 390,
+      "overflow": false,
+      "heading": "Materials, Selections & References",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/",
+      "width": 390,
+      "overflow": false,
+      "heading": "Overview",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/access-denied",
+      "width": 390,
+      "overflow": false,
+      "heading": "Access isn’t available",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "path": "/missing-route",
+      "width": 390,
+      "overflow": false,
+      "heading": "Page not found",
+      "healthyView": true,
+      "fontLoaded": true,
+      "controlsReadable": true
+    },
+    {
+      "case": "external client navigation",
+      "width": 390,
+      "healthyView": true
+    },
+    {
+      "path": "/login",
+      "width": 390,
+      "overflow": false,
+      "heading": "Your projects, together."
+    },
+    {
+      "path": "/invite/accept",
+      "width": 390,
+      "overflow": false,
+      "heading": "Join Merveille Designs"
+    },
+    {
+      "path": "/login?setup=pending",
+      "width": 390,
+      "overflow": false,
+      "heading": "Sign-in is being prepared"
+    },
+    {
+      "case": "setup pending has no sign-in loop",
+      "width": 390,
+      "visible": true
+    },
+    {
+      "case": "administrator access history",
+      "visible": true
+    },
+    {
+      "case": "administrator invitation form",
+      "visible": true
+    },
+    {
+      "case": "failed settlement stays visible and preserves input",
+      "visible": true
+    },
+    {
+      "case": "settlement retry retains operation key",
+      "visible": true
+    },
+    {
+      "case": "archived admin settlement form",
+      "visible": true
+    },
+    {
+      "case": "archived authoring hidden",
+      "visible": true
+    },
+    {
+      "case": "exact drawing release form",
+      "visible": true
+    },
+    {
+      "case": "dialog keyboard focus",
+      "contained": true
+    },
+    {
+      "case": "dialog escape",
+      "closed": true,
+      "focusReturned": true
+    },
+    {
+      "case": "mobile drawer escape",
+      "collapsed": true
+    },
+    {
+      "case": "long drawing filename keeps download reachable",
+      "visible": true,
+      "overflow": false
+    },
+    {
+      "case": "failed overview",
+      "visible": true,
+      "falseZero": 0
+    },
+    {
+      "case": "interrupted tasks",
+      "visible": true
+    },
+    {
+      "case": "accepted invitation has ongoing access copy",
+      "visible": true
+    },
+    {
+      "case": "reduced motion disables route and dialog animation",
+      "visible": true
+    },
+    {
+      "case": "chosen theme applied",
+      "visible": true
+    },
+    {
+      "case": "theme control switches light and dark",
+      "visible": true
+    },
+    {
+      "case": "system theme follows device changes",
+      "visible": true
+    },
+    {
+      "case": "appearance survives reload",
+      "visible": true
+    },
+    {
+      "case": "lazy fireworks canvas renders",
+      "visible": true
+    },
+    {
+      "case": "focused celebration dismissal remains while particles stop",
+      "visible": true
+    },
+    {
+      "case": "reduced motion avoids celebration canvas",
+      "visible": true
+    },
+    {
+      "case": "particle cooldown uses quiet feedback for next success",
+      "visible": true
+    },
+    {
+      "case": "consumed achievements do not replay on navigation",
+      "visible": true
+    },
+    {
+      "case": "mobile appearance popover stays inside viewport",
+      "visible": true
+    }
+  ],
+  "errors": [],
+  "actions": [
+    {
+      "path": "/api/people",
+      "payload": {
+        "email": "newperson@example.invalid",
+        "displayName": "Fictional invited person",
+        "roles": [
+          "ADMIN"
+        ],
+        "projects": [],
+        "confirmElevation": true
+      }
+    },
+    {
+      "path": "/api/projects/prj_review/finance/receipts",
+      "payload": {
+        "action": "REPORT",
+        "idempotencyKey": "cd0f3a4e-bc46-4cf5-a572-69f5d7252603",
+        "settlementInvoiceId": "invoice_existing",
+        "amountMinor": 10000,
+        "receivedDate": "2026-11-24",
+        "paymentMethod": "NEFT",
+        "referenceNote": "FICTIONAL-TRANSFER-REFERENCE"
+      }
+    },
+    {
+      "path": "/api/projects/prj_review/finance/receipts",
+      "payload": {
+        "action": "REPORT",
+        "idempotencyKey": "cd0f3a4e-bc46-4cf5-a572-69f5d7252603",
+        "settlementInvoiceId": "invoice_existing",
+        "amountMinor": 10000,
+        "receivedDate": "2026-11-24",
+        "paymentMethod": "NEFT",
+        "referenceNote": "FICTIONAL-TRANSFER-REFERENCE"
+      }
+    },
+    {
+      "path": "/api/drawings/versions/version_review",
+      "payload": {
+        "action": "RELEASE",
+        "expectedCurrentVersionId": "version_old"
+      }
+    }
+  ]
+}

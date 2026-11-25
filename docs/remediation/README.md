@@ -1,5 +1,7 @@
 # Merveille Designs — current remediation work order
 
+**25 November appearance amendment:** [Dark-first themes and permission-aware celebrations](../design/appearance-and-celebrations.md) supersedes earlier light-only defaults. Cloudflare-managed email-code sign-in remains the current identity method.
+
 **Active instruction, 24 November 2026.** Build on the existing application. Deliver a consistent premium SaaS interface, genuine Google-account access and reliable workflows. Preserve working domain code and records; complete the repairs below without restarting the project.
 
 This is the detailed update prompt for the implementation agent. Read it after [AGENTS.md](../../AGENTS.md) and [START_HERE.md](../../START_HERE.md). The short kickoff is [NEXT_AGENT.md](../../NEXT_AGENT.md).

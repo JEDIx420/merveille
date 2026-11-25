@@ -1,0 +1,154 @@
+{
+  "environment": "http://localhost:3021; isolated browser-only API fixtures; no authentication bypass in app",
+  "results": [
+    {
+      "case": "administrator access history",
+      "visible": true
+    },
+    {
+      "case": "administrator invitation form",
+      "visible": true
+    },
+    {
+      "case": "failed settlement stays visible and preserves input",
+      "visible": true
+    },
+    {
+      "case": "settlement retry retains operation key",
+      "visible": true
+    },
+    {
+      "case": "archived admin settlement form",
+      "visible": true
+    },
+    {
+      "case": "archived authoring hidden",
+      "visible": true
+    },
+    {
+      "case": "exact drawing release form",
+      "visible": true
+    },
+    {
+      "case": "dialog keyboard focus",
+      "contained": true
+    },
+    {
+      "case": "dialog escape",
+      "closed": true,
+      "focusReturned": true
+    },
+    {
+      "case": "mobile drawer escape",
+      "collapsed": true
+    },
+    {
+      "case": "long drawing filename keeps download reachable",
+      "visible": true,
+      "overflow": false
+    },
+    {
+      "case": "failed overview",
+      "visible": true,
+      "falseZero": 0
+    },
+    {
+      "case": "interrupted tasks",
+      "visible": true
+    },
+    {
+      "case": "accepted invitation has ongoing access copy",
+      "visible": true
+    },
+    {
+      "case": "reduced motion disables route and dialog animation",
+      "visible": true
+    },
+    {
+      "case": "chosen theme applied",
+      "visible": true
+    },
+    {
+      "case": "theme control switches light and dark",
+      "visible": true
+    },
+    {
+      "case": "system theme follows device changes",
+      "visible": true
+    },
+    {
+      "case": "appearance survives reload",
+      "visible": true
+    },
+    {
+      "case": "lazy fireworks canvas renders",
+      "visible": true
+    },
+    {
+      "case": "focused celebration dismissal remains while particles stop",
+      "visible": true
+    },
+    {
+      "case": "reduced motion avoids celebration canvas",
+      "visible": true
+    },
+    {
+      "case": "particle cooldown uses quiet feedback for next success",
+      "visible": true
+    },
+    {
+      "case": "consumed achievements do not replay on navigation",
+      "visible": true
+    },
+    {
+      "case": "mobile appearance popover stays inside viewport",
+      "visible": true
+    }
+  ],
+  "errors": [],
+  "actions": [
+    {
+      "path": "/api/people",
+      "payload": {
+        "email": "newperson@example.invalid",
+        "displayName": "Fictional invited person",
+        "roles": [
+          "ADMIN"
+        ],
+        "projects": [],
+        "confirmElevation": true
+      }
+    },
+    {
+      "path": "/api/projects/prj_review/finance/receipts",
+      "payload": {
+        "action": "REPORT",
+        "idempotencyKey": "bf8a8340-1f76-45e9-8527-ad66ef364891",
+        "settlementInvoiceId": "invoice_existing",
+        "amountMinor": 10000,
+        "receivedDate": "2026-11-24",
+        "paymentMethod": "NEFT",
+        "referenceNote": "FICTIONAL-TRANSFER-REFERENCE"
+      }
+    },
+    {
+      "path": "/api/projects/prj_review/finance/receipts",
+      "payload": {
+        "action": "REPORT",
+        "idempotencyKey": "bf8a8340-1f76-45e9-8527-ad66ef364891",
+        "settlementInvoiceId": "invoice_existing",
+        "amountMinor": 10000,
+        "receivedDate": "2026-11-24",
+        "paymentMethod": "NEFT",
+        "referenceNote": "FICTIONAL-TRANSFER-REFERENCE"
+      }
+    },
+    {
+      "path": "/api/drawings/versions/version_review",
+      "payload": {
+        "action": "RELEASE",
+        "expectedCurrentVersionId": "version_old"
+      }
+    }
+  ]
+}
