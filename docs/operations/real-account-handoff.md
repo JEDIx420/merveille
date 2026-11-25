@@ -8,7 +8,7 @@ The coding agent owns migration/build/regression commands. Jay and the pilot tea
 
 Staging deployment is explicitly authorized for R05. The operator created an isolated APAC D1 database (`merveille-data-staging`) and private R2 bucket (`merveille-files-staging`), and applied all 21 migrations. The remote reconciliation view reports zero errors. Existing preview/production resources were not modified.
 
-The protected staging origin is [merveille-web-staging.rhelo-bible.workers.dev](https://merveille-web-staging.rhelo-bible.workers.dev). Current Worker version is `250b3d7f-650e-4c22-8aeb-007f1496b94b`. Production and old preview are unchanged. Preview URLs remain disabled; no custom Worker routes exist; the file bucket has no public managed domain.
+The protected staging origin is [merveille-web-staging.rhelo-bible.workers.dev](https://merveille-web-staging.rhelo-bible.workers.dev). Current Worker version is `a5e8cbe1-52fc-460a-95b9-9fcb3005dce4`. Production and old preview are unchanged. Preview URLs remain disabled; no custom Worker routes exist; the file bucket has no public managed domain.
 
 `wrangler whoami` confirms the same account as the signed-in dashboard, explicitly pinned in Wrangler configuration. The dashboard shows the existing Zero Trust team `plain-dream-04be.cloudflareaccess.com`. Earlier OAuth API empty lists did not reflect the dashboard inventory; organization API is 403. Do not infer absent infrastructure from those limited API responses.
 
@@ -68,4 +68,6 @@ For changed Access subjects, use `scripts/recover-identity.mjs` only with authen
 
 ## Release gate
 
-Native-provider login, invitation sync, ADMIN/OWNER denial, last-admin guard, Cron, Queue suppression/replay, isolated retry/DLQ and private backup transport/quarantine passed. Second-admin delegation, distinct real-role business passes, real provider/webhook delivery and populated remote business recovery remain **pending**. Local implementation and tests are evidence for their stated scope only.
+Native-provider login, invitation sync, ADMIN/OWNER denial, last-admin guard, Cron, Queue suppression/replay, isolated retry/DLQ and private backup transport/quarantine passed. Second-admin delegation, distinct real-role business passes, real provider/webhook delivery populated remote business recovery, and scheduled backup/stale-success monitoring remain **pending**. Local implementation and tests are evidence for their stated scope only.
+
+The [current R05 gate audit](../evidence/remediation/r05-open-gates.md) separates passed checks, account inputs and unfinished operational coverage. An interrupted restore now quarantines destination seed accounts and consumes bootstrap before any object copy; this failure path is locally verified in actual workerd.

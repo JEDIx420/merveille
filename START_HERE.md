@@ -1,6 +1,6 @@
 # Start here — improve the existing Merveille Designs application
 
-The app exists on **`implement/merveille-portal`**. The current assignment is remediation: premium consistent UI, real Google accounts/admin access and reliable business workflows. Do not start from a fresh Next scaffold or repeat P00.
+The app exists on **`implement/merveille-portal`**. The current assignment is remediation: premium consistent UI, real Cloudflare-managed accounts/admin access and reliable business workflows. Do not start from a fresh Next scaffold or repeat P00.
 
 ## 1. Open the right code
 
@@ -32,8 +32,8 @@ Preserve the current Next/OpenNext runtime and Cloudflare/Wrangler resources. Us
 
 - Neutral white, cool gray and graphite interface; compact original Merveille Designs logo at the top.
 - No role/view switcher, demo login or deployed impersonation.
-- Jay bootstrapped once as initial ADMIN from a privately supplied exact Google email; multiple admins and admin-managed invitations/roles/projects.
-- Real Google accounts for the team's approximately three initial testers; no permanent user cap.
+- Jay bootstrapped once as initial ADMIN from a privately supplied exact sign-in email; multiple admins and admin-managed invitations/roles/projects.
+- Cloudflare email-code login for the team's approximately three initial testers; no permanent user cap.
 - Consultant drawing approval followed by manager final release; no client drawing approval. Internal discussions remain private.
 - Keep all existing commercial, financial, site and archive rules in AGENTS.md.
 

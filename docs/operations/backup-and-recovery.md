@@ -26,6 +26,10 @@ Start with nightly database exports and a manifest of committed files, plus a ma
 
 The ordinary web Worker must not have read or delete access to backup SQL exports because they contain all projects, payroll and other private records. Only the dedicated backup/recovery operator path accesses them. Backup management credentials are separate from application bindings.
 
+## Current deployment status
+
+The staging notification/admission Cron is operational; it is not a database backup schedule. Manual private D1/R2 transport and isolated restore were verified. Nightly management-API database export, stale-backup monitoring and retention policy are not operational and remain release gates. Do not infer continuous backup coverage from a successful drill or configured backup bucket. A dedicated backup credential must be separate from the invitation-policy credential.
+
 ## Database export job
 
 1. Obtain an authorized export through the D1 management API or selected supported CLI, using a least-privilege backup credential.
@@ -51,7 +55,8 @@ Perform a restore into a new isolated staging database/bucket, not production, b
 3. Deploy the matching or compatible code with synthetic/test outbound messaging only.
 4. Reconcile row counts, key foreign relationships, active user permissions, released drawing pointers, superseded versions, invoice/receipt balances, file existence and archive downloads.
 5. Keep jobs paused until outbox events, sent-message IDs and receipt postings are reconciled. A restored outbox must not resend past reminders or duplicate financial effects.
-6. Record elapsed time, unrecovered gaps and corrective actions. Delete test recovery copies only through an explicit cleanup plan.
+6. If an object copy fails, treat the restore as incomplete. Destination users, memberships, grants and bootstrap are quarantined in the database restore transaction before file copying; never reopen that partial target. Preserve failure evidence and use a fresh isolated destination for a new attempt. Do not delete a recovery target without the applicable authorization.
+7. Record elapsed time, unrecovered gaps and corrective actions. Delete test recovery copies only through an explicit cleanup plan.
 
 ## Real incident recovery
 

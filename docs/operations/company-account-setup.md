@@ -25,7 +25,7 @@ A fresh company installation is the default. No transfer of Jay's staging users,
 - Open the portal and sign in with the exact invited email using its configured Cloudflare login.
 - Under **People & access**, choose **Invite person**, enter their name/email, and assign only the capabilities and projects needed.
 - When access is ready, copy the invitation link and share it privately. The portal does not claim to have emailed it.
-- If access is still being prepared, use **Retry invitation access**. Persistent errors go to the technical setup operator; they must not require her to edit Cloudflare policies or code.
+- If access is still being prepared, use **Refresh invitation access**. Persistent errors go to the technical setup operator; they must not require her to edit Cloudflare policies or code.
 - Use **Manage access** for role changes/suspension. ADMIN and OWNER remain separate. Keep a second authorized administrator for continuity.
 
 Production infrastructure configuration, provider credentials and recovery remain operator responsibilities. They are distinct from routine company administration.

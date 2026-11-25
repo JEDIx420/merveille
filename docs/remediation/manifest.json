@@ -7,7 +7,7 @@
   "auditedSourceCommit": "813ef8b765045b95ff713665a3217e4487491d75",
   "entryPoint": "docs/remediation/README.md",
   "historicalManifest": "docs/implementation/manifest.json",
-  "status": "Protected email-code staging and policy-scoped invitation sync verified; actual Cron, Queue retry/DLQ and private backup transport verified. Team role UAT, real messaging/webhook and populated remote business recovery remain open.",
+  "status": "Protected email-code staging and policy-scoped invitation sync verified; actual Cron, Queue retry/DLQ and private backup transport verified. Team role UAT, real messaging/webhook and populated remote business recovery remain open. Interrupted-restore quarantine repaired and verified; continuous backup automation/monitoring remains unimplemented and not release-ready.",
   "dependencyPolicy": "Implementation and local-verification contracts unlock independent downstream work. A blocked hosted/provider check remains explicit and blocks real onboarding/release, not unrelated implementation. See stage exit gates.",
   "stages": [
     {
@@ -28,7 +28,7 @@
         "docs/evidence/remediation/r05-operations.json"
       ],
       "blockers": [
-        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding."
+        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding. Continuous backup scheduling and stale-success monitoring remain unimplemented/unverified."
       ]
     },
     {
@@ -51,7 +51,7 @@
         "docs/evidence/remediation/r05-operations.json"
       ],
       "blockers": [
-        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding."
+        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding. Continuous backup scheduling and stale-success monitoring remain unimplemented/unverified."
       ]
     },
     {
@@ -74,7 +74,7 @@
         "docs/evidence/remediation/r05-operations.json"
       ],
       "blockers": [
-        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding."
+        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding. Continuous backup scheduling and stale-success monitoring remain unimplemented/unverified."
       ],
       "parallelWith": [
         "R03"
@@ -101,7 +101,7 @@
         "docs/evidence/remediation/r05-operations.json"
       ],
       "blockers": [
-        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding."
+        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding. Continuous backup scheduling and stale-success monitoring remain unimplemented/unverified."
       ],
       "parallelWith": [
         "R02"
@@ -128,7 +128,7 @@
         "docs/evidence/remediation/r05-operations.json"
       ],
       "blockers": [
-        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding."
+        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding. Continuous backup scheduling and stale-success monitoring remain unimplemented/unverified."
       ]
     },
     {
@@ -151,10 +151,11 @@
       "teamAcceptance": "in-progress",
       "evidence": [
         "docs/evidence/remediation/session.md",
-        "docs/evidence/remediation/r05-operations.json"
+        "docs/evidence/remediation/r05-operations.json",
+        "docs/evidence/remediation/r05-open-gates.md"
       ],
       "blockers": [
-        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding."
+        "Other tester emails/roles and second-admin/full-role business UAT pending; real messaging/webhook provider inputs and populated remote business recovery remain outstanding. Continuous backup scheduling and stale-success monitoring remain unimplemented/unverified."
       ]
     }
   ]

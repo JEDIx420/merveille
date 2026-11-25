@@ -1,15 +1,16 @@
 {
-  "sourceCommit": "cc47787",
-  "webVersion": "250b3d7f-650e-4c22-8aeb-007f1496b94b",
+  "sourceCommit": "7b8d9dd",
+  "webVersion": "a5e8cbe1-52fc-460a-95b9-9fcb3005dce4",
   "jobsVersion": "de09aa26-c792-41d0-9b21-d91e7d6faa3b",
   "local": {
     "tests": 106,
     "testFiles": 22,
-    "workerdChecks": 9,
+    "workerdChecks": 10,
     "browserChecks": 112,
     "invitationParsingCases": 3,
     "typecheck": "passed",
-    "workerBuild": "passed"
+    "workerBuild": "passed",
+    "restoreCopyFailure": "passed: R2 copy failure leaves seed users/memberships/grants quarantined and bootstrap consumed in D1 transaction"
   },
   "hosted": {
     "migrationCount": 21,
@@ -45,7 +46,8 @@
       "deadLetterPulled": 1,
       "ackCount": 1,
       "cleanup": "passed: consumers detached, disposable probe Worker, two Queues and D1 removed; portal resources retained"
-    }
+    },
+    "continuousBackup": "not operational: scheduled export/copy and stale-success monitoring require implementation, dedicated credential and hosted evidence"
   },
   "team": "remaining account emails/roles and UAT pending"
 }
