@@ -382,14 +382,14 @@ export default function FirmFinancePage() {
                       exp.status === "POSTED"
                         ? "var(--ui-success-bg)"
                         : exp.status === "APPROVED"
-                          ? "#DBEAFE"
-                          : "#FEF3C7",
+                          ? "var(--ui-info-bg)"
+                          : "var(--ui-warning-bg)",
                     color:
                       exp.status === "POSTED"
-                        ? "#065F46"
+                        ? "var(--ui-success)"
                         : exp.status === "APPROVED"
-                          ? "#1E40AF"
-                          : "#92400E",
+                          ? "var(--ui-link)"
+                          : "var(--ui-warning)",
                   }}
                   className={cx(layout.block41)}
                 >
@@ -445,14 +445,14 @@ export default function FirmFinancePage() {
                       cb.status === "POSTED"
                         ? "var(--ui-success-bg)"
                         : cb.status === "APPROVED"
-                          ? "#DBEAFE"
-                          : "#FEF3C7",
+                          ? "var(--ui-info-bg)"
+                          : "var(--ui-warning-bg)",
                     color:
                       cb.status === "POSTED"
-                        ? "#065F46"
+                        ? "var(--ui-success)"
                         : cb.status === "APPROVED"
-                          ? "#1E40AF"
-                          : "#92400E",
+                          ? "var(--ui-link)"
+                          : "var(--ui-warning)",
                   }}
                   className={cx(layout.block51)}
                 >

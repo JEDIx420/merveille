@@ -1,7 +1,7 @@
 import { chromium } from "playwright";
 import fs from "node:fs";
 const out = new URL("../docs/evidence/remediation/ui", import.meta.url)
-  .pathname;
+  .pathname + (process.env.BROWSER_THEME ? "/experience-"+process.env.BROWSER_THEME : "");
 const base = process.env.BASE_URL || "http://localhost:3021";
 fs.mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ headless: true });
@@ -87,6 +87,10 @@ let mode = "manager",
   failSettlementOnce = false,
   longFilename=false;
 const page = await browser.newPage();
+let appearance={theme:process.env.BROWSER_THEME||'dark',celebrations:'full'};
+let celebrationEvents=[];const claimedCelebrations=new Set();
+await page.addInitScript(v=>localStorage.setItem('merveille-appearance',JSON.stringify(v)),appearance);
+
 async function visit(url) {
   try {
     await page.goto(url, { waitUntil: "domcontentloaded" });
@@ -107,6 +111,12 @@ const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
 await page.route("**/api/**", async (route) => {
   const url = new URL(route.request().url());
+  if(url.pathname==='/api/preferences/appearance') {
+    if(route.request().method()==='PUT')appearance=route.request().postDataJSON();
+    return route.fulfill({contentType:'application/json',body:JSON.stringify(appearance)});
+  }
+  if(url.pathname==='/api/celebrations')return route.fulfill({contentType:'application/json',body:JSON.stringify({events:celebrationEvents.filter(e=>!claimedCelebrations.has(e.id))})});
+  if(url.pathname==='/api/celebrations/claim'){const {id}=route.request().postDataJSON();const claimed=!claimedCelebrations.has(id);claimedCelebrations.add(id);return route.fulfill({contentType:'application/json',body:JSON.stringify({claimed})});}
   if (route.request().method() === "POST") {
     const payload = route.request().postDataJSON();
     actions.push({ path: url.pathname, payload });
@@ -255,6 +265,7 @@ await page.route("**/api/**", async (route) => {
         mode === "archive-admin"
           ? { ...project, is_archived: 1, status: "ARCHIVED" }
           : project,
+      onboarding: mode==='admin'?{handover_notes:"Fictional handover record.",commercial_notes:"Fictional reconciliation notes."}:null,
       stages: [],
       members: [],
       events: [],
@@ -387,6 +398,8 @@ for (const size of process.env.BROWSER_SCOPE === "actions"
   for (const path of [
     "/overview",
     "/projects",
+    "/projects/new",
+    "/projects/prj_review/onboarding",
     "/waiting",
     "/archive",
     "/enquiries",
@@ -418,7 +431,7 @@ for (const size of process.env.BROWSER_SCOPE === "actions"
       !process.env.BROWSER_ROUTES ||
       process.env.BROWSER_ROUTES.split(",").includes(path),
   )) {
-    mode=path.startsWith('/people')||path==='/finance'?'admin':path==='/performance'?'owner':'manager';
+    mode=path.startsWith('/people')||path==='/finance'||path==='/projects/new'||path.endsWith('/onboarding')?'admin':path==='/performance'?'owner':'manager';
     await visit(base + path);
     await page.waitForTimeout(100);
     console.log(size.width, path);
@@ -717,6 +730,58 @@ await page.getByRole("button", {name:"Add employee",exact:true}).click();
 results.push({case:"reduced motion disables route and dialog animation", visible: await page.locator("dialog").evaluate(el=>getComputedStyle(el).animationName === "none") && await page.locator("main > div").evaluate(el=>getComputedStyle(el).animationName === "none")});
 await page.getByRole("button", {name:"Close dialog",exact:true}).click();
 await page.emulateMedia({reducedMotion:"no-preference"});
+await page.setViewportSize({width:1440,height:900});
+await visit(base+'/overview');
+await page.waitForFunction(theme=>document.documentElement.dataset.theme===theme,appearance.theme);
+results.push({case:'chosen theme applied',visible:await page.evaluate(theme=>document.documentElement.dataset.theme===theme,appearance.theme)});
+await page.getByLabel('Appearance',{exact:true}).filter({visible:true}).click();
+await page.screenshot({path:out+'/appearance-desktop.png',fullPage:false});
+await page.getByRole('radio',{name:'Light',exact:true}).check();
+await page.waitForFunction(()=>document.documentElement.dataset.theme==='light');
+await page.getByRole('radio',{name:'Dark',exact:true}).check();
+await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
+results.push({case:'theme control switches light and dark',visible:true});
+await page.getByRole('radio',{name:'System',exact:true}).check();
+await page.emulateMedia({colorScheme:'light'});await page.waitForFunction(()=>document.documentElement.dataset.theme==='light');
+await page.emulateMedia({colorScheme:'dark'});await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
+results.push({case:'system theme follows device changes',visible:true});
+await page.getByRole('radio',{name:'Light',exact:true}).check();
+await page.reload();await page.waitForFunction(()=>document.documentElement.dataset.theme==='light');
+results.push({case:'appearance survives reload',visible:true});
+await page.getByLabel('Appearance',{exact:true}).filter({visible:true}).click();
+await page.getByRole('radio',{name:'Dark',exact:true}).check();
+
+await page.getByText('Preview celebrations',{exact:true}).filter({visible:true}).click();
+await page.getByRole('button',{name:'fireworks',exact:true}).click();
+await page.waitForFunction(()=>!!document.querySelector('canvas[aria-hidden]'));
+results.push({case:'lazy fireworks canvas renders',visible:true});
+await page.getByRole('button',{name:'Dismiss celebration',exact:true}).focus();
+await page.waitForTimeout(2400);
+results.push({case:'focused celebration dismissal remains while particles stop',visible:await page.getByRole('button',{name:'Dismiss celebration',exact:true}).isVisible() && await page.locator('canvas[aria-hidden]').count()===0});
+await page.getByRole('button',{name:'Dismiss celebration',exact:true}).click();
+await page.waitForFunction(()=>!document.querySelector('canvas[aria-hidden]'));
+await page.emulateMedia({reducedMotion:'reduce'});
+await page.getByLabel('Appearance',{exact:true}).filter({visible:true}).click();
+await page.getByRole('button',{name:'confetti',exact:true}).click();
+results.push({case:'reduced motion avoids celebration canvas',visible:await page.locator('canvas[aria-hidden]').count()===0});
+await page.getByRole('button',{name:'Dismiss celebration',exact:true}).click();
+await page.emulateMedia({reducedMotion:'no-preference'});
+celebrationEvents=[{id:'a'.repeat(32),kind:'invoice_settled',actorId:'review_manager',projectId:project.id,projectName:project.name,quiet:false}];
+await visit(base+'/overview');
+await page.getByText('Invoice fully paid',{exact:true}).waitFor();
+await page.getByRole('button',{name:'Dismiss celebration',exact:true}).click();
+celebrationEvents.push({id:'b'.repeat(32),kind:'task_completed',actorId:'review_manager',projectId:project.id,projectName:project.name,quiet:false});
+await page.getByRole('link',{name:'Waiting on you',exact:true}).click();await page.getByRole('heading',{name:'Waiting on you',exact:true}).waitFor();
+await page.getByRole('link',{name:'Overview',exact:true}).click();await page.getByText('Task completed',{exact:true}).waitFor();
+results.push({case:'particle cooldown uses quiet feedback for next success',visible:await page.locator('canvas[aria-hidden]').count()===0});
+await page.getByRole('button',{name:'Dismiss celebration',exact:true}).click();
+await visit(base+'/overview');await page.waitForTimeout(1000);
+results.push({case:'consumed achievements do not replay on navigation',visible:await page.getByText('Invoice fully paid',{exact:true}).count()===0 && await page.getByText('Task completed',{exact:true}).count()===0});
+await page.setViewportSize({width:390,height:844});
+await page.getByLabel('Appearance',{exact:true}).filter({visible:true}).click();
+results.push({case:'mobile appearance popover stays inside viewport',visible:await page.getByRole('heading',{name:'Make it yours',exact:true}).evaluate(el=>{const r=el.parentElement.getBoundingClientRect();return r.left>=15&&r.right<=innerWidth-15&&r.bottom<=innerHeight;})});
+await page.getByRole('radio',{name:process.env.BROWSER_THEME==='light'?'Light':'Dark',exact:true}).check();
+await page.screenshot({path:out+'/appearance-mobile.png',fullPage:false});
 fs.writeFileSync(
   out + "/browser-results.json",
   JSON.stringify(

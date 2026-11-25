@@ -582,9 +582,9 @@ export default function ProjectFinancePage() {
                       backgroundColor:
                         quote.status === "ACCEPTED"
                           ? "var(--ui-success-bg)"
-                          : "#FEF3C7",
+                          : "var(--ui-warning-bg)",
                       color:
-                        quote.status === "ACCEPTED" ? "#065F46" : "#92400E",
+                        quote.status === "ACCEPTED" ? "var(--ui-success)" : "var(--ui-warning)",
                     }}
                     className={cx(layout.block32)}
                   >
@@ -668,8 +668,8 @@ export default function ProjectFinancePage() {
                         backgroundColor:
                           sch.status === "AGREED"
                             ? "var(--ui-success-bg)"
-                            : "#F3F4F6",
-                        color: sch.status === "AGREED" ? "#065F46" : "#6B7280",
+                            : "var(--ui-surface-subtle)",
+                        color: sch.status === "AGREED" ? "var(--ui-success)" : "var(--ui-text-muted)",
                       }}
                       className={cx(layout.block48)}
                     >
@@ -755,8 +755,8 @@ export default function ProjectFinancePage() {
                     <span
                       style={{
                         backgroundColor:
-                          inv.status === "ISSUED" ? "#DBEAFE" : "#FEF3C7",
-                        color: inv.status === "ISSUED" ? "#1E40AF" : "#92400E",
+                          inv.status === "ISSUED" ? "var(--ui-info-bg)" : "var(--ui-warning-bg)",
+                        color: inv.status === "ISSUED" ? "var(--ui-link)" : "var(--ui-warning)",
                       }}
                       className={cx(layout.block68)}
                     >
@@ -768,11 +768,11 @@ export default function ProjectFinancePage() {
                           backgroundColor:
                             inv.settlement_status === "PAID"
                               ? "var(--ui-success-bg)"
-                              : "#FEE2E2",
+                              : "var(--ui-danger-bg)",
                           color:
                             inv.settlement_status === "PAID"
-                              ? "#065F46"
-                              : "#991B1B",
+                              ? "var(--ui-success)"
+                              : "var(--ui-danger)",
                         }}
                         className={cx(layout.block69)}
                       >
@@ -880,8 +880,8 @@ export default function ProjectFinancePage() {
                       backgroundColor:
                         rcp.status === "CONFIRMED"
                           ? "var(--ui-success-bg)"
-                          : "#FEF3C7",
-                      color: rcp.status === "CONFIRMED" ? "#065F46" : "#92400E",
+                          : "var(--ui-warning-bg)",
+                      color: rcp.status === "CONFIRMED" ? "var(--ui-success)" : "var(--ui-warning)",
                     }}
                     className={cx(layout.block83)}
                   >

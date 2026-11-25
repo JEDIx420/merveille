@@ -1,5 +1,6 @@
 /** Isolated local verification entry, never deployed or linked from the product. */
 import { onboardExistingProject } from "../../src/server/domain/projects/onboarding";
+import {listCelebrations,claimCelebration,setAppearance} from "../../src/server/experience/service";
 import { identityDrill } from "./identity-drill";
 import { FinanceService } from "../../src/server/domain/finance/service";
 import { releaseDrawingVersion } from "../../src/server/domain/drawings/service";
@@ -196,10 +197,19 @@ export default {
         paymentMethod: "BANK_TRANSFER",
         idempotencyKey: "workerd-receipt",
       });
+      check(!(await listCelebrations(env.DB,admin,project)).some(e=>e.kind==='receipt_confirmed'), 'Reported payment celebrated before confirmation');
+      try { await FinanceService.confirmReceipt(faulting(env.DB),admin,{receiptId:receipt.receiptId,idempotencyKey:'fault-celebration-confirm'}); } catch {}
+      check(!(await listCelebrations(env.DB,admin,project)).some(e=>e.kind==='receipt_confirmed'), 'Rolled-back confirmation published a celebration');
       await FinanceService.confirmReceipt(env.DB, admin, {
         receiptId: receipt.receiptId,
         idempotencyKey: "workerd-confirm",
       });
+      const paymentEvent=(await listCelebrations(env.DB,admin,project)).find(e=>e.kind==='receipt_confirmed');
+      check(!!paymentEvent, 'Confirmed payment lacks celebration');
+      const claims=await Promise.all([claimCelebration(env.DB,admin,paymentEvent!.id),claimCelebration(env.DB,admin,paymentEvent!.id)]);
+      check(claims.filter(Boolean).length===1,'Concurrent celebration claims played twice');
+      await setAppearance(env.DB,admin,{theme:'dark',celebrations:'reduced'});
+      passed.push('D1 celebration confirmation rolls back atomically, excludes reported payments, and claims once concurrently');
       const allocations = await Promise.allSettled([
         FinanceService.allocateReceipt(env.DB, admin, {
           receiptId: receipt.receiptId,

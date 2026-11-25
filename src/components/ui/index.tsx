@@ -317,6 +317,7 @@ export async function readResponse(res: Response): Promise<any> {
           ? "You do not have access to this action."
           : "Unable to save. Please try again."),
     );
+  if (typeof window !== "undefined" && !/\/api\/(celebrations|preferences\/appearance)/.test(res.url)) window.dispatchEvent(new Event("merveille:refresh-celebrations"));
   return body;
 }
 export function FilePreview({

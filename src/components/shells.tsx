@@ -28,6 +28,7 @@ import {
   readResponse,
 } from "./ui";
 import styles from "./shell.module.css";
+import { AppearanceControl } from "./experience/controls";
 import { ProjectContext } from "./project-context";
 function Brand() {
   return (
@@ -45,6 +46,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
       <header className={styles.authHeader}>
         <img src={BRAND_CONFIG.logoPath} alt="" />
         <strong>Merveille Designs</strong>
+        <AppearanceControl />
       </header>
       <main className={styles.authBody}>{children}</main>
     </div>
@@ -182,6 +184,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               Merveille Designs
             </Link>
             <div className={styles.mobileActions}>
+            <AppearanceControl />
             <Link href="/notifications" className="btn-secondary" aria-label="Notifications"><Inbox size={20} aria-hidden="true" /></Link>
             <button
               ref={menu}
@@ -196,10 +199,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <header className={styles.topbar}>
             <p>Your project workspace</p>
+            <div className={styles.desktopActions}><AppearanceControl />
             <Link href="/notifications">
               <Inbox size={18} aria-hidden="true" />
               Notifications
-            </Link>
+            </Link></div>
           </header>
           <main className={styles.content} id="main-content">
             <div key={path} className={styles.route}>{children}</div>

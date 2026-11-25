@@ -208,7 +208,7 @@ export default function ProjectsPage() {
                       style={{
                         color: hasCommercialGate
                           ? "var(--ui-success)"
-                          : "#fbbf24",
+                          : "var(--ui-warning)",
                       }}
                       className={cx(layout.block29)}
                     >

@@ -657,7 +657,7 @@ export default function UpdatesPage() {
                   }}
                   style={{
                     backgroundColor:
-                      reviewAction === "PUBLISH" ? "#059669" : "#DC2626",
+                      reviewAction === "PUBLISH" ? "var(--ui-success)" : "var(--ui-danger)",
                   }}
                   className={cx(layout.block82)}
                 >

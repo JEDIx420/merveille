@@ -23,7 +23,7 @@
   background: var(--ui-surface-subtle);
 }
 .u9 {
-  background: #10182870;
+  background: var(--ui-overlay);
 }
 .u10 {
   background: var(--ui-surface-subtle);
@@ -646,13 +646,13 @@
   align-self: flex-start;
 }
 .u200 {
-  box-shadow: 0 20px 48px #10182825;
+  box-shadow: var(--ui-shadow-menu);
 }
 .u201 {
   box-shadow: none;
 }
 .u202 {
-  box-shadow: 0 24px 48px #10182825;
+  box-shadow: var(--ui-shadow-menu);
 }
 .u203 {
   box-shadow: none;
@@ -785,7 +785,7 @@
   color: var(--ui-text-muted);
 }
 .u235 {
-  color: white;
+  color: var(--ui-on-action);
 }
 .u236 {
   color: var(--ui-text-secondary);
@@ -828,7 +828,7 @@
   color: var(--ui-text);
 }
 .u249 {
-  color: white;
+  color: var(--ui-on-action);
 }
 .u250 {
   font-size: 20px;

@@ -80,6 +80,8 @@ export async function createRecoveryCheckpoint(
     );
     const excluded = new Set([
       "backup_runs",
+      "celebration_events",
+      "celebration_consumptions",
       "financial_guard",
       "atomic_guards",
       "command_guards",

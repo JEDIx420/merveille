@@ -49,7 +49,7 @@
   font-size: 14px;
   text-decoration: none;
   background: var(--ui-action);
-  color: white;
+  color: var(--ui-on-action);
   cursor: pointer;
   white-space: normal;
 }
@@ -57,7 +57,7 @@
   background: var(--ui-action-hover);
 }
 .secondary {
-  background: white;
+  background: var(--ui-surface);
   color: var(--ui-text);
   border-color: var(--ui-divider);
 }
@@ -98,20 +98,20 @@
 .positive {
   color: var(--ui-success);
   background: var(--ui-success-bg);
-  border-color: #abefc6;
+  border-color: var(--ui-success-border);
 }
 .negative {
   color: var(--ui-danger);
   background: var(--ui-danger-bg);
-  border-color: #fecdca;
+  border-color: var(--ui-danger-border);
 }
 .warning {
   color: var(--ui-warning);
   background: var(--ui-warning-bg);
-  border-color: #fedf89;
+  border-color: var(--ui-warning-border);
 }
 .error {
-  border: 1px solid #fecdca;
+  border: 1px solid var(--ui-danger-border);
   background: var(--ui-danger-bg);
   color: var(--ui-danger);
   border-radius: 8px;
@@ -140,7 +140,7 @@
   background: linear-gradient(
     90deg,
     var(--ui-surface-subtle),
-    white,
+    var(--ui-surface-raised),
     var(--ui-surface-subtle)
   );
   padding: 24px;
@@ -151,7 +151,7 @@
   overflow: auto;
   border: 1px solid var(--ui-divider);
   border-radius: 12px;
-  background: white;
+  background: var(--ui-surface);
 }
 .table {
   width: 100%;
@@ -239,11 +239,11 @@
   width: 100%;
   max-height: calc(100dvh - 32px);
   color: var(--ui-text);
-  background: white;
-  box-shadow: 0 24px 48px #10182825;
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-menu);
 }
 .dialog::backdrop {
-  background: #10182855;
+  background: var(--ui-overlay);
   backdrop-filter: blur(3px);
 }
 .dialogHeader {
@@ -291,7 +291,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: 12px 16px;
-  background: white;
+  background: var(--ui-surface);
   border-bottom: 1px solid var(--ui-divider);
 }
 .previewFallback {
@@ -434,12 +434,12 @@
 .button { transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, transform 100ms ease; }
 .button:active:not(:disabled) { transform: translateY(1px); }
 .secondary { box-shadow: 0 1px 2px #10182805; }
-.secondary:hover { border-color: #c6ccd5; }
+.secondary:hover { border-color: var(--ui-control-border); }
 .panel, .tableWrap { box-shadow: 0 2px 6px #10182803; }
 .table tbody tr { transition: background-color 140ms ease; }
-.table tbody tr:hover { background: #f9fafb; }
+.table tbody tr:hover { background: var(--ui-surface-subtle); }
 .dialog[open] { animation: dialogEnter 180ms cubic-bezier(.2,.8,.2,1); }
-.dialogHeader { position: sticky; top: 0; background: white; z-index: 1; }
+.dialogHeader { position: sticky; top: 0; background: var(--ui-surface); z-index: 1; }
 .checkbox { min-height: 40px; gap: 10px; padding: 6px 0; font-size: 14px; line-height: 1.5; }
 .checkbox input { margin: 2px 0 0; }
 .form fieldset > p { margin: 0 0 12px; }

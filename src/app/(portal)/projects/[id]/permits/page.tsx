@@ -349,15 +349,15 @@ export default function PermitsPage() {
                                   ? "var(--ui-success-bg)"
                                   : obs.sharing_status ===
                                       "SUBMITTED_FOR_SHARING"
-                                    ? "#FEF3C7"
-                                    : "#F3F4F6",
+                                    ? "var(--ui-warning-bg)"
+                                    : "var(--ui-surface-subtle)",
                               color:
                                 obs.sharing_status === "SHARED"
-                                  ? "#065F46"
+                                  ? "var(--ui-success)"
                                   : obs.sharing_status ===
                                       "SUBMITTED_FOR_SHARING"
-                                    ? "#92400E"
-                                    : "#374151",
+                                    ? "var(--ui-warning)"
+                                    : "var(--ui-text-secondary)",
                             }}
                             className={cx(layout.block38)}
                           >
@@ -383,11 +383,11 @@ export default function PermitsPage() {
                                 key={f.id}
                                 style={{
                                   backgroundColor: f.is_client_shared
-                                    ? "#DBEAFE"
-                                    : "#FEE2E2",
+                                    ? "var(--ui-info-bg)"
+                                    : "var(--ui-danger-bg)",
                                   color: f.is_client_shared
-                                    ? "#1E40AF"
-                                    : "#991B1B",
+                                    ? "var(--ui-link)"
+                                    : "var(--ui-danger)",
                                 }}
                                 className={cx(layout.block42)}
                               >

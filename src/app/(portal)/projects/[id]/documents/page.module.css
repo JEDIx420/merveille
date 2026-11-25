@@ -67,7 +67,7 @@
   border-radius: 4px;
   background-color: var(--ui-action);
   border: 1px dashed var(--ui-divider);
-  color: white;
+  color: var(--ui-on-action);
   font-size: 0.875rem;
   cursor: pointer;
 }
@@ -114,7 +114,7 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.8125rem;
-  color: white;
+  color: var(--ui-on-action);
   cursor: pointer;
 }
 .block21 {
@@ -302,7 +302,7 @@
 .block57 {
   background: none;
   border: none;
-  color: white;
+  color: var(--ui-on-action);
   font-size: 0.8125rem;
   cursor: pointer;
 }

@@ -39,9 +39,9 @@
 }
 .block9 {
   padding: 1.25rem;
-  background-color: #f9fafb;
+  background-color: var(--ui-surface-subtle);
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--ui-divider);
   margin-bottom: 2rem;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -62,7 +62,7 @@
   color: var(--ui-success);
 }
 .block13 {
-  color: #dc2626;
+  color: var(--ui-danger);
 }
 .block14 {
   font-size: 0.8125rem;
@@ -90,12 +90,12 @@
   color: var(--ui-success);
 }
 .block19 {
-  color: #d97706;
+  color: var(--ui-warning);
 }
 .block20 {
   padding: 1rem;
-  background-color: #fee2e2;
-  color: #991b1b;
+  background-color: var(--ui-danger-bg);
+  color: var(--ui-danger);
   border-radius: 6px;
   margin-bottom: 1.5rem;
 }
@@ -178,7 +178,7 @@
   margin-top: 1rem;
 }
 .block35 {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--ui-divider);
   text-align: left;
   color: var(--ui-text-muted);
 }
@@ -248,7 +248,7 @@
   font-size: 0.875rem;
 }
 .block50 {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--ui-divider);
   text-align: left;
   color: var(--ui-text-muted);
 }
@@ -346,7 +346,7 @@
   color: var(--ui-success);
 }
 .block72 {
-  color: #dc2626;
+  color: var(--ui-danger);
 }
 .block73 {
   display: flex;
@@ -358,7 +358,7 @@
   padding: 0.4rem 0.8rem;
   font-size: 0.8125rem;
   background-color: var(--ui-action);
-  color: white;
+  color: var(--ui-on-action);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -367,7 +367,7 @@
   padding: 0.4rem 0.8rem;
   font-size: 0.8125rem;
   background-color: var(--ui-action);
-  color: white;
+  color: var(--ui-on-action);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -424,7 +424,7 @@
   color: var(--ui-success);
 }
 .block86 {
-  color: #2563eb;
+  color: var(--ui-link);
 }
 .block87 {
   display: flex;
@@ -436,7 +436,7 @@
   padding: 0.4rem 0.8rem;
   font-size: 0.8125rem;
   background-color: var(--ui-action);
-  color: white;
+  color: var(--ui-on-action);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -445,7 +445,7 @@
   padding: 0.4rem 0.8rem;
   font-size: 0.8125rem;
   background-color: var(--ui-action);
-  color: white;
+  color: var(--ui-on-action);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -531,7 +531,7 @@
 .block104 {
   padding: 0.5rem 1rem;
   background-color: var(--ui-action);
-  color: white;
+  color: var(--ui-on-action);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -617,7 +617,7 @@
 .block119 {
   padding: 0.5rem 1rem;
   background-color: var(--ui-action);
-  color: white;
+  color: var(--ui-on-action);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -688,7 +688,7 @@
 .block131 {
   padding: 0.5rem 1rem;
   background-color: var(--ui-action);
-  color: white;
+  color: var(--ui-on-action);
   border: none;
   border-radius: 4px;
   cursor: pointer;
