@@ -22,9 +22,15 @@ Dependencies and exact contracts: [active manifest](docs/remediation/manifest.js
 - Actual local checks: 120 tests/24 files; 12 actual workerd checks; typecheck/Workers build; 130 full browser checks per theme plus 25 focused reruns per theme. Both-theme screenshots reviewed, zero overflow/JS errors. [Feature contract](docs/design/appearance-and-celebrations.md) and [evidence](docs/evidence/remediation/appearance.json).
 - Hosted: migration/schema/index verified, deployment succeeded and new API ingress is Access protected/private. Real signed-in dark workspace and Appearance panel inspected. Chrome disconnected during attempted Light save; no hosted preference row was written at read-back. Actual signed-in save/reload and cross-device confirmation remain **unverified** until Chrome reconnects. No business records were created for visual demonstrations.
 
+## Button contrast repair
+
+- Source `469f909`; deployed staging web `90c31ec4-7506-4f6f-b95e-7f5a14f7398b`. Paired legacy action backgrounds with their semantic foreground, corrected seven Cancel styles and removed native gray filter backgrounds.
+- Current typecheck and Workers build passed; 132 rendered browser checks per theme (264 total), including enabled button contrast at 4.5:1, Site Issues and the payment dialog. Prior domain/workerd results below were not rerun for this CSS repair.
+- Actual signed-in hosted dark review verified Site Issues report/filter buttons and payment dialog Cancel/Submit; cancellation returned to the page without creating any record. Private real-account screenshots stay ignored. Team UAT and existing R05 gates remain open.
+
 ## Current checkpoint
 
-- Current branch: `implement/merveille-portal`. Existing logo, Next/OpenNext and Wrangler foundation preserved. Latest deployed web `f359c8b0-2da1-4c9c-ac7e-b17fc846925d`; jobs `de09aa26-c792-41d0-9b21-d91e7d6faa3b`.
+- Current branch: `implement/merveille-portal`. Existing logo, Next/OpenNext and Wrangler foundation preserved. Latest deployed web `90c31ec4-7506-4f6f-b95e-7f5a14f7398b`; jobs `de09aa26-c792-41d0-9b21-d91e7d6faa3b`.
 - Protected staging: https://merveille-web-staging.rhelo-bible.workers.dev. User completed Cloudflare One-time PIN login. Existing initial ADMIN retained; OWNER endpoint denied. Last-administrator removal denied with clear guidance and unchanged atomic guard. Google Cloud configuration is no longer required for team sign-in.
 - Explicitly approved single-policy Admin credential is installed only in web/jobs platform secrets. Temporary transfer file deleted. Unrelated policy GET denied 403; actual People & access refresh reported “Invitation access is up to date.” No broad/domain admission was added.
 - Actual local checks: typecheck, 120 tests/24 files, twelve workerd checks through all 23 migrations, Worker build passed. Typed last-admin assertions passed in 10 authorization tests. Both-theme frontend passed 130 full checks per theme across the expanded route inventory/three viewport sizes with fictional API fixtures; this is distinct from real team UAT.

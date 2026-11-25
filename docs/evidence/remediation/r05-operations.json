@@ -1,17 +1,19 @@
 {
-  "sourceCommit": "7c400dd",
-  "webVersion": "f359c8b0-2da1-4c9c-ac7e-b17fc846925d",
+  "sourceCommit": "469f909",
+  "webVersion": "90c31ec4-7506-4f6f-b95e-7f5a14f7398b",
   "jobsVersion": "de09aa26-c792-41d0-9b21-d91e7d6faa3b",
   "local": {
     "tests": 120,
     "testFiles": 24,
     "workerdChecks": 12,
-    "browserChecks": 260,
+    "browserChecks": 264,
     "invitationParsingCases": 3,
     "typecheck": "passed",
     "workerBuild": "passed",
     "restoreCopyFailure": "passed: R2 copy failure leaves seed users/memberships/grants quarantined and bootstrap consumed in D1 transaction",
-    "browserChecksPerTheme": 130
+    "browserChecksPerTheme": 132,
+    "buttonContrast": "passed: rendered enabled button labels require 4.5:1; full dark/light browser runs",
+    "priorUnchangedChecks": "120 domain tests and 12 workerd checks are prior appearance-stage results, not rerun for the button CSS repair"
   },
   "hosted": {
     "migrationCount": 23,
@@ -50,7 +52,8 @@
     },
     "continuousBackup": "not operational: scheduled export/copy and stale-success monitoring require implementation, dedicated credential and hosted evidence",
     "uiRefinement": "passed: signed-in accepted account copy, invitation dialog, single finance action, readable project filter, compact mobile navigation and no overflow",
-    "appearance": "deployed; real dark view/settings inspected; real account save/reload unverified due Chrome connection loss"
+    "appearance": "deployed; real dark view/settings inspected; real account save/reload unverified due Chrome connection loss",
+    "buttonContrast": "passed: actual signed-in dark Site Issues CTA/filters and external-payment Cancel/Submit inspected; Cancel closed dialog, no business submission"
   },
   "team": "remaining account emails/roles and UAT pending"
 }
