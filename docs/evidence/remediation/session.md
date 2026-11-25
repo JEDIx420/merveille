@@ -155,3 +155,8 @@ Actual commands/results: `npm test` 106 tests/22 files passed; `npm run typechec
 `wrangler whoami` verified pinned account; `wrangler deploy --env staging` succeeded, web version `3e003439-210c-42a3-9613-b4656648e7b9`; jobs unchanged. Actual Chrome signed-in ADMIN review verified accepted account has no expiry date, dialog link-only explanation, exactly one Record expense action, readable project filter, animated route and phone header with one Notifications link/no overflow. Reviewed actual screenshots; viewport restored afterward. Private proof `.private/polish-staging-people.jpg`, `.private/polish-finance-desktop.jpg`; no real email or screenshot committed. No invitation submission, financial record or permission mutation performed during this visual review.
 
 `npm run check:handoff` passed. R05 team/provider/continuous-backup/populated-remote-recovery gates remain unchanged and open; this is a deployed UI refinement, not blanket release acceptance.
+
+
+## 25 November — employee access and ongoing project onboarding
+
+Source `02600a8`; deployed staging web `e6ce3850-52aa-4e39-9ecd-ebdae6ca7654`. Both user-requested flows implemented with existing approval/payment boundaries. Five new boundary/rollback/retry tests and a workerd check pass; total 111 tests and 11 workerd checks. Built fixture browser regression (114 records) and new three-viewport onboarding journeys passed. Additive migration 0022 and protected pre-migration export completed. Signed-in hosted forms verified; anonymous access remains blocked. No actual employee invitation or business record submitted remotely. See [verification and limitations](onboarding/verification.md).

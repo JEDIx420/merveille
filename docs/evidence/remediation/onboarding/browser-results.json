@@ -1,0 +1,36 @@
+{
+  "environment": "http://127.0.0.1:8809",
+  "scope": "Fictional intercepted API fixtures; server boundaries tested separately",
+  "results": [
+    {
+      "width": 1440,
+      "employeeScopedPermissions": true,
+      "existingProjectCreation": true,
+      "preservedErrorInput": true,
+      "retryKeyPreserved": true,
+      "setupChecklist": true,
+      "noOverflow": true,
+      "noJavaScriptErrors": true
+    },
+    {
+      "width": 1024,
+      "employeeScopedPermissions": true,
+      "existingProjectCreation": true,
+      "preservedErrorInput": true,
+      "retryKeyPreserved": true,
+      "setupChecklist": true,
+      "noOverflow": true,
+      "noJavaScriptErrors": true
+    },
+    {
+      "width": 390,
+      "employeeScopedPermissions": true,
+      "existingProjectCreation": true,
+      "preservedErrorInput": true,
+      "retryKeyPreserved": true,
+      "setupChecklist": true,
+      "noOverflow": true,
+      "noJavaScriptErrors": true
+    }
+  ]
+}

@@ -31,3 +31,8 @@ Reminders use durable outbox/Queue/scheduled processing, current eligibility, bo
 Final exact command/results, screenshots and source commit are in the [session evidence](docs/evidence/remediation/session.md). Tests cover Node SQLite/domain logic, actual local D1/R2 workerd transactions/recovery/identity races, real unauthenticated HTTP boundaries and browser UI behavior at three sizes. The browser UI harness uses fictional API fixtures; it does not prove live Google sign-in or hosted end-to-end business transitions.
 
 Protected staging is deployed with all 21 migrations. Cloudflare email-code login and policy-scoped invitation synchronization passed; no Google Cloud setup is required for team login. Actual Cron, Queue suppression/replay, isolated retry/DLQ and private backup transport/quarantine have hosted evidence. Real team role/business UAT, real messaging/webhook delivery and populated remote recovery remain open. No production migration or WhatsApp send was performed. See current session evidence for exact deployed versions and scope.
+
+
+## Employee and ongoing-project setup — 25 November
+
+Deployed on protected staging from `02600a8`. Use People & access → Add employee for explicit project roles/finance choices; clients and consultants have a separate invitation action. Projects → Add project now distinguishes New enquiry from Existing project. Existing-project onboarding records current context directly, then retains Setup pending until normal commercial checks and manager activation pass. Internal handover records never certify money or drawing approvals. See [actual verification](docs/evidence/remediation/onboarding/verification.md).

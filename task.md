@@ -17,7 +17,7 @@ Dependencies and exact contracts: [active manifest](docs/remediation/manifest.js
 
 ## Current checkpoint
 
-- Current branch: `implement/merveille-portal`. Existing logo, Next/OpenNext and Wrangler foundation preserved. Latest deployed web `3e003439-210c-42a3-9613-b4656648e7b9`; jobs `de09aa26-c792-41d0-9b21-d91e7d6faa3b`.
+- Current branch: `implement/merveille-portal`. Existing logo, Next/OpenNext and Wrangler foundation preserved. Latest deployed web `e6ce3850-52aa-4e39-9ecd-ebdae6ca7654`; jobs `de09aa26-c792-41d0-9b21-d91e7d6faa3b`.
 - Protected staging: https://merveille-web-staging.rhelo-bible.workers.dev. User completed Cloudflare One-time PIN login. Existing initial ADMIN retained; OWNER endpoint denied. Last-administrator removal denied with clear guidance and unchanged atomic guard. Google Cloud configuration is no longer required for team sign-in.
 - Explicitly approved single-policy Admin credential is installed only in web/jobs platform secrets. Temporary transfer file deleted. Unrelated policy GET denied 403; actual People & access refresh reported “Invitation access is up to date.” No broad/domain admission was added.
 - Actual local checks: typecheck, 106 tests/22 files, ten workerd checks through all 21 migrations, Worker build passed. Typed last-admin assertions passed in 10 authorization tests. Earlier built frontend passed 112 checks across 29 pages/three viewport sizes with fictional API fixtures; this is distinct from real team UAT.
@@ -39,6 +39,14 @@ Dependencies and exact contracts: [active manifest](docs/remediation/manifest.js
 - Source `7b8d9dd`: moved seed-account/grant quarantine and bootstrap invalidation into the database restore transaction before fallible R2 copies. Injected storage failure passed in unit tests and actual local workerd. Full 106 tests, typecheck and Workers build passed; workerd now has 10 checks.
 - Audited outstanding gates in [R05 open gates](docs/evidence/remediation/r05-open-gates.md), including the previously insufficiently prominent absence of scheduled backup/stale-success monitoring. Notification Cron is not backup automation.
 - Updated current kickoff/company instructions to Cloudflare email codes and actual Refresh invitation access wording.
+
+## Employee and existing-project onboarding
+
+- Source `02600a8`, deployed staging web `e6ce3850-52aa-4e39-9ecd-ebdae6ca7654`. Add employee now explicitly assigns project roles and separate finance permissions; optional ADMIN/OWNER remain independent. Client/consultant invitations remain separate.
+- Projects → Add project → New enquiry / Existing project. ADMIN-only ongoing-project creation stores immutable reported stage/start/handover and scoped contacts/team in one guarded, retry-safe D1 batch. Setup pending does not grant commercial activation, historical approvals or ledger balances. A persistent checklist links People, original documents, finance reconciliation and manager activation.
+- Additive migration 0022 applied only to staging after a protected private D1 export. Existing history and Access settings preserved.
+- Actual checks: 111 tests/23 files, typecheck, Worker build, 11 local workerd checks through 22 migrations, existing 114 fixture browser records and dedicated final onboarding journeys at three viewport sizes passed. Hosted signed-in employee/project forms and actual account labels verified. Anonymous new routes remain behind Access. Real invitation/project submission was exercised only in isolated test data, not hosted real accounts.
+- [Detailed evidence](docs/evidence/remediation/onboarding/verification.md). Existing R05 provider, full team UAT and recovery/continuous backup gates stay open.
 
 ## Historical P00–P14 implementation records
 
