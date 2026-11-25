@@ -361,6 +361,37 @@ export async function restoreRecoveryCheckpoint(
         targetDb.prepare(sql).bind(...columns.map((c) => row[c])),
       );
     }
+  // Quarantine destination seeds in the same transaction, before any fallible object copy.
+  statements.push(
+    targetDb
+      .prepare(
+        "UPDATE users SET status='DISABLED' WHERE id IN(SELECT user_id FROM organization_memberships WHERE org_id=?)",
+      )
+      .bind(manifest.orgId),
+    targetDb
+      .prepare("UPDATE organization_memberships SET is_active=0 WHERE org_id=?")
+      .bind(manifest.orgId),
+    targetDb
+      .prepare("UPDATE project_memberships SET is_active=0 WHERE org_id=?")
+      .bind(manifest.orgId),
+    targetDb
+      .prepare(
+        "UPDATE role_assignments SET revoked_at=? WHERE org_id=? AND revoked_at IS NULL",
+      )
+      .bind(now, manifest.orgId),
+  );
+  const bootstrapTable = await queryFirst<any>(
+    targetDb,
+    "SELECT name FROM sqlite_schema WHERE type='table' AND name='bootstrap_state'",
+  );
+  if (bootstrapTable)
+    statements.push(
+      targetDb.prepare(
+        "INSERT OR REPLACE INTO bootstrap_state(id,invitation_id,consumed_at) VALUES(1,?,?)",
+      )
+        .bind(`restored-quarantined:${manifest.checkpointId}`, now),
+    );
+
   // Actual D1 batch is transactional; a missing dependency rolls back the entire record checkpoint.
   statements.push(...triggers.map((t) => targetDb.prepare(t.sql)));
   if (statements.length) await targetDb.batch(statements);
@@ -396,36 +427,6 @@ export async function restoreRecoveryCheckpoint(
     if (hash.digest("hex") !== obj.sha256)
       throw new Error("RESTORE_OBJECT_HASH_MISMATCH");
   }
-  // Seeded accounts in the destination must not remain active either.
-  await targetDb.batch([
-    targetDb
-      .prepare(
-        "UPDATE users SET status='DISABLED' WHERE id IN(SELECT user_id FROM organization_memberships WHERE org_id=?)",
-      )
-      .bind(manifest.orgId),
-    targetDb
-      .prepare("UPDATE organization_memberships SET is_active=0 WHERE org_id=?")
-      .bind(manifest.orgId),
-    targetDb
-      .prepare("UPDATE project_memberships SET is_active=0 WHERE org_id=?")
-      .bind(manifest.orgId),
-    targetDb
-      .prepare(
-        "UPDATE role_assignments SET revoked_at=? WHERE org_id=? AND revoked_at IS NULL",
-      )
-      .bind(now, manifest.orgId),
-  ]);
-  const bootstrapTable = await queryFirst<any>(
-    targetDb,
-    "SELECT name FROM sqlite_schema WHERE type='table' AND name='bootstrap_state'",
-  );
-  if (bootstrapTable)
-    await targetDb
-      .prepare(
-        "INSERT OR REPLACE INTO bootstrap_state(id,invitation_id,consumed_at) VALUES(1,?,?)",
-      )
-      .bind(`restored-quarantined:${manifest.checkpointId}`, now)
-      .run();
   const financial = await queryFirst<any>(
     targetDb,
     "SELECT COALESCE(SUM(outstanding_minor),0) AS outstanding FROM invoices WHERE org_id=?",

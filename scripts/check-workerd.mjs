@@ -25,7 +25,7 @@ async function run(args) {
     );
   });
 }
-for (const db of ["DB", "RESTORE_DB", "IDENTITY_DB"])
+for (const db of ["DB", "RESTORE_DB", "IDENTITY_DB", "FAILURE_DB"])
   await run([
     "d1",
     "migrations",

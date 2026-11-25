@@ -20,6 +20,12 @@
       "migrations_dir": "../../migrations",
     },
     {
+      "binding": "FAILURE_DB",
+      "database_name": "verification-failure",
+      "database_id": "verification-failure-local-only",
+      "migrations_dir": "../../migrations",
+    },
+    {
       "binding": "IDENTITY_DB",
       "database_name": "verification-identity",
       "database_id": "verification-identity-local-only",

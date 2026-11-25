@@ -1,4 +1,4 @@
-import { beforeEach, describe, it, expect } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import { setupMigratedTestDb, createTestR2Bucket } from "../test-db";
 import { NotificationService } from "@/server/notifications/service";
 import {
@@ -295,6 +295,17 @@ describe("Independent recovery and archive repairs", () => {
       backup,
     );
     await source.delete("objects/site-photo");
+    // A storage failure must not leave destination seed accounts active.
+    const failedDb = await setupMigratedTestDb();
+    const failedTarget = createTestR2Bucket();
+    vi.spyOn(failedTarget, "put").mockRejectedValueOnce(new Error("RESTORE_STORAGE_UNAVAILABLE"));
+    await expect(ArchiveService.restoreBackupToIsolatedEnv(
+      failedDb, backup, failedTarget, exported.backupKey, exported.manifestSha256,
+    )).rejects.toThrow("RESTORE_STORAGE_UNAVAILABLE");
+    expect((await failedDb.prepare("SELECT COUNT(*) n FROM users WHERE status='ACTIVE'").first<any>())?.n).toBe(0);
+    expect((await failedDb.prepare("SELECT COUNT(*) n FROM organization_memberships WHERE is_active=1").first<any>())?.n).toBe(0);
+    expect((await failedDb.prepare("SELECT COUNT(*) n FROM role_assignments WHERE revoked_at IS NULL").first<any>())?.n).toBe(0);
+    expect((await failedDb.prepare("SELECT consumed_at FROM bootstrap_state WHERE id=1").first<any>())?.consumed_at).toBeGreaterThan(0);
     const targetDb = await setupMigratedTestDb();
     const restored = await ArchiveService.restoreBackupToIsolatedEnv(
       targetDb,

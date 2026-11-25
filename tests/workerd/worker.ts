@@ -7,6 +7,7 @@ import type { UserPrincipal } from "../../src/server/auth/principal";
 interface Env {
   DB: D1Database;
   RESTORE_DB: D1Database;
+  FAILURE_DB: D1Database;
   IDENTITY_DB: D1Database;
   FILES: R2Bucket;
   BACKUPS: R2Bucket;
@@ -307,6 +308,24 @@ export default {
         env.BACKUPS,
       );
       await env.FILES.delete(["verification/old.pdf", "verification/new.pdf"]);
+      const failingStorage = new Proxy(env.RESTORED, {
+        get(bucket, key) {
+          if (key === "put") return async () => { throw new Error("INJECTED_RESTORE_STORAGE_FAILURE"); };
+          const value = Reflect.get(bucket, key);
+          return typeof value === "function" ? value.bind(bucket) : value;
+        },
+      });
+      let storageFailed = false;
+      try {
+        await ArchiveService.restoreBackupToIsolatedEnv(env.FAILURE_DB, env.BACKUPS, failingStorage, backup.backupKey, backup.manifestSha256);
+      } catch (error) {
+        storageFailed = error instanceof Error && error.message === "INJECTED_RESTORE_STORAGE_FAILURE";
+      }
+      check(storageFailed, "Storage failure injection did not execute");
+      check((await env.FAILURE_DB.prepare("SELECT COUNT(*) n FROM users WHERE status='ACTIVE'").first<any>())?.n === 0, "Failed restore left active seed users");
+      check((await env.FAILURE_DB.prepare("SELECT COUNT(*) n FROM organization_memberships WHERE is_active=1").first<any>())?.n === 0, "Failed restore left active memberships");
+      check((await env.FAILURE_DB.prepare("SELECT consumed_at FROM bootstrap_state WHERE id=1").first<any>())?.consumed_at > 0, "Failed restore reopened bootstrap");
+      passed.push("D1 restore quarantines seed accounts and consumes bootstrap before failing R2 copy");
       const restored = await ArchiveService.restoreBackupToIsolatedEnv(
         env.RESTORE_DB,
         env.BACKUPS,
