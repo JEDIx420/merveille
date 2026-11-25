@@ -17,7 +17,7 @@ Dependencies and exact contracts: [active manifest](docs/remediation/manifest.js
 
 ## Current checkpoint
 
-- Current branch: `implement/merveille-portal`. Existing logo, Next/OpenNext and Wrangler foundation preserved. Latest deployed web `a5e8cbe1-52fc-460a-95b9-9fcb3005dce4`; jobs `de09aa26-c792-41d0-9b21-d91e7d6faa3b`.
+- Current branch: `implement/merveille-portal`. Existing logo, Next/OpenNext and Wrangler foundation preserved. Latest deployed web `3e003439-210c-42a3-9613-b4656648e7b9`; jobs `de09aa26-c792-41d0-9b21-d91e7d6faa3b`.
 - Protected staging: https://merveille-web-staging.rhelo-bible.workers.dev. User completed Cloudflare One-time PIN login. Existing initial ADMIN retained; OWNER endpoint denied. Last-administrator removal denied with clear guidance and unchanged atomic guard. Google Cloud configuration is no longer required for team sign-in.
 - Explicitly approved single-policy Admin credential is installed only in web/jobs platform secrets. Temporary transfer file deleted. Unrelated policy GET denied 403; actual People & access refresh reported “Invitation access is up to date.” No broad/domain admission was added.
 - Actual local checks: typecheck, 106 tests/22 files, ten workerd checks through all 21 migrations, Worker build passed. Typed last-admin assertions passed in 10 authorization tests. Earlier built frontend passed 112 checks across 29 pages/three viewport sizes with fictional API fixtures; this is distinct from real team UAT.
@@ -26,6 +26,13 @@ Dependencies and exact contracts: [active manifest](docs/remediation/manifest.js
 - Next exact action: obtain other team members’ exact sign-in emails and explicit global/project roles privately, invite through People & access, then complete second-admin, role-boundary and business UAT with their own accounts. No demo/impersonation controls exist.
 - Sister/company installation will use a separate Cloudflare account and fresh resources, secrets and bootstrap; cloning source alone does not transfer infrastructure. See [company setup](docs/operations/company-account-setup.md).
 - R05 remains open for team UAT, real provider/webhook tests, continuous backup implementation/configuration and populated remote recovery. See [actual evidence](docs/evidence/remediation/session.md) and [handoff](docs/operations/real-account-handoff.md). No production migration or WhatsApp send was performed.
+
+## Latest UI refinement
+
+- Source `064f0d8`, deployed web `3e003439-210c-42a3-9613-b4656648e7b9`. User screenshot review drove aligned gutters/section rhythm, compact empty states, readable project filters, softer fields, spaced capability choices, one finance action row, and a single compact mobile header.
+- Accepted invitation history now says “Account active · no scheduled access expiry.” The old date was a pre-acceptance link deadline; no account cutoff existed or was extended. Pending links remain single-use and time-limited. A regression verifies account/grants remain active after the stored invitation deadline.
+- Short route fade, dialog entrance and control/nav feedback respect reduced motion. No logo, business approval or access-policy expansion.
+- Actual checks: 106 tests passed; Workers build/typecheck passed; 114 built frontend browser checks passed across 29 routes/three viewport sizes, including motion/focus/expiry copy, with zero overflow or JS errors. Hosted signed-in ADMIN review verified People, invitation dialog, Finance, Projects and phone navigation. Fictional UI screenshots remain separate from private real-account proof.
 
 ## Latest independent follow-up
 

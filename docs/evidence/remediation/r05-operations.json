@@ -1,12 +1,12 @@
 {
-  "sourceCommit": "7b8d9dd",
-  "webVersion": "a5e8cbe1-52fc-460a-95b9-9fcb3005dce4",
+  "sourceCommit": "064f0d8",
+  "webVersion": "3e003439-210c-42a3-9613-b4656648e7b9",
   "jobsVersion": "de09aa26-c792-41d0-9b21-d91e7d6faa3b",
   "local": {
     "tests": 106,
     "testFiles": 22,
     "workerdChecks": 10,
-    "browserChecks": 112,
+    "browserChecks": 114,
     "invitationParsingCases": 3,
     "typecheck": "passed",
     "workerBuild": "passed",
@@ -47,7 +47,8 @@
       "ackCount": 1,
       "cleanup": "passed: consumers detached, disposable probe Worker, two Queues and D1 removed; portal resources retained"
     },
-    "continuousBackup": "not operational: scheduled export/copy and stale-success monitoring require implementation, dedicated credential and hosted evidence"
+    "continuousBackup": "not operational: scheduled export/copy and stale-success monitoring require implementation, dedicated credential and hosted evidence",
+    "uiRefinement": "passed: signed-in accepted account copy, invitation dialog, single finance action, readable project filter, compact mobile navigation and no overflow"
   },
   "team": "remaining account emails/roles and UAT pending"
 }

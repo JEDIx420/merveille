@@ -1,5 +1,5 @@
 {
-  "environment": "http://127.0.0.1:8801; isolated browser-only API fixtures; no authentication bypass in app",
+  "environment": "http://localhost:3021; isolated browser-only API fixtures; no authentication bypass in app",
   "results": [
     {
       "path": "/overview",
@@ -14,7 +14,7 @@
       "path": "/projects",
       "width": 1440,
       "overflow": false,
-      "heading": "Project Portfolio",
+      "heading": "Projects",
       "healthyView": true,
       "fontLoaded": true,
       "controlsReadable": true
@@ -32,7 +32,7 @@
       "path": "/archive",
       "width": 1440,
       "overflow": false,
-      "heading": "Archived Projects",
+      "heading": "Archive",
       "healthyView": true,
       "fontLoaded": true,
       "controlsReadable": true
@@ -68,7 +68,7 @@
       "path": "/finance",
       "width": 1440,
       "overflow": false,
-      "heading": "Firm Operational Accounts",
+      "heading": "Finance",
       "healthyView": true,
       "fontLoaded": true,
       "controlsReadable": true
@@ -294,7 +294,7 @@
       "path": "/projects",
       "width": 1024,
       "overflow": false,
-      "heading": "Project Portfolio",
+      "heading": "Projects",
       "healthyView": true,
       "fontLoaded": true,
       "controlsReadable": true
@@ -312,7 +312,7 @@
       "path": "/archive",
       "width": 1024,
       "overflow": false,
-      "heading": "Archived Projects",
+      "heading": "Archive",
       "healthyView": true,
       "fontLoaded": true,
       "controlsReadable": true
@@ -348,7 +348,7 @@
       "path": "/finance",
       "width": 1024,
       "overflow": false,
-      "heading": "Firm Operational Accounts",
+      "heading": "Finance",
       "healthyView": true,
       "fontLoaded": true,
       "controlsReadable": true
@@ -574,7 +574,7 @@
       "path": "/projects",
       "width": 390,
       "overflow": false,
-      "heading": "Project Portfolio",
+      "heading": "Projects",
       "healthyView": true,
       "fontLoaded": true,
       "controlsReadable": true
@@ -592,7 +592,7 @@
       "path": "/archive",
       "width": 390,
       "overflow": false,
-      "heading": "Archived Projects",
+      "heading": "Archive",
       "healthyView": true,
       "fontLoaded": true,
       "controlsReadable": true
@@ -628,7 +628,7 @@
       "path": "/finance",
       "width": 390,
       "overflow": false,
-      "heading": "Firm Operational Accounts",
+      "heading": "Finance",
       "healthyView": true,
       "fontLoaded": true,
       "controlsReadable": true
@@ -895,6 +895,14 @@
     {
       "case": "interrupted tasks",
       "visible": true
+    },
+    {
+      "case": "accepted invitation has ongoing access copy",
+      "visible": true
+    },
+    {
+      "case": "reduced motion disables route and dialog animation",
+      "visible": true
     }
   ],
   "errors": [],
@@ -915,7 +923,7 @@
       "path": "/api/projects/prj_review/finance/receipts",
       "payload": {
         "action": "REPORT",
-        "idempotencyKey": "bf8c8044-d306-4249-a6b5-fadeddf853fa",
+        "idempotencyKey": "8354baba-8b52-4be3-be83-0f98102c34db",
         "settlementInvoiceId": "invoice_existing",
         "amountMinor": 10000,
         "receivedDate": "2026-11-24",
@@ -927,7 +935,7 @@
       "path": "/api/projects/prj_review/finance/receipts",
       "payload": {
         "action": "REPORT",
-        "idempotencyKey": "bf8c8044-d306-4249-a6b5-fadeddf853fa",
+        "idempotencyKey": "8354baba-8b52-4be3-be83-0f98102c34db",
         "settlementInvoiceId": "invoice_existing",
         "amountMinor": 10000,
         "receivedDate": "2026-11-24",
