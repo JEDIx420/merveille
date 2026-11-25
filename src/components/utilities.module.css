@@ -880,3 +880,6 @@
 .u265 {
   z-index: 50;
 }
+
+/* Pair the fill and foreground even when an older route adds a text utility. */
+.actionFill.actionFill { color: var(--ui-on-action); }

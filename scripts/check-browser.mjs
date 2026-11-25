@@ -107,6 +107,22 @@ async function visit(url) {
   );
   await page.evaluate(() => document.fonts.ready);
 }
+async function buttonContrast(selector='body') {
+  return page.locator(selector).evaluate(root=>{
+    const rgb=value=>{const n=value.match(/[\d.]+/g)?.map(Number)||[0,0,0,0];return [n[0],n[1],n[2],n[3]??1];};
+    const blend=(top,bottom)=>top.slice(0,3).map((n,i)=>n*top[3]+bottom[i]*(1-top[3]));
+    const luminance=c=>c.map(n=>n/255).map(n=>n<=.04045?n/12.92:((n+.055)/1.055)**2.4).reduce((sum,n,i)=>sum+n*[.2126,.7152,.0722][i],0);
+    const failures=[];
+    for(const button of root.querySelectorAll('button')) {
+      if(!button.getClientRects().length||button.disabled||button.getAttribute('aria-disabled')==='true'||!/[A-Za-z0-9]/.test(button.innerText))continue;
+      const nodes=[];for(let n=button;n;n=n.parentElement)nodes.unshift(n);
+      let bg=[255,255,255];for(const n of nodes)bg=blend(rgb(getComputedStyle(n).backgroundColor),bg);
+      const fg=blend(rgb(getComputedStyle(button).color),bg),a=luminance(fg),b=luminance(bg),ratio=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+      if(ratio<4.5)failures.push({text:button.innerText.trim().slice(0,80),ratio:Number(ratio.toFixed(2))});
+    }
+    return failures;
+  });
+}
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
 await page.route("**/api/**", async (route) => {
@@ -447,6 +463,7 @@ for (const size of process.env.BROWSER_SCOPE === "actions"
       path,
       width: size.width,
       overflow,
+      contrastFailures: await buttonContrast(),
       heading,
       healthyView: !!heading && heading !== 'Unable to open this page',
       fontLoaded: await page.evaluate(() =>
@@ -782,6 +799,19 @@ await page.getByLabel('Appearance',{exact:true}).filter({visible:true}).click();
 results.push({case:'mobile appearance popover stays inside viewport',visible:await page.getByRole('heading',{name:'Make it yours',exact:true}).evaluate(el=>{const r=el.parentElement.getBoundingClientRect();return r.left>=15&&r.right<=innerWidth-15&&r.bottom<=innerHeight;})});
 await page.getByRole('radio',{name:process.env.BROWSER_THEME==='light'?'Light':'Dark',exact:true}).check();
 await page.screenshot({path:out+'/appearance-mobile.png',fullPage:false,animations:'disabled'});
+// Reported regressions: legacy primary action, native tabs, and payment-dialog cancellation.
+await page.setViewportSize({width:1440,height:900});mode='admin';
+await visit(base+'/projects/prj_review/snags');
+await page.getByRole('button',{name:'+ Report Site Issue',exact:true}).waitFor();
+results.push({case:'site issue action and filters contrast',contrastFailures:await buttonContrast()});
+await page.screenshot({path:out+'/site-issues-buttons.png',fullPage:false,animations:'disabled'});
+await visit(base+'/projects/prj_review/finance');
+await page.getByRole('button',{name:/Receipts & Payments/}).click();
+await page.getByRole('button',{name:/Report payment/}).click();
+await page.getByRole('dialog',{name:'Report external payment',exact:true}).waitFor();
+results.push({case:'payment dialog buttons contrast',contrastFailures:await buttonContrast('dialog')});
+await page.screenshot({path:out+'/payment-buttons.png',fullPage:true,animations:'disabled'});
+await page.getByRole('button',{name:'Cancel',exact:true}).click();
 fs.writeFileSync(
   out + (process.env.BROWSER_SCOPE === "actions" ? "/browser-results-actions.json" : "/browser-results.json"),
   JSON.stringify(
@@ -802,6 +832,7 @@ if (
   results.some(
     (r) =>
       r.overflow ||
+      r.contrastFailures?.length ||
       r.healthyView === false ||
       r.fontLoaded === false ||
       r.controlsReadable === false ||
@@ -820,5 +851,6 @@ console.log(
     routes: results.length,
     overflow: results.filter((r) => r.overflow),
     errors,
+    contrastFailures:results.filter(r=>r.contrastFailures?.length),
   }),
 );

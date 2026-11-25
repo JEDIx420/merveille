@@ -267,10 +267,14 @@ const names: Record<string, string> = {
   "z-50": "u265",
 };
 /** Maps migrated route classes to locally scoped styles; no utility runtime or external CSS. */
+// Filled semantic actions always pair their fill with its contrasting foreground.
+const actionBackgrounds = new Set([
+  "bg-amber-600", "bg-amber-800", "bg-blue-900", "bg-emerald-700",
+  "bg-emerald-800", "bg-primary", "bg-purple-900", "bg-stone-900",
+]);
 export function cx(value: string) {
-  return value
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((key) => (names[key] ? styles[names[key]] : key))
-    .join(" ");
+  const keys = value.split(/\s+/).filter(Boolean);
+  const classes = keys.map(key => names[key] ? styles[names[key]] : key);
+  if (keys.some(key => actionBackgrounds.has(key))) classes.push(styles.actionFill);
+  return classes.join(" ");
 }
