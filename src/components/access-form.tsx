@@ -16,7 +16,11 @@ export function AccessGrants({
   options,
   confirm,
   setConfirm,
+  defaultProjectRole,
+  employeeOnly = false,
 }: {
+  employeeOnly?: boolean;
+  defaultProjectRole?: "TEAM_MEMBER" | "MANAGER";
   roles: string[];
   setRoles: (v: string[]) => void;
   projects: AccessProject[];
@@ -40,42 +44,10 @@ export function AccessGrants({
   return (
     <>
       <fieldset>
-        <legend>Organisation capabilities</legend>
-        <p className={ui.meta}>
-          These capabilities are independent. Administrator access does not
-          include manager approvals or owner performance.
-        </p>
-        {["ADMIN", "OWNER", "TEAM_MEMBER", "MANAGER"].map((role) => (
-          <label className={ui.checkbox} key={role}>
-            <input
-              type="checkbox"
-              checked={roles.includes(role)}
-              onChange={(e) =>
-                setRoles(
-                  e.target.checked
-                    ? [...roles, role]
-                    : roles.filter((r) => r !== role),
-                )
-              }
-            />
-            {
-              (
-                {
-                  ADMIN: "Administrator — people, receipts, payroll and profit",
-                  OWNER: "Owner — individual performance reporting",
-                  TEAM_MEMBER: "Enquiry intake",
-                  MANAGER: "Company announcement publishing and enquiry intake",
-                } as Record<string, string>
-              )[role]
-            }
-          </label>
-        ))}
-      </fieldset>
-      <fieldset>
         <legend>Project assignments</legend>
         <p className={ui.meta}>
           No project access is granted by default. Select each project and its
-          specific permissions.
+          specific permissions. Team members see internal project work; consultants see assigned review work and client commercial history; clients see released and published records.
         </p>
         {options.map((option) => {
           const grant = projects.find((p) => p.projectId === option.id);
@@ -92,7 +64,7 @@ export function AccessGrants({
                             ...projects,
                             {
                               projectId: option.id,
-                              roles: [],
+                              roles: defaultProjectRole ? [defaultProjectRole] : [],
                               financeAccess: false,
                               financeAuthor: false,
                               invoiceIssue: false,
@@ -115,7 +87,7 @@ export function AccessGrants({
                       ["CONSULTANT", "Consultant"],
                       ["MAIN_CLIENT", "Main client"],
                       ["CLIENT_REP", "Client representative"],
-                    ].map(([role, label]) => (
+                    ].filter(([role]) => !employeeOnly || ["MANAGER","TEAM_MEMBER"].includes(role)).map(([role, label]) => (
                       <label className={ui.checkbox} key={role}>
                         <input
                           type="checkbox"
@@ -181,8 +153,39 @@ export function AccessGrants({
           );
         })}
         {!options.length && (
-          <p>No projects available. Project access can be assigned later.</p>
+          <p>No projects yet. You can add this employee now, then assign Team member or Project manager access after creating a project.</p>
         )}
+      </fieldset>
+      <fieldset>
+        <legend>Organisation-wide access (optional)</legend>
+        <p className={ui.meta}>
+          Employees usually need only project assignments below. Administrator includes payroll and profit; Owner includes individual performance. Neither grants project manager approval authority.
+        </p>
+        {["ADMIN", "OWNER", "TEAM_MEMBER", "MANAGER"].map((role) => (
+          <label className={ui.checkbox} key={role}>
+            <input
+              type="checkbox"
+              checked={roles.includes(role)}
+              onChange={(e) =>
+                setRoles(
+                  e.target.checked
+                    ? [...roles, role]
+                    : roles.filter((r) => r !== role),
+                )
+              }
+            />
+            {
+              (
+                {
+                  ADMIN: "Administrator — people, receipts, payroll and profit",
+                  OWNER: "Owner — individual performance reporting",
+                  TEAM_MEMBER: "Enquiry intake",
+                  MANAGER: "Company announcement publishing and enquiry intake",
+                } as Record<string, string>
+              )[role]
+            }
+          </label>
+        ))}
       </fieldset>
       {roles.some((r) => ["ADMIN", "OWNER"].includes(r)) && (
         <label className={ui.checkbox}>

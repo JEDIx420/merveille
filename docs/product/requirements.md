@@ -47,6 +47,7 @@ The provenance column may include more than one label where a confirmed outcome 
 | DEC-024 | Jay is the initial admin and can add another admin; admins assign team roles/project access. | C: latest request; O: exact email and optional grants | One-time protected bootstrap, multiple admins and audited invitation/access lifecycle; no guessed identity. |
 | DEC-025 | Approximately three real people test with administrator-assigned access. | C: latest request | Browser-only team UAT through their own accounts; not a permanent account limit; developer regression checks remain. |
 | DEC-026 | Put detailed update instructions and a short continuous-execution kickoff in the repository. | C: latest request | NEXT_AGENT.md and docs/remediation are the active entry; maintain honest checkpoints/evidence. |
+| DEC-027 | Clear employee invitations with explicit access and dedicated existing-project onboarding. | C: 25 November user request | Add employee; project-specific roles/finance grants; ADMIN-only direct onboarding with immutable handover, Setup pending and unchanged commercial/drawing approval gates. |
 
 ## Engineering default register
 

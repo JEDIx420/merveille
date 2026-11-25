@@ -56,3 +56,13 @@ P00–P14 remain useful business/architecture specifications and implementation 
 ## Implementation interpretations recorded during remediation
 
 The [authority ADR](../architecture/decisions/0002-remediation-authority.md) records additive engineering interpretations: project conversion is ADMIN-only because it assigns project contacts/access and contractual authority; optional organization intake/company-publishing grants never imply scoped project approval; archived new receipts must name an existing invoice and use normal financial confirmation/allocation. These preserve the confirmed authority rules rather than introducing substitute actors. Provider and hosted acceptance remain separate gates.
+
+## Employee access and existing-project onboarding — 25 November 2026
+
+Confirmed user amendment: make adding employees and varying access clear, and provide a dedicated path for projects already underway. Preserve all approval/payment rules.
+
+People & access uses **Add employee** as its primary action and **Invite client or consultant** separately. An employee's Team member/Project manager role is explicitly applied only to selected projects. Financial read/preparation/issuing remain separate; organisation-wide ADMIN and OWNER are optional independent grants. Adding an employee does not itself grant project access or payroll/profit/performance. Project roles appear before organisation-wide privileges. Copy-link delivery and invitation admission remain unchanged.
+
+Projects uses **Add project** → **New enquiry** or **Existing project**. Existing-project onboarding is ADMIN-only because it assigns identities and project authority. It records current reported stage, optional original start date, work completed, commercial reconciliation notes, manager, optional contractual client and team. It creates a DRAFT project displayed as Setup pending, not a fabricated enquiry. No earlier stage, drawing approval, quotation acceptance, receipt or balance is invented. An immutable original handover and linked setup checklist remain available from the project overview.
+
+Commercial notes and source documents are evidence to reconcile, not posted opening balances or a historical-finance import. Use the normal quotation/acceptance, receipt confirmation and manager activation commands. Financial cutover sign-off and any future historical import remain distinct from this onboarding entry. Consultants/client accounts do not receive internal handover notes. Existing drawing and extra-work gates remain unchanged.

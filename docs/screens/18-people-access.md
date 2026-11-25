@@ -10,7 +10,7 @@ Allow ADMIN to add people, manage their project memberships and remove access. G
 
 People table: name, identity/address, active/invited/disabled state, role bundles, project count and last relevant access-change date. Person detail shows membership per project, client representation relationship, drawing-review assignment where relevant and explicit financial-read grants. Invitation form includes address, intended roles, project assignments and expiry/review information defined by security policy.
 
-**Primary action:** “Invite person.” On existing accounts use “Save access changes” with a clear before/after summary. Revocation is an explicit separate action. Do not use an all-or-nothing “Can access project” checkbox that implicitly grants financial/internal/admin data.
+**Primary action:** “Add employee,” with a separate “Invite client or consultant” action. Employee invitations clearly select a default project role (Team member or Project manager) applied only to newly selected projects. Project access appears before optional organisation-wide capabilities. Finance preparation/issuing and ADMIN/OWNER remain explicit independent choices. On existing accounts use “Save access changes” with a clear before/after summary. Revocation is an explicit separate action. Do not use an all-or-nothing “Can access project” checkbox that implicitly grants financial/internal/admin data.
 
 ## Interaction and service contract
 

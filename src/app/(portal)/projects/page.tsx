@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { useSession } from "@/components/session";
+import { hasCapability } from "@/server/auth/principal";
 import { cx } from "@/components/utilities";
 import { readResponse } from "@/components/ui";
 import layout from "./page.module.css";
@@ -32,6 +34,8 @@ const STAGES = [
 ];
 
 export default function ProjectsPage() {
+  const { principal } = useSession();
+  const canAdd = hasCapability(principal,"ADMIN") || hasCapability(principal,"OWNER") || principal?.intakeAccess;
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
@@ -81,9 +85,7 @@ export default function ProjectsPage() {
           </p>
         </div>
         <div className={cx(layout.block4)}>
-          <Link href="/enquiries/new" className={cx("btn-secondary")}>
-            New enquiry
-          </Link>
+          {canAdd && <Link href="/projects/new" className={cx("btn-primary")}>Add project</Link>}
         </div>
       </header>
 
@@ -144,7 +146,7 @@ export default function ProjectsPage() {
         <div className={cx(["card text-muted", layout.block14].join(" "))}>
           <p className={cx(layout.block15)}>No matching projects found</p>
           <p className={cx(layout.block16)}>
-            Convert an accepted enquiry or check your stage filters.
+            Add a new enquiry or onboard an existing project, or check your filters.
           </p>
         </div>
       ) : (
@@ -174,7 +176,7 @@ export default function ProjectsPage() {
                         }`,
                       )}
                     >
-                      {p.status}
+                      {p.status === "DRAFT" ? "Setup pending" : p.status}
                     </span>
                   </div>
 

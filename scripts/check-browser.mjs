@@ -525,7 +525,7 @@ await page.screenshot({
   fullPage: true,
 });
 await visit(base + "/people");
-await page.getByRole("button", { name: "Invite person", exact: true }).click();
+await page.getByRole("button", { name: "Add employee", exact: true }).click();
 await page
   .getByLabel("Full name", { exact: true })
   .fill("Fictional invited person");
@@ -539,7 +539,7 @@ await page
   .check();
 await page.getByLabel(/I confirm this elevated access/).check();
 await page
-  .getByRole("button", { name: "Create invitation", exact: true })
+  .getByRole("button", { name: "Create employee invitation", exact: true })
   .click();
 await page.getByText("Invitation created", { exact: true }).waitFor();
 const invitation = actions.find((a) => a.path === "/api/people");
@@ -713,7 +713,7 @@ await visit(base + "/people");
 await page.getByText("Account active · no scheduled access expiry", {exact:true}).waitFor();
 results.push({case:"accepted invitation has ongoing access copy", visible: await page.getByText("Account active · no scheduled access expiry", {exact:true}).isVisible() && await page.getByText(/Invitation link expires/).count() === 0});
 await page.emulateMedia({reducedMotion:"reduce"});
-await page.getByRole("button", {name:"Invite person",exact:true}).click();
+await page.getByRole("button", {name:"Add employee",exact:true}).click();
 results.push({case:"reduced motion disables route and dialog animation", visible: await page.locator("dialog").evaluate(el=>getComputedStyle(el).animationName === "none") && await page.locator("main > div").evaluate(el=>getComputedStyle(el).animationName === "none")});
 await page.getByRole("button", {name:"Close dialog",exact:true}).click();
 await page.emulateMedia({reducedMotion:"no-preference"});

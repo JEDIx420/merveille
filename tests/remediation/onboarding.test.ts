@@ -1,0 +1,29 @@
+import {beforeEach,describe,it,expect} from "vitest";
+import {setupMigratedTestDb} from "../test-db";
+import {onboardExistingProject,ExistingProjectInput} from "@/server/domain/projects/onboarding";
+import {getProject} from "@/server/domain/projects/service";
+import {FinanceService} from "@/server/domain/finance/service";
+import {UserPrincipal} from "@/server/auth/principal";
+const org="org_merveille_main";
+const admin:UserPrincipal={id:"onboard_admin",email:"admin@example.invalid",name:"Administrator",orgId:org,role:"ADMIN",roles:["ADMIN"],projectMemberships:[]};
+const input=():ExistingProjectInput=>({requestKey:crypto.randomUUID(),code:"MD-EX-01",name:"Existing House",siteLocation:"Fictional site",stage:"Site Execution & Supervision",managerUserId:"manager",mainClientUserId:"client",teamUserIds:["employee"],reportedStartDate:"2025-01-02",handoverNotes:"Construction has started; consultant evidence to reconcile.",commercialNotes:"Original quotation and received advance require review."});
+describe("Existing-project onboarding preserves commercial and access boundaries",()=>{
+ let db:D1Database;
+ beforeEach(async()=>{db=await setupMigratedTestDb();for(const id of [admin.id,"manager","client","employee"]){await db.prepare("INSERT INTO users(id,email,display_name,status,created_at) VALUES(?,?,?,'ACTIVE',1)").bind(id,`${id}@example.invalid`,id).run();await db.prepare("INSERT INTO organization_memberships(id,org_id,user_id,is_active,created_at) VALUES(?,?,?,1,1)").bind(`om_${id}`,org,id).run();}await db.prepare("INSERT INTO role_assignments(id,org_id,user_id,role,scope,granted_at) VALUES('onboard_ra',?,?,'ADMIN','GLOBAL',1)").bind(org,admin.id).run();});
+ it("creates ongoing work directly, preserving stage/context without enquiries or invented approvals, money or privileges",async()=>{
+  const result=await onboardExistingProject(admin,input(),db);
+  const p=await db.prepare("SELECT * FROM projects WHERE id=?").bind(result.projectId).first<any>();expect(p.status).toBe("DRAFT");expect(p.stage).toBe("Site Execution & Supervision");expect(p.quote_accepted_at).toBeNull();expect(p.advance_confirmed_at).toBeNull();expect(p.activated_at).toBeNull();
+  expect((await db.prepare("SELECT * FROM enquiries").all()).results).toHaveLength(0);
+  const grants=(await db.prepare("SELECT * FROM project_memberships WHERE project_id=?").bind(p.id).all()).results as any[];expect(grants.map(g=>g.project_role).sort()).toEqual(["MAIN_CLIENT","MANAGER","TEAM_MEMBER"]);expect(grants.every(g=>!g.finance_author&&!g.invoice_issue)).toBe(true);
+  expect((await db.prepare("SELECT * FROM project_stages WHERE project_id=? AND status!='PENDING'").bind(p.id).all()).results).toHaveLength(0);
+  expect((await db.prepare("SELECT * FROM audit_events WHERE entity_id=? AND action='EXISTING_PROJECT_ONBOARDED'").bind(p.id).all()).results).toHaveLength(1);
+  const manager={...admin,id:"manager",role:"MANAGER" as const,roles:[],projectMemberships:[{projectId:p.id,roles:["MANAGER" as const]}]};
+  await expect(FinanceService.activateProject(db,manager,p.id)).rejects.toThrow();
+  const client={...manager,id:"client",role:"MAIN_CLIENT" as const,projectMemberships:[{projectId:p.id,roles:["MAIN_CLIENT" as const],contractualAuthority:true}]};
+  expect((await getProject(client,p.id,db) as any).onboarding).toBeUndefined();expect((await getProject(admin,p.id,db) as any).onboarding.handover_notes).toContain("Construction");
+ });
+ it("is retry-safe and rejects changed reuse and duplicate codes",async()=>{const v=input();const a=await onboardExistingProject(admin,v,db);const b=await onboardExistingProject(admin,v,db);expect(b.projectId).toBe(a.projectId);expect(b.replayed).toBe(true);await expect(onboardExistingProject(admin,{...v,name:"Changed"},db)).rejects.toThrow(/different/);await expect(onboardExistingProject(admin,{...v,requestKey:crypto.randomUUID()},db)).rejects.toThrow(/code/);expect((await db.prepare("SELECT * FROM project_onboarding").all()).results).toHaveLength(1);});
+ it("rejects owner-only, project-manager and stale administrator requests",async()=>{await expect(onboardExistingProject({...admin,roles:["OWNER"]},input(),db)).rejects.toThrow(/administrators/);await expect(onboardExistingProject({...admin,roles:[],role:"MANAGER"},input(),db)).rejects.toThrow();await db.prepare("UPDATE role_assignments SET revoked_at=1 WHERE id='onboard_ra'").run();await expect(onboardExistingProject(admin,input(),db)).rejects.toThrow(/changed/);});
+ it("rejects foreign/inactive contacts, self-client assignments and invalid dates without partial writes",async()=>{await expect(onboardExistingProject(admin,{...input(),managerUserId:"unknown"},db)).rejects.toThrow(/active/);await db.prepare("UPDATE users SET status='DISABLED' WHERE id='employee'").run();await expect(onboardExistingProject(admin,input(),db)).rejects.toThrow(/active/);await expect(onboardExistingProject(admin,{...input(),mainClientUserId:"manager",teamUserIds:[]},db)).rejects.toThrow(/separate/);await expect(onboardExistingProject(admin,{...input(),reportedStartDate:"2025-02-30"},db)).rejects.toThrow(/date/);expect((await db.prepare("SELECT * FROM projects").all()).results).toHaveLength(0);});
+ it("rolls back the project, grants, stages and handover if audit insertion fails",async()=>{await db.exec("CREATE TRIGGER reject_onboard_audit BEFORE INSERT ON audit_events WHEN NEW.action='EXISTING_PROJECT_ONBOARDED' BEGIN SELECT RAISE(ABORT,'injected audit failure'); END;");await expect(onboardExistingProject(admin,input(),db)).rejects.toThrow();expect((await db.prepare("SELECT * FROM projects").all()).results).toHaveLength(0);expect((await db.prepare("SELECT * FROM project_memberships").all()).results).toHaveLength(0);expect((await db.prepare("SELECT * FROM project_onboarding").all()).results).toHaveLength(0);});
+});

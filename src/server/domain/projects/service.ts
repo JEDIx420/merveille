@@ -172,8 +172,10 @@ export async function getProject(
       members: [],
       events: [],
     };
+  const onboarding = await db.prepare("SELECT reported_start_date,handover_notes,commercial_notes,created_at FROM project_onboarding WHERE project_id=? AND org_id=?").bind(projectId, principal.orgId).first();
   return {
     project,
+    onboarding,
     stages,
     members: members.map((m: any) => ({
       id: m.user_id,

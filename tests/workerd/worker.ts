@@ -1,4 +1,5 @@
 /** Isolated local verification entry, never deployed or linked from the product. */
+import { onboardExistingProject } from "../../src/server/domain/projects/onboarding";
 import { identityDrill } from "./identity-drill";
 import { FinanceService } from "../../src/server/domain/finance/service";
 import { releaseDrawingVersion } from "../../src/server/domain/drawings/service";
@@ -105,6 +106,16 @@ export default {
     try {
       await identityDrill(env.IDENTITY_DB, passed);
       await seed(env.DB);
+      const existingInput = {requestKey: "workerd-onboard", code: "WORKERD-EX", name: "Fictional ongoing project", siteLocation: "Fictional site", stage: "Site Execution & Supervision", managerUserId:manager.id, teamUserIds:[staff.id], handoverNotes:"Existing site work; approvals to reconcile", commercialNotes:"Original agreement and advances require reconciliation"};
+      const onboarded = await onboardExistingProject(admin,existingInput,env.DB);
+      check((await onboardExistingProject(admin,existingInput,env.DB)).projectId === onboarded.projectId,"Onboarding replay duplicated project");
+      const onboardedProject = await env.DB.prepare("SELECT status,quote_accepted_at,advance_confirmed_at FROM projects WHERE id=?").bind(onboarded.projectId).first<any>();
+      check(onboardedProject.status === "DRAFT" && !onboardedProject.quote_accepted_at && !onboardedProject.advance_confirmed_at,"Onboarding bypassed commercial gates");
+      const onboardingManager={...manager,projectMemberships:[...manager.projectMemberships,{projectId:onboarded.projectId,roles:["MANAGER" as const]}]};
+      let onboardingBlocked=false;try {await FinanceService.activateProject(env.DB,onboardingManager,onboarded.projectId);}catch{onboardingBlocked=true;}
+      check(onboardingBlocked,"Existing-project activation bypassed quotation and advance");
+      passed.push("Existing-project creation and retry are atomic in workerd; activation still requires commercial gates");
+
       const invoice = await FinanceService.draftInvoice(env.DB, staff, {
         projectId: project,
         dueDate: "2026-12-15",

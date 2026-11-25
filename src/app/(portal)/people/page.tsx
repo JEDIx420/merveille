@@ -21,6 +21,9 @@ export default function People() {
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [employeeMode,setEmployeeMode] = useState(true);
+  const [employeeRole,setEmployeeRole] = useState<"TEAM_MEMBER"|"MANAGER">("TEAM_MEMBER");
+  function openInvite(employee: boolean) { setEmployeeMode(employee); setRoles([]); setProjects([]); setConfirm(false); setName(""); setEmail(""); setError(""); setShow(true); }
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const [email, setEmail] = useState("");
@@ -120,9 +123,9 @@ export default function People() {
     <div className={ui.page}>
       <PageHeader
         title="People & access"
-        description="Invite people and assign the permissions they need for their work."
+        description="Add employees, invite clients and consultants, and control what each person can see and do."
         actions={
-          data && <Button onClick={() => setShow(true)}>Invite person</Button>
+          data && <div className={ui.actions}><Button onClick={() => openInvite(true)}>Add employee</Button><Button secondary onClick={() => openInvite(false)}>Invite client or consultant</Button></div>
         }
       />
       {error && <ErrorState message={error} retry={load} />}{" "}
@@ -276,7 +279,7 @@ export default function People() {
         )
       )}
       {show && (
-        <Dialog title="Invite person" onClose={() => setShow(false)}>
+        <Dialog title={employeeMode ? "Add employee" : "Invite client or consultant"} onClose={() => setShow(false)}>
           <form onSubmit={invite} className={ui.form}>
             {error && <ErrorState message={error} />}
             <Field label="Full name">
@@ -299,7 +302,15 @@ export default function People() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </Field>
+            {employeeMode && <>
+              <p>Add an employee using their own sign-in email. Choose only the projects and permissions needed for their work; no payroll, profit or performance access is granted by default.</p>
+              <Field label="Default role for newly selected projects" help="Choose a project below to apply this role. You can customise each selected project's roles and finance permissions separately.">
+                <select value={employeeRole} onChange={e=>setEmployeeRole(e.target.value as "TEAM_MEMBER"|"MANAGER")}><option value="TEAM_MEMBER">Team member — internal project work</option><option value="MANAGER">Project manager — project approvals and releases</option></select>
+              </Field>
+            </>}
             <AccessGrants
+              defaultProjectRole={employeeMode ? employeeRole : undefined}
+              employeeOnly={employeeMode}
               roles={roles}
               setRoles={setRoles}
               projects={projects}
@@ -313,7 +324,7 @@ export default function People() {
               access continues until an administrator removes it.
             </p>
             <Button type="submit" disabled={busy}>
-              {busy ? "Creating invitation…" : "Create invitation"}
+              {busy ? "Creating invitation…" : employeeMode ? "Create employee invitation" : "Create invitation"}
             </Button>
           </form>
         </Dialog>

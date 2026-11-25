@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { PermissionGate } from "@/components/permission-gate";
 import { cx } from "@/components/utilities";
 import { Dialog, readResponse } from "@/components/ui";
@@ -230,6 +231,7 @@ export default function ProjectOverviewPage({
         <span className={cx(layout.block8)}>{project.code}</span>
       </nav>
 
+      {data.onboarding && <section className={cx("card")}><h2>Existing project setup</h2><p>Review the original handover and complete the commercial checks before manager activation.</p><Link href={`/projects/${projectId}/onboarding`}>View onboarding checklist and original records</Link></section>}
       {/* Project Header */}
       <header className={cx(layout.block9)}>
         <div>

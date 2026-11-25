@@ -10,11 +10,11 @@ Find the right active project quickly. Every role sees only its memberships/capa
 
 Header: “Projects,” permitted count and one primary action. Default to a restrained table/list: project title/code, client/site descriptor, current stage, next milestone, last published or internal update as appropriate and accountable manager where permitted. Offer search, stage filter and “Assigned to me” for internal users. Keep archive as a clear separate destination.
 
-**Primary action:** “New enquiry” for authorised internal users. Clients/consultants have no creation action. A view switch is optional, not required; one excellent list is preferable to maintaining redundant card/list interfaces.
+**Primary action:** “Add project” opens `/projects/new`: New enquiry for authorised intake users, or Existing project for ADMIN. Clients/consultants have no creation action. A view switch is optional, not required; one excellent list is preferable to maintaining redundant card/list interfaces.
 
 ## Interaction and service contract
 
-Read a paginated, permission-filtered project projection; search runs over authorised records only. Row selection opens the project overview. Preserve filters in harmless route state. Create enquiry is a separate workflow, not a project activated by a single “Create” click.
+Read a paginated, permission-filtered project projection; search runs over authorised records only. Row selection opens the project overview. Preserve filters in harmless route state. Create enquiry is a separate workflow. Existing projects enter through the ADMIN-only onboarding form and remain Setup pending until normal commercial activation checks pass. Neither creation path activates work by a single “Create” click.
 
 Internal users may see draft/pipeline status only if their access permits it. External users see published milestones rather than internal task counts. Archive action belongs in an authorised project menu with context and consequences, not as a row icon easily tapped by mistake.
 
@@ -29,3 +29,5 @@ Inherit [shared states](../design/interaction-patterns.md). No projects assigned
 - Empty, filtered-empty and revoked-membership results are distinct and safe.
 - Archive access is discoverable without mixing closed projects into the default list.
 - Project selection remains usable with long names on a 390 px viewport.
+
+Existing-project onboarding records reported stage/start date, immutable work/commercial handover, manager, optional main client and team, with a persistent checklist at `/projects/:id/onboarding`. Source documents, accepted quotation, admin-confirmed advance and manager activation use existing workflows. Replayed requests must not create duplicate projects or grants. Internal handover notes are excluded from external project projections.
