@@ -12,7 +12,7 @@
     "docs/remediation/manifest.json",
     "docs/implementation/manifest.json"
   ],
-  "status": "User-approved simplification implemented; final local/hosted verification in progress. Voice retired, manual WhatsApp retained. Historical stage results below do not prove the redesigned UI.",
+  "status": "Accepted simple workspace implemented and locally verified: 144 tests, 13 workerd checks, 150 new browser checks and 264 broader records. Targeted signed-in staging review passed; multi-person UAT and remaining Free runtime/recovery/company gates remain open. Voice retired.",
   "constraints": {
     "cloudflarePlan": "free",
     "paidFallback": false,
@@ -181,5 +181,17 @@
       ]
     }
   ],
-  "activeAmendment": "docs/design/simple-workspace.md"
+  "activeAmendment": "docs/design/simple-workspace.md",
+  "simplification": {
+    "sourceCommit": "1461c4d",
+    "implementation": "passed",
+    "localVerification": "passed",
+    "hostedVerification": "passed: signed-in Home, task panel/List/Board/Calendar/view persistence, project directory/progress, More, Inbox and final permission-specific control cleanup; not team UAT",
+    "teamAcceptance": "not-started",
+    "evidence": [
+      "docs/next-phase/evidence/simple-workspace.md",
+      "docs/next-phase/evidence/simple-ui/results.json"
+    ],
+    "webVersion": "364b339c-36d3-4b6f-8362-1516e9cd2d19"
+  }
 }

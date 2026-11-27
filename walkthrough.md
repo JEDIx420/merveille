@@ -1,3 +1,7 @@
+# Latest delivery — simple project workspace
+
+27 November 2026, source `1461c4d`. Home/Inbox/My Tasks/Projects, shared task panel and List/Board/Calendar, personal favorites/preferences, project progress and drawing side panel implemented. Voice retired and AI binding removed. [Scope](docs/design/simple-workspace.md) and [actual verification](docs/next-phase/evidence/simple-workspace.md) supersede earlier voice-pilot steps. Team acceptance, measured Free workload and applicable recovery/company gates remain open.
+
 # Merveille Designs — remediation walkthrough
 
 **27 November 2026 next-phase scope:** The [new ordered plan](docs/next-phase/README.md) is active. Its application work has not started; this handoff changes documentation only. The walkthrough below preserves earlier implementation evidence and is not proof that the Free-only, open-source voice, external-billing or manual-WhatsApp upgrade is implemented. Follow [current task state](task.md) for the next action and retain applicable access/recovery gates.
