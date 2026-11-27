@@ -1,5 +1,7 @@
 # Merveille Designs repository instructions
 
+Latest accepted amendment: [simple project workspace](docs/design/simple-workspace.md). It supersedes voice entry and conflicting daily navigation requirements below. Voice is retired, not a pending activation gate. Preserve the specialist/history workflows behind secondary navigation.
+
 ## Purpose and current precedence
 
 Improve the existing architectural practice workspace on `implement/merveille-portal`. Read [NEXT_AGENT.md](NEXT_AGENT.md), [START_HERE.md](START_HERE.md), [task.md](task.md) and the [next-phase work order](docs/next-phase/README.md). Preserve the existing application, records and completed repairs.

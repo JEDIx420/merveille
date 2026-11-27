@@ -156,7 +156,7 @@ export default function Drawings({
     <div className={ui.page}>
       <PageHeader
         title="Drawings"
-        description="Prepared by the team, reviewed by designated consultants, released by your manager."
+        description="Current releases and every drawing revision in one place."
         actions={
           author && (
             <Button onClick={() => setModal("drawing")}>Add drawing</Button>
@@ -241,7 +241,7 @@ export default function Drawings({
         )
       )}
       {selected && (
-        <section className={ui.panel}>
+        <Dialog title={drawing?.title || "Drawing details"} onClose={()=>setSelected("")} side>
           <PageHeader
             section
             title={drawing?.title || "Drawing details"}
@@ -400,7 +400,7 @@ export default function Drawings({
               </div>
             </>
           )}
-        </section>
+        </Dialog>
       )}
       {modal && (
         <Dialog

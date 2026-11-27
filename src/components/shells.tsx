@@ -29,6 +29,8 @@ import {
 } from "./ui";
 import styles from "./shell.module.css";
 import { AppearanceControl } from "./experience/controls";
+import { TaskPanelProvider } from "./workspace/task-panel";
+import { FavoriteProjects } from "./workspace/favorites";
 import { ProjectContext } from "./project-context";
 function Brand() {
   return (
@@ -124,10 +126,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const links: [string, string, any][] = internal
     ? [
-        ["/overview", "Today", LayoutDashboard],
+        ["/overview", "Home", LayoutDashboard],
+        ["/notifications", "Inbox", Inbox],
         ["/waiting", "My Tasks", ListTodo],
         ["/projects", "Projects", FolderOpen],
-        ["/notifications", "Inbox", Inbox],
       ]
     : isConsultant
       ? [
@@ -148,7 +150,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       hasCapability(principal, "ADMIN") ||
       hasCapability(principal, "OWNER"))
   )
-    links.splice(3, 0, ["/enquiries", "Leads", Building2]);
+    links.push( ["/enquiries", "Leads", Building2]);
   if (internal) links.push(["/archive", "Archive", Archive]);
   if (hasCapability(principal, "ADMIN"))
     links.push(["/people", "People & access", Users]);
@@ -157,7 +159,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (hasCapability(principal, "ADMIN") || hasCapability(principal, "OWNER"))
     links.push(["/finance", "Commercial History", Wallet]);
   return (
-    <FeedbackProvider>
+    <FeedbackProvider><TaskPanelProvider>
       <div className={styles.workspace}>
         <a href="#main-content" className={styles.skip}>
           Skip to content
@@ -178,7 +180,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Brand />
           </Link>
           <nav className={styles.nav}>
-            {links.map(([href, label, Icon]) => (
+            {links.slice(0,4).map(([href, label, Icon]) => (
               <Link
                 key={href}
                 href={href}
@@ -193,6 +195,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
           </nav>
+          {links.length>4&&<details style={{padding:'8px 24px'}}><summary style={{cursor:'pointer',color:'var(--ui-text-muted)'}}>Workspace tools</summary><nav className={styles.nav}>{links.slice(4).map(([href,label,Icon])=><Link href={href} key={href}><Icon aria-hidden="true"/>{label}</Link>)}</nav></details>}
+          <FavoriteProjects/>
           <div className={styles.account}>
             <strong>{principal.name}</strong>
             <span>{principal.email}</span>
@@ -224,7 +228,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className={styles.desktopActions}><AppearanceControl />
             <Link href="/notifications">
               <Inbox size={18} aria-hidden="true" />
-              Notifications
+              Inbox
             </Link></div>
           </header>
           <main className={styles.content} id="main-content">
@@ -232,7 +236,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </main>
         </div>
       </div>
-    </FeedbackProvider>
+    </TaskPanelProvider></FeedbackProvider>
   );
 }
 export function ProjectShell({
@@ -293,6 +297,7 @@ export function ProjectShell({
     ["snags", "Site issues"],
   ];
   if (internal) sections.splice(1, 0, ["tasks", "Tasks"]);
+  if (internal) sections.splice(2, 0, ["progress", "Progress"]);
   if (finance) sections.splice(5, 0, ["finance", "Finance"]);
   return (
     <ProjectContext.Provider value={project}>
@@ -331,7 +336,7 @@ export function ProjectShell({
           </div>
         )}
         <nav className={styles.projectNav} aria-label="Project sections">
-          {sections.map(([slug, label]) => (
+          {sections.filter(([slug])=>["overview","tasks","drawings","updates","progress"].includes(slug)).map(([slug, label]) => (
             <Link
               href={`/projects/${projectId}/${slug}`}
               key={slug}
@@ -340,6 +345,7 @@ export function ProjectShell({
               {label}
             </Link>
           ))}
+          <details className={styles.more}><summary>More</summary><div>{sections.filter(([slug])=>!["overview","tasks","drawings","updates","progress"].includes(slug)).map(([slug,label])=><Link key={slug} aria-current={path.endsWith("/"+slug)?"page":undefined} href={`/projects/${projectId}/${slug}`}>{slug==="finance"?"Commercial history":label}</Link>)}</div></details>
         </nav>
       </section>
       {children}

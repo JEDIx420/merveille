@@ -1,3 +1,6 @@
+import { taskActions } from './actions';
+import { ArchiveService } from '../archive/service';
+import { isBusinessDate } from '@/shared/validation';
 /**
  * Private Personal Tasks, Canonical Subtasks, Checklists, and Collaborators (Stage N01, NAC-003).
  * Personal tasks belong strictly to their owner; colleagues/managers/admins cannot inspect them.
@@ -47,6 +50,7 @@ export async function createPersonalTask(
     throw new AuthorizationError("Task title is required.", "INVALID_INPUT");
   }
 
+  if(input.dueDate && !isBusinessDate(input.dueDate)) throw new AuthorizationError("Choose a valid date.","INVALID_INPUT");
   if (input.parentTaskId) {
     const parent = await queryFirst<any>(
       db,
@@ -151,15 +155,17 @@ export async function updatePersonalTask(
     }
   }
 
+  if(patch.status && !["TODO","IN_PROGRESS","BLOCKED","COMPLETED","CANCELLED"].includes(patch.status)) throw new AuthorizationError("Choose a valid task status.","INVALID_INPUT");
+  if(patch.dueDate && !isBusinessDate(patch.dueDate)) throw new AuthorizationError("Choose a valid date.","INVALID_INPUT");
   const nextStatus = patch.status ?? existing.status;
   const completedAt =
     nextStatus === "COMPLETED" ? existing.completed_at || Date.now() : null;
 
-  await execute(
+  const updated = await execute(
     db,
     `UPDATE personal_tasks
      SET title = ?, description = ?, status = ?, priority = ?, due_date = ?, section_label = ?, completed_at = ?, revision = revision + 1
-     WHERE id = ? AND owner_user_id = ?`,
+     WHERE id = ? AND owner_user_id = ? AND revision = ?`,
     [
       patch.title?.trim() || existing.title,
       patch.description !== undefined ? patch.description : existing.description,
@@ -170,8 +176,10 @@ export async function updatePersonalTask(
       completedAt,
       personalTaskId,
       actor.id,
+      existing.revision,
     ]
   );
+  if(!updated.meta.changes) throw new AuthorizationError("Task changed. Reload before saving.","CONCURRENCY_CONFLICT");
 
   return getPersonalTask(actor, personalTaskId, db);
 }
@@ -242,6 +250,7 @@ export async function addTaskChecklistItem(
     [taskId, actor.orgId]
   );
   if (!task) throw new AuthorizationError("Task not found.", "NOT_FOUND");
+  await ArchiveService.assertProjectNotArchived(db,task.project_id);
   if (!canReadInternalNotes(actor, task.project_id)) {
     throw new AuthorizationError("Forbidden", "FORBIDDEN");
   }
@@ -278,6 +287,7 @@ export async function toggleTaskChecklistItem(
   if (!item || item.org_id !== actor.orgId) {
     throw new AuthorizationError("Checklist item not found.", "NOT_FOUND");
   }
+  await ArchiveService.assertProjectNotArchived(db,item.project_id);
   if (!canReadInternalNotes(actor, item.project_id)) {
     throw new AuthorizationError("Forbidden", "FORBIDDEN");
   }
@@ -301,6 +311,7 @@ export async function addTaskCollaborator(
     [taskId, actor.orgId]
   );
   if (!task) throw new AuthorizationError("Task not found.", "NOT_FOUND");
+  await ArchiveService.assertProjectNotArchived(db,task.project_id);
   if (!canReadInternalNotes(actor, task.project_id)) {
     throw new AuthorizationError("Forbidden", "FORBIDDEN");
   }
@@ -339,7 +350,7 @@ export async function getMyTasksUnified(
 ) {
   const projectTasks = await query<any>(
     db,
-    `SELECT t.*, p.name as project_name, p.code as project_code, u.display_name as assignee_name
+    `SELECT DISTINCT t.*, p.name as project_name, p.code as project_code, u.display_name as assignee_name
      FROM tasks t
      JOIN projects p ON p.id = t.project_id
      JOIN project_memberships pm ON pm.project_id = t.project_id AND pm.user_id = ? AND pm.is_active = 1
@@ -368,6 +379,7 @@ export async function getMyTasksUnified(
       sectionLabel: t.section_label || null,
       assigneeName: t.assignee_name || actor.name,
       revision: t.revision,
+      allowedActions: taskActions(actor,t),
       link: `/projects/${t.project_id}/tasks?taskId=${t.id}`,
     })),
     ...personal.map((pt) => ({
@@ -418,7 +430,7 @@ export async function getTeamMemberProjectTasks(
 
   const rows = await query<any>(
     db,
-    `SELECT t.*, p.name as project_name, p.code as project_code, u.display_name as assignee_name
+    `SELECT DISTINCT t.*, p.name as project_name, p.code as project_code, u.display_name as assignee_name
      FROM tasks t
      JOIN projects p ON p.id = t.project_id
      JOIN project_memberships target_pm ON target_pm.project_id = t.project_id AND target_pm.user_id = ? AND target_pm.is_active = 1
@@ -445,6 +457,8 @@ export async function getTeamMemberProjectTasks(
       dueDate: t.effective_due_date,
       isOverdue: computeIsOverdue(t),
       assigneeName: t.assignee_name || "Unassigned",
+      revision: t.revision,
+      allowedActions: taskActions(actor,t),
       link: `/projects/${t.project_id}/tasks?taskId=${t.id}`,
     })),
   };

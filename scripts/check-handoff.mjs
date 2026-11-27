@@ -240,6 +240,7 @@ const nextCases = new Set(
 if (nextPhase?.kind !== "active-free-tier-next-phase-plan")
   fail("Next phase: missing active work-order kind");
 for (const path of [
+  nextPhase?.activeAmendment,
   nextPhase?.entryPoint,
   nextPhase?.sourcesFile,
   ...(nextPhase?.historicalManifests || []),
@@ -249,7 +250,7 @@ for (const path of [
 const expectedConstraints = {
   cloudflarePlan: "free",
   paidFallback: false,
-  speech: "open-source-models-on-free-compute",
+  speech: "disabled",
   whatsapp: "manual-prepared-share",
   externalWhatsAppDispatch: false,
   billing: "external",
@@ -272,7 +273,7 @@ for (const stage of nextStages) {
   for (const field of [
     "implementation", "localVerification", "hostedVerification", "teamAcceptance",
   ]) {
-    if (!statuses.has(stage[field])) fail(stage.id + ": invalid " + field);
+    if (!statuses.has(stage[field]) && !(stage.id==="N03" && stage[field]==="deferred" && nextPhase.activeAmendment==="docs/design/simple-workspace.md")) fail(stage.id + ": invalid " + field);
     if (stage[field] === "passed" && !stage.evidence?.length)
       fail(stage.id + ": " + field + " passed without evidence");
     if (stage[field] === "blocked" && !stage.blockers?.length)

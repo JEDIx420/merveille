@@ -11,7 +11,6 @@ import {
   PageHeader,
   readResponse,
 } from "@/components/ui";
-import { VoiceDictationButton } from "@/components/voice-dictation";
 import {
   parseSpreadsheetBytes,
   suggestLeadColumnMapping,
@@ -592,21 +591,7 @@ export function LeadsWorkspace() {
               <span className="text-muted" style={{ fontSize: "0.82rem" }}>
                 Only Name & Requirement are required. Voice fills fields for review without auto-saving.
               </span>
-              <VoiceDictationButton
-                targetKind="LEAD"
-                onApplyDraft={(p) => {
-                  const ext = p.extractedLead;
-                  if (ext?.name) setName(ext.name);
-                  if (ext?.phone) setPhone(ext.phone);
-                  if (ext?.email) setEmail(ext.email);
-                  if (ext?.requirement) setRequirement(ext.requirement);
-                  else if (p.cleanedText) setRequirement(p.cleanedText);
-                  if (ext?.nextAction) setNextAction(ext.nextAction);
-                  if (ext?.nextActionDate) setNextActionDate(ext.nextActionDate);
-                  if (ext?.nextActionTime) setNextActionTime(ext.nextActionTime);
-                  setAmbiguousNotes(ext?.ambiguousFields || []);
-                }}
-              />
+
             </div>
 
             {ambiguousNotes.length > 0 && (
@@ -701,14 +686,7 @@ export function LeadsWorkspace() {
         <Dialog title={`Follow-up: ${followupLead.contact_name}`} onClose={() => setFollowupLead(null)}>
           <form onSubmit={handleAddFollowup} style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <VoiceDictationButton
-                targetKind="FOLLOWUP"
-                onApplyDraft={(p) => {
-                  setFuText(p.cleanedText);
-                  if (p.extractedLead?.nextActionDate) setFuDate(p.extractedLead.nextActionDate);
-                  if (p.extractedLead?.nextActionTime) setFuTime(p.extractedLead.nextActionTime);
-                }}
-              />
+
             </div>
             <input
               type="text"

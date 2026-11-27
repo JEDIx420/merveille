@@ -1,5 +1,7 @@
 # Merveille next phase — implementation work order
 
+Latest accepted amendment: [simple project workspace](../design/simple-workspace.md). It supersedes voice entry and conflicting daily navigation requirements below. Voice is retired, not a pending activation gate. Preserve the specialist/history workflows behind secondary navigation.
+
 **Confirmed direction: 27 November 2026. Application implementation has not started under this plan.**
 
 Upgrade the existing Merveille Designs portal so daily work feels as familiar and simple as the client's Asana setup. Add a small leads tracker, reviewed Excel import, useful dictation, automatic in-app reminders and prepared WhatsApp messages that staff send themselves. Operate within Cloudflare's free allowances; introduce no paid plans, inference APIs or messaging services.

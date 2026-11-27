@@ -162,11 +162,13 @@ export function Dialog({
   children,
   onClose,
   open = true,
+  side = false,
 }: {
   title: string;
   children: React.ReactNode;
   onClose: () => void;
   open?: boolean;
+  side?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const feedback = useFeedback();
@@ -185,7 +187,7 @@ export function Dialog({
   return (
     <dialog
       ref={ref}
-      className={styles.dialog}
+      className={[styles.dialog, side ? styles.sideDialog : ""].join(" ")}
       onCancel={(e) => {
         e.preventDefault();
         onClose();

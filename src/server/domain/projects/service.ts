@@ -72,13 +72,19 @@ export async function listProjects(
   sql += " ORDER BY p.created_at DESC";
 
   const result = await query<any>(db, sql, params);
+  const progress = await query<any>(db,`SELECT project_id,
+ COUNT(CASE WHEN status!='CANCELLED' THEN 1 END) AS task_count,
+ SUM(CASE WHEN status='COMPLETED' THEN 1 ELSE 0 END) AS completed_count,
+ MIN(CASE WHEN status NOT IN ('COMPLETED','CANCELLED') THEN effective_due_date END) AS next_deadline
+ FROM tasks WHERE org_id=? GROUP BY project_id`,[principal.orgId]);
+  const members = await query<any>(db,`SELECT pm.project_id,u.display_name FROM project_memberships pm JOIN users u ON u.id=pm.user_id JOIN organization_memberships om ON om.user_id=u.id AND om.org_id=pm.org_id AND om.is_active=1 WHERE pm.org_id=? AND pm.is_active=1 AND u.status='ACTIVE' GROUP BY pm.project_id,u.id`,[principal.orgId]);
   return result.map((p) => {
     const internal =
       hasCapability(principal, "ADMIN") ||
       hasCapability(principal, "OWNER") ||
       hasCapability(principal, "MANAGER", p.id) ||
       hasCapability(principal, "TEAM_MEMBER", p.id);
-    if (internal) return p;
+    if (internal) return {...p,...(progress.find(t=>t.project_id===p.id)||{task_count:0,completed_count:0,next_deadline:null}),member_names:members.filter(m=>m.project_id===p.id).map(m=>m.display_name)};
     return {
       id: p.id,
       code: p.code,

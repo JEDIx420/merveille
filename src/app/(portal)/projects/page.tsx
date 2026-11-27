@@ -1,228 +1,223 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { Star } from "lucide-react";
 import { useSession } from "@/components/session";
 import { hasCapability } from "@/server/auth/principal";
-import { cx } from "@/components/utilities";
-import { readResponse } from "@/components/ui";
-import layout from "./page.module.css";
-
-import { useState, useEffect } from "react";
+import {
+  PageHeader,
+  LoadingState,
+  ErrorState,
+  EmptyState,
+  readResponse,
+} from "@/components/ui";
 import { formatBusinessDate } from "@/shared/config";
-
-interface ProjectItem {
-  id: string;
-  code: string;
-  name: string;
-  site_location: string;
-  stage: string;
-  status: "DRAFT" | "ACTIVE" | "PAUSED" | "COMPLETED";
-  quote_accepted_at: number | null;
-  advance_confirmed_at: number | null;
-  manager_name: string | null;
-  main_client_name: string | null;
-  created_at: number;
-}
-
-const STAGES = [
-  "All Stages",
-  "Schematic Design",
-  "Design Development",
-  "Statutory & Permit Drawings",
-  "Tender Documentation & GFC",
-  "Site Execution & Supervision",
-  "Handover & Project Closeout",
-];
-
-export default function ProjectsPage() {
+import styles from "@/components/workspace/workspace.module.css";
+export default function Projects() {
   const { principal } = useSession();
-  const canAdd = hasCapability(principal,"ADMIN") || hasCapability(principal,"OWNER") || principal?.intakeAccess;
-  const [projects, setProjects] = useState<ProjectItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
-  const [search, setSearch] = useState("");
-  const [stageFilter, setStageFilter] = useState("All Stages");
-  const [includeArchived, setIncludeArchived] = useState(false);
-
-  useEffect(() => {
-    loadProjects();
-  }, [stageFilter, includeArchived]);
-
-  async function loadProjects() {
+  const [projects, setProjects] = useState<any[]>([]),
+    [favorites, setFavorites] = useState<string[]>([]),
+    [view, setView] = useState("LIST"),
+    [search, setSearch] = useState(""),
+    [status, setStatus] = useState("ALL"),
+    [archive, setArchive] = useState(false),
+    [error, setError] = useState(""),
+    [loading, setLoading] = useState(true),
+    [saving, setSaving] = useState(false);
+  const canAdd =
+    hasCapability(principal, "ADMIN") ||
+    hasCapability(principal, "OWNER") ||
+    principal?.intakeAccess;
+  async function load() {
     setLoading(true);
-    setError("");
     try {
-      const params = new URLSearchParams();
-      if (stageFilter !== "All Stages") params.set("stage", stageFilter);
-      if (search.trim()) params.set("query", search.trim());
-      if (includeArchived) params.set("includeArchived", "true");
-
-      const res = await fetch(`/api/projects?${params.toString()}`);
-      const data: any = await readResponse(res);
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to load projects");
-      }
-      setProjects(data.projects || []);
-    } catch (err: any) {
-      setError(err.message);
+      const [p, pref] = await Promise.all([
+        fetch(`/api/projects?includeArchived=${archive}`).then(readResponse),
+        fetch("/api/workspace").then(readResponse),
+      ]);
+      setProjects(p.projects || []);
+      setFavorites(pref.favorites || []);
+      setError("");
+    } catch (e: any) {
+      setError(e.message);
     } finally {
       setLoading(false);
     }
   }
-
-  function handleSearchSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    loadProjects();
+  useEffect(() => {
+    load();
+  }, [archive]);
+  async function favorite(id: string) {
+    setSaving(true);
+    try {
+      const next = favorites.includes(id)
+        ? favorites.filter((x) => x !== id)
+        : [...favorites, id];
+      const d = await readResponse(
+        await fetch("/api/workspace", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ favorites: next }),
+        }),
+      );
+      setFavorites(d.favorites);
+      window.dispatchEvent(new Event("workspace:preferences"));
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
   }
-
+  const filtered = projects.filter(
+    (p) =>
+      (status === "ALL" ||
+        (status === "FAVORITES" && favorites.includes(p.id)) ||
+        status === p.status) &&
+      `${p.name} ${p.code} ${p.site_location || ""}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+  );
+  function internal(p: any) {
+    return (
+      hasCapability(principal, "ADMIN") ||
+      hasCapability(principal, "OWNER") ||
+      principal?.projectMemberships.some(
+        (m) =>
+          m.projectId === p.id &&
+          (m.roles || [m.projectRole]).some((r) =>
+            ["MANAGER", "TEAM_MEMBER", "STAFF"].includes(r || ""),
+          ),
+      )
+    );
+  }
   return (
-    <div className={cx(layout.block1)}>
-      {/* Header */}
-      <header className={cx(layout.block2)}>
-        <div>
-          <h1 className={cx("text-display")}>Projects</h1>
-          <p className={cx(["text-muted", layout.block3].join(" "))}>
-            Your commissions, current stages and project records.
-          </p>
-        </div>
-        <div className={cx(layout.block4)}>
-          {canAdd && <Link href="/projects/new" className={cx("btn-primary")}>Add project</Link>}
-        </div>
-      </header>
-
-      {/* Filter and Search Bar */}
-      <div className={cx(["card", layout.block5].join(" "))}>
-        <form onSubmit={handleSearchSubmit} className={cx(layout.block6)}>
+    <div className={styles.workspace}>
+      <PageHeader
+        title="Projects"
+        description="A clear view of your current work."
+        actions={
+          canAdd && (
+            <Link className="btn-primary" href="/projects/new">
+              Add project
+            </Link>
+          )
+        }
+      />
+      <div className={styles.toolbar}>
+        <div className={styles.inline}>
           <input
             aria-label="Search projects"
             type="search"
-            placeholder="Search by code, title, or site location..."
+            placeholder="Find a project…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className={cx(layout.block7)}
           />
-          <button
-            type="submit"
-            className={cx(["btn-secondary", layout.block8].join(" "))}
-          >
-            Search
-          </button>
-        </form>
-
-        <div className={cx(layout.block9)}>
           <select
-            value={stageFilter}
-            onChange={(e) => setStageFilter(e.target.value)}
-            className={cx(layout.block10)}
-            aria-label="Project stage"
-            id="stageFilter"
+            aria-label="Project status"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
           >
-            {STAGES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
+            {["ALL", "FAVORITES", "DRAFT", "ACTIVE", "PAUSED", "COMPLETED"].map(
+              (s) => (
+                <option value={s} key={s}>
+                  {s === "ALL"
+                    ? "All projects"
+                    : s === "DRAFT"
+                      ? "Setup pending"
+                      : s[0] + s.slice(1).toLowerCase()}
+                </option>
+              ),
+            )}
           </select>
-
-          <label className={cx(layout.block11)} htmlFor="includeArchived">
+          <label className={styles.check}>
             <input
               type="checkbox"
-              id="includeArchived"
-              checked={includeArchived}
-              onChange={(e) => setIncludeArchived(e.target.checked)}
+              checked={archive}
+              onChange={(e) => setArchive(e.target.checked)}
             />
-            Include Archived
+            Include archived
           </label>
         </div>
+        <div className={styles.tabs}>
+          {["LIST", "CARDS"].map((v) => (
+            <button
+              key={v}
+              aria-pressed={view === v}
+              onClick={() => setView(v)}
+            >
+              {v === "LIST" ? "List" : "Cards"}
+            </button>
+          ))}
+        </div>
       </div>
-
-      {error && <div className={cx(layout.block12)}>{error}</div>}
-
-      {/* Projects List */}
+      {error && <ErrorState message={error} retry={load} />}
       {loading ? (
-        <div className={cx(["card text-muted", layout.block13].join(" "))}>
-          Loading active project portfolio...
-        </div>
-      ) : error ? null : projects.length === 0 ? (
-        <div className={cx(["card text-muted", layout.block14].join(" "))}>
-          <p className={cx(layout.block15)}>No matching projects found</p>
-          <p className={cx(layout.block16)}>
-            Add a new enquiry or onboard an existing project, or check your filters.
-          </p>
-        </div>
+        <LoadingState label="Loading projects…" />
+      ) : !filtered.length ? (
+        <EmptyState
+          title="No matching projects"
+          description="Try another search or add a project."
+        />
       ) : (
-        <div className={cx(layout.block17)}>
-          {projects.map((p) => {
-            const hasCommercialGate =
-              p.quote_accepted_at && p.advance_confirmed_at;
-
-            return (
-              <Link
-                key={p.id}
-                href={`/projects/${p.id}/overview`}
-                className={cx(["card", layout.block18].join(" "))}
-              >
+        <div className={view === "CARDS" ? styles.projects : styles.stack}>
+          {filtered.map((p) => (
+            <article
+              key={p.id}
+              className={styles.projectCard}
+              style={
+                view === "LIST"
+                  ? {
+                      display: "grid",
+                      gridTemplateColumns: "minmax(0,1fr) auto",
+                      padding: "16px 20px",
+                    }
+                  : undefined
+              }
+            >
+              <div className={styles.toolbar}>
+                <Link
+                  href={`/projects/${p.id}/${internal(p) ? "tasks" : "overview"}`}
+                >
+                  <span className={styles.muted}>{p.code}</span>
+                  <h2>{p.name}</h2>
+                </Link>
+                <button
+                  disabled={saving}
+                  aria-pressed={favorites.includes(p.id)}
+                  aria-label={`${favorites.includes(p.id) ? "Unfavorite" : "Favorite"} ${p.name}`}
+                  onClick={() => favorite(p.id)}
+                >
+                  <Star
+                    aria-hidden="true"
+                    size={18}
+                    fill={favorites.includes(p.id) ? "currentColor" : "none"}
+                  />
+                </button>
+              </div>
+              <p className={styles.muted}>
+                {p.member_names?.slice(0, 3).join(", ") ||
+                  p.manager_name ||
+                  "No manager"}{" "}
+                · {p.stage?.replaceAll("_", " ")}
+              </p>
+              {p.task_count !== undefined && (
                 <div>
-                  <div className={cx(layout.block19)}>
-                    <span className={cx(layout.block20)}>{p.code}</span>
-
-                    <span
-                      className={cx(
-                        `badge badge-${
-                          p.status === "ACTIVE"
-                            ? "active"
-                            : p.status === "PAUSED"
-                              ? "paused"
-                              : "draft"
-                        }`,
-                      )}
-                    >
-                      {p.status === "DRAFT" ? "Setup pending" : p.status}
-                    </span>
-                  </div>
-
-                  <h2 className={cx(layout.block21)}>{p.name}</h2>
-                  <p className={cx(layout.block22)}>
-                    {p.site_location || "Location not recorded"}
-                  </p>
-
-                  <div className={cx(layout.block23)}>
-                    <span className={cx("text-muted")}>Current Stage: </span>
-                    <strong className={cx(layout.block24)}>{p.stage}</strong>
-                  </div>
+                  <progress
+                    aria-label={`${p.name} progress`}
+                    className={styles.progress}
+                    max={p.task_count || 1}
+                    value={p.completed_count || 0}
+                  />
+                  <small className={styles.muted}>
+                    {p.completed_count || 0} of {p.task_count} completed
+                    {p.next_deadline
+                      ? ` · Next due ${formatBusinessDate(p.next_deadline)}`
+                      : ""}
+                  </small>
                 </div>
-
-                <div className={cx(layout.block25)}>
-                  <div className={cx(layout.block26)}>
-                    <span className={cx("text-muted")}>Main Client:</span>
-                    <span>{p.main_client_name || "Unassigned"}</span>
-                  </div>
-                  <div className={cx(layout.block27)}>
-                    <span className={cx("text-muted")}>Project Manager:</span>
-                    <span>{p.manager_name || "Unassigned"}</span>
-                  </div>
-                  <div className={cx(layout.block28)}>
-                    <span className={cx("text-muted")}>
-                      Payment requirements:
-                    </span>
-                    <span
-                      style={{
-                        color: hasCommercialGate
-                          ? "var(--ui-success)"
-                          : "var(--ui-warning)",
-                      }}
-                      className={cx(layout.block29)}
-                    >
-                      {hasCommercialGate
-                        ? "Gate Cleared"
-                        : p.quote_accepted_at
-                          ? "Awaiting Advance"
-                          : "Quote Pending"}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
+              )}
+            </article>
+          ))}
         </div>
       )}
     </div>

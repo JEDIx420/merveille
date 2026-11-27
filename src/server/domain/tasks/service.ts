@@ -1,3 +1,4 @@
+import { taskActions } from './actions';
 import { businessDateISO } from "@/shared/config";
 import { isBusinessDate } from "@/shared/validation";
 import { assertProjectOrganisation } from "@/server/auth/policy";
@@ -436,6 +437,7 @@ export async function startTask(
   actor: UserPrincipal,
   taskId: string,
   db: D1Database,
+  expectedRevision?: number,
 ) {
   const plan: D1PreparedStatement[] = [];
 
@@ -444,6 +446,7 @@ export async function startTask(
   ]);
   if (!task) throw new AuthorizationError("Task not found.", "NOT_FOUND");
 
+  if(expectedRevision !== undefined && task.revision !== expectedRevision) throw new AuthorizationError("Task changed. Reload before saving.","CONCURRENCY_CONFLICT");
   assertTaskAccess(actor, task.project_id);
   await assertProjectOrganisation(db, actor, task.project_id);
   await ArchiveService.assertProjectNotArchived(db, task.project_id);
@@ -779,6 +782,8 @@ export async function blockTask(
       "INVALID_STATE",
     );
 
+  if(!input.reason?.trim()) throw new AuthorizationError("Add a reason for blocking this task.","INVALID_INPUT");
+  if(input.expectedRevision !== undefined && task.revision !== input.expectedRevision) throw new AuthorizationError("Task changed. Reload before saving.","CONCURRENCY_CONFLICT");
   const now = Date.now();
   const guardId = crypto.randomUUID();
   plan.push(
@@ -1017,6 +1022,7 @@ export async function getTask(
 
   return {
     task: { ...task, isOverdue },
+    allowedActions: taskActions(actor,task,!!(await queryFirst<any>(db,"SELECT is_archived FROM projects WHERE id=?",[task.project_id]))?.is_archived),
     events,
     comments,
     checklists,
@@ -1064,8 +1070,10 @@ export async function listProjectTasks(
 
   const rows = await query<any>(db, sql, params);
 
+  const project = await queryFirst<any>(db,"SELECT is_archived FROM projects WHERE id=?",[projectId]);
   return rows.map((r) => ({
     ...r,
     isOverdue: computeIsOverdue(r),
+    allowedActions: taskActions(actor,r,!!project?.is_archived),
   }));
 }

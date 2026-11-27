@@ -1,0 +1,712 @@
+[
+  {
+    "theme": "dark",
+    "case": "/overview at 1440 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/overview at 1440 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/overview at 1440 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/waiting at 1440 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/waiting at 1440 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/waiting at 1440 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects at 1440 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects at 1440 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects at 1440 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/notifications at 1440 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/notifications at 1440 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/notifications at 1440 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/tasks at 1440 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/tasks at 1440 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/tasks at 1440 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "calendar has 42 day cells at 1440",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/progress at 1440 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/progress at 1440 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/progress at 1440 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/overview at 1024 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/overview at 1024 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/overview at 1024 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/waiting at 1024 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/waiting at 1024 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/waiting at 1024 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects at 1024 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects at 1024 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects at 1024 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/notifications at 1024 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/notifications at 1024 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/notifications at 1024 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/tasks at 1024 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/tasks at 1024 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/tasks at 1024 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "calendar has 42 day cells at 1024",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/progress at 1024 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/progress at 1024 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/progress at 1024 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/overview at 390 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/overview at 390 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/overview at 390 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/waiting at 390 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/waiting at 390 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/waiting at 390 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects at 390 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects at 390 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects at 390 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/notifications at 390 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/notifications at 390 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/notifications at 390 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/tasks at 390 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/tasks at 390 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/tasks at 390 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "calendar has 42 day cells at 390",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/progress at 390 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/progress at 390 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "/projects/simple_project/progress at 390 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "drag-and-drop uses reviewed domain transition",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "view tabs support arrow-key navigation",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "task panel honors reduced motion",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "board transition commits completion",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "checklist appears in shared panel",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "comments persist after panel refresh",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "conflict retains user draft",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "Escape dismisses panel",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "board preference survives navigation",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "favorite appears in sidebar",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "Inbox opens same task panel",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "mark read removes unread item",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "specialist routes retained under More",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "no page JavaScript errors",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/overview at 1440 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/overview at 1440 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/overview at 1440 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/waiting at 1440 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/waiting at 1440 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/waiting at 1440 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects at 1440 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects at 1440 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects at 1440 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/notifications at 1440 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/notifications at 1440 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/notifications at 1440 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/tasks at 1440 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/tasks at 1440 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/tasks at 1440 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "calendar has 42 day cells at 1440",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/progress at 1440 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/progress at 1440 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/progress at 1440 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/overview at 1024 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/overview at 1024 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/overview at 1024 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/waiting at 1024 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/waiting at 1024 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/waiting at 1024 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects at 1024 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects at 1024 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects at 1024 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/notifications at 1024 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/notifications at 1024 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/notifications at 1024 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/tasks at 1024 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/tasks at 1024 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/tasks at 1024 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "calendar has 42 day cells at 1024",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/progress at 1024 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/progress at 1024 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/progress at 1024 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/overview at 390 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/overview at 390 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/overview at 390 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/waiting at 390 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/waiting at 390 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/waiting at 390 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects at 390 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects at 390 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects at 390 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/notifications at 390 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/notifications at 390 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/notifications at 390 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/tasks at 390 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/tasks at 390 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/tasks at 390 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "calendar has 42 day cells at 390",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/progress at 390 contains no page overflow",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/progress at 390 has no voice controls",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "/projects/simple_project/progress at 390 has readable button text",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "drag-and-drop uses reviewed domain transition",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "view tabs support arrow-key navigation",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "task panel honors reduced motion",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "board transition commits completion",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "checklist appears in shared panel",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "comments persist after panel refresh",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "conflict retains user draft",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "Escape dismisses panel",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "board preference survives navigation",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "favorite appears in sidebar",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "Inbox opens same task panel",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "mark read removes unread item",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "specialist routes retained under More",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "no page JavaScript errors",
+    "passed": true
+  }
+]

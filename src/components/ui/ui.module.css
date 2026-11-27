@@ -451,3 +451,8 @@
 .priorityList > .empty { padding: 24px 0 8px; text-align: left; }
 .priorityList > .empty h3 { font-size: 14px; font-weight: 500; }
 .priorityList > .empty p { font-size: 13px; margin: 0; }
+
+.sideDialog { margin: 0 0 0 auto; height: 100dvh; max-height:100dvh; max-width:min(620px,100vw); border-radius:0; border-right:0; }
+.sideDialog[open] { animation: panelIn 180ms ease-out; }
+@keyframes panelIn { from {transform:translateX(24px);opacity:0} to {transform:none;opacity:1} }
+@media(prefers-reduced-motion:reduce){.sideDialog[open]{animation:none}}

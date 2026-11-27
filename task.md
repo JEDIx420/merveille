@@ -1,5 +1,12 @@
 # Merveille Designs — current task state
 
+## Active simplification checkpoint — 27 November 2026
+
+The user approved the [simple project workspace amendment](docs/design/simple-workspace.md). Home/Inbox/My Tasks/Projects replace the daily administrative interface; Leads and specialist tools stay secondary. Shared interactive task List/Board/month-week Calendar and side panel, private view/favorites persistence, progress charts and drawing side panel implemented. Voice is disabled before inference and the web AI binding removed. Manual WhatsApp, history and permission boundaries remain.
+
+Local/hosted verification is in progress; record final results in [current evidence](docs/next-phase/evidence/simple-workspace.md). Earlier N00–N05 voice-pilot and production-authorization next-action text below is historical, not the current task. No production rollout is included.
+
+
 ## Active next phase recorded 27 November 2026
 
 The current work order is [docs/next-phase/README.md](docs/next-phase/README.md), with [N00–N05 dependencies](docs/next-phase/manifest.json).

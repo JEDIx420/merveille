@@ -1,5 +1,7 @@
 # Start here
 
+Latest accepted amendment: [simple project workspace](docs/design/simple-workspace.md). It supersedes voice entry and conflicting daily navigation requirements below. Voice is retired, not a pending activation gate. Preserve the specialist/history workflows behind secondary navigation.
+
 Continue the existing Merveille Designs app on **`implement/merveille-portal`**. The active assignment is the [27 November next-phase plan](docs/next-phase/README.md), N00–N05. Preserve completed remediation, source, migrations, data and useful tests.
 
 ## 1 Open the existing application

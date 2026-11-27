@@ -1,3 +1,5 @@
+import {preferences,savePreferences,projectProgress,personalDetail} from '../../src/server/workspace/service';
+import {createPersonalTask,updatePersonalTask} from '../../src/server/domain/tasks/personal-service';
 /** Isolated local verification entry, never deployed or linked from the product. */
 import { onboardExistingProject } from "../../src/server/domain/projects/onboarding";
 import {listCelebrations,claimCelebration,setAppearance} from "../../src/server/experience/service";
@@ -107,6 +109,17 @@ export default {
     try {
       await identityDrill(env.IDENTITY_DB, passed);
       await seed(env.DB);
+      await savePreferences(env.DB,staff,{view:'BOARD',favorites:[project]});
+      check((await preferences(env.DB,staff)).view==='BOARD','Workspace view did not persist in D1');
+      const personal=await createPersonalTask(staff,{title:'Fictional private workerd note'},env.DB);
+      check((await personalDetail(env.DB,staff,personal.id)).task.title===personal.title,'Private task detail missing');
+      let personalDenied=false;try{await personalDetail(env.DB,manager,personal.id);}catch{personalDenied=true;}
+      check(personalDenied,'Manager read a private task');
+      await updatePersonalTask(staff,personal.id,{status:'IN_PROGRESS',expectedRevision:1},env.DB);
+      let staleDenied=false;try{await updatePersonalTask(staff,personal.id,{status:'COMPLETED',expectedRevision:1},env.DB);}catch{staleDenied=true;}
+      check(staleDenied,'Stale personal task update succeeded');
+      check((await projectProgress(env.DB,staff,project)).total===0,'Private task leaked into project progress');
+      passed.push('workspace preferences, private details, revision guards and scoped progress in actual D1');
       const existingInput = {requestKey: "workerd-onboard", code: "WORKERD-EX", name: "Fictional ongoing project", siteLocation: "Fictional site", stage: "Site Execution & Supervision", managerUserId:manager.id, teamUserIds:[staff.id], handoverNotes:"Existing site work; approvals to reconcile", commercialNotes:"Original agreement and advances require reconciliation"};
       const onboarded = await onboardExistingProject(admin,existingInput,env.DB);
       check((await onboardExistingProject(admin,existingInput,env.DB)).projectId === onboarded.projectId,"Onboarding replay duplicated project");

@@ -329,3 +329,7 @@
 
 .desktopActions { display:flex; align-items:center; gap:16px; }
 .authHeader > strong { margin-right:auto; }
+
+.more{position:relative;align-self:center}.more summary{cursor:pointer;padding:10px 16px;color:var(--ui-text-secondary)}.more[open]>div{position:absolute;right:0;top:100%;min-width:210px;padding:8px;background:var(--ui-surface);border:1px solid var(--ui-divider);border-radius:10px;box-shadow:var(--ui-shadow-menu);z-index:30;display:flex;flex-direction:column}.projectNav:has(.more[open]){overflow:visible;flex-wrap:wrap}.more a{padding:9px 12px!important}.more summary:focus-visible{outline:2px solid var(--ui-focus)}
+
+@media(max-width:700px){.projectNav{flex-wrap:wrap;overflow:visible;gap:0 14px}.projectNav a{padding:10px 0}.more summary{padding:10px 0}}

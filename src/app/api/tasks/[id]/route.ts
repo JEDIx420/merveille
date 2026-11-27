@@ -92,7 +92,7 @@ export async function POST(
       }
 
       case "START": {
-        const result = await startTask(auth.principal, taskId, env.DB);
+        const result = await startTask(auth.principal, taskId, env.DB, body.expectedRevision);
         return NextResponse.json({ ok: true, ...result });
       }
 

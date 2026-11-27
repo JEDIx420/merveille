@@ -1,5 +1,7 @@
 # Next agent
 
+Latest accepted amendment: [simple project workspace](docs/design/simple-workspace.md). It supersedes voice entry and conflicting daily navigation requirements below. Voice is retired, not a pending activation gate. Preserve the specialist/history workflows behind secondary navigation.
+
 The application exists on **`implement/merveille-portal`**. Continue that branch or a safely based feature branch; preserve local work and do not scaffold from main.
 
 ## Copyable kickoff

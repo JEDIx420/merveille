@@ -32,17 +32,11 @@
       "bucket_name": "merveille-files"
     }
   ],
-  "ai": {
-    "binding": "AI"
-  },
   "env": {
     "staging": {
       "name": "merveille-web-staging",
       "workers_dev": true,
       "preview_urls": false,
-      "ai": {
-        "binding": "AI"
-      },
       "vars": {
         "APP_ENV": "staging",
         "APP_ORIGIN": "https://merveille-web-staging.rhelo-bible.workers.dev",

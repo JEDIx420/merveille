@@ -5,6 +5,8 @@ description: Build, improve or resume the existing Merveille Designs portal usin
 
 # Build and improve Merveille Designs
 
+Follow the latest [simple workspace amendment](../../../docs/design/simple-workspace.md). Voice is retired; older voice/model pilot steps below are historical and must not be re-enabled.
+
 Maintain this repository-owned skill with the project; it is not a globally installed personal skill.
 
 1. Read [AGENTS.md](../../../AGENTS.md), [NEXT_AGENT.md](../../../NEXT_AGENT.md), [START_HERE.md](../../../START_HERE.md) and [task.md](../../../task.md).

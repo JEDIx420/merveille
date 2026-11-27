@@ -1,6 +1,6 @@
 import { chromium } from "playwright";
 import fs from "node:fs";
-const out = new URL("../docs/evidence/remediation/ui", import.meta.url)
+const out = process.env.BROWSER_OUTPUT || new URL("../docs/evidence/remediation/ui", import.meta.url)
   .pathname + (process.env.BROWSER_THEME ? "/experience-"+process.env.BROWSER_THEME : "");
 const base = process.env.BASE_URL || "http://localhost:3021";
 fs.mkdirSync(out, { recursive: true });
@@ -157,7 +157,7 @@ await page.route("**/api/**", async (route) => {
   }
   if (interrupt && url.pathname.endsWith("/tasks"))
     return route.abort("internetdisconnected");
-  if (fail && url.pathname === "/api/dashboard/overview")
+  if (fail && url.pathname === "/api/projects")
     return route.fulfill({
       status: 503,
       contentType: "application/json",
@@ -274,6 +274,7 @@ await page.route("**/api/**", async (route) => {
       activeProjects: [project],
       firmFinance: null,
     };
+  if(url.pathname.endsWith("/progress")) d={total:0,completed:0,open:0,overdue:0,percent:0,weeks:[],historyAvailable:false};
   if (url.pathname === "/api/dashboard/waiting") d = { items: waiting };
   if (url.pathname === "/api/projects/prj_review")
     d = {
@@ -660,6 +661,7 @@ results.push({
     release.path === "/api/drawings/versions/version_review" &&
     release.payload.expectedCurrentVersionId === "version_old",
 });
+await page.getByRole("button", { name: "Close dialog", exact: true }).click();
 await page.getByRole("button", { name: "Add drawing", exact: true }).click();
 const modal = page.getByRole("dialog");
 await modal.waitFor({ state: "visible" });
@@ -789,7 +791,7 @@ await page.getByText('Invoice fully paid',{exact:true}).waitFor();
 await page.getByRole('button',{name:'Dismiss celebration',exact:true}).click();
 celebrationEvents.push({id:'b'.repeat(32),kind:'task_completed',actorId:'review_manager',projectId:project.id,projectName:project.name,quiet:false});
 await page.getByRole('link',{name:'My Tasks',exact:true}).click();await page.getByRole('heading',{name:'My Tasks',exact:true}).waitFor();
-await page.getByRole('link',{name:'Today',exact:true}).click();await page.getByText('Task completed',{exact:true}).waitFor();
+await page.getByRole('link',{name:'Home',exact:true}).click();await page.getByText('Task completed',{exact:true}).waitFor();
 results.push({case:'particle cooldown uses quiet feedback for next success',visible:await page.locator('canvas[aria-hidden]').count()===0});
 await page.getByRole('button',{name:'Dismiss celebration',exact:true}).click();
 await visit(base+'/overview');await page.waitForTimeout(1000);
