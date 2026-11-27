@@ -1,10 +1,11 @@
 # Merveille Designs documentation
 
-Start at [START_HERE.md](../START_HERE.md). This index is a navigation aid, not an alternative implementation order.
+Start at [START_HERE.md](../START_HERE.md). This index is a navigation aid, not an alternative implementation order. The 27 November next-phase amendment governs Free-only hosting/inference, manual prepared WhatsApp sharing and external billing. Older linked specifications remain reference where unchanged; their provider/finance execution instructions do not override the active plan.
 
 | Area | Entry point |
 | --- | --- |
-| **Current work order** | [Remediation index](remediation/README.md), [R00–R05 manifest](remediation/manifest.json), [short kickoff](../NEXT_AGENT.md) |
+| **Current work order** | [Next-phase plan](next-phase/README.md), [N00–N05 manifest](next-phase/manifest.json), [short kickoff](../NEXT_AGENT.md) |
+| Previous remediation and evidence | [Remediation specification](remediation/README.md), [R00–R05 records](remediation/manifest.json), [remaining applicable gates](next-phase/06-verification-and-rollout.md) |
 | Product scope and decisions | [Product brief](product/brief.md), [requirements](product/requirements.md), [permissions](product/roles-and-permissions.md) |
 | Business workflows | [Workflow index](workflows/README.md) |
 | Screens | [20 screen specifications](screens/README.md) |

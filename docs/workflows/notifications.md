@@ -1,5 +1,7 @@
 # In-portal reminders, WhatsApp and escalation
 
+**27 November 2026 next-phase scope:** Follow [reminders and manual WhatsApp](../next-phase/05-reminders-and-manual-whatsapp.md). In-portal reminders remain active scope. WhatsApp is prepared text plus Copy update / Open WhatsApp Web, with a person selecting the group and sending; API delivery stays disabled. Preserve the old transport specification below as reference, not a requirement to configure Meta/provider sends, webhooks or financial reminders. Opening or copying a message is not sent/delivered evidence.
+
 **Requirements:** REQ-NOT-001–006, REQ-IAM-003/006/007, REQ-DAS-003.
 
 **Confirmed channels:** In-portal and WhatsApp. Unresolved overdue items escalate to the administrator. Timings, contact details and sender arrangements are later operational inputs.

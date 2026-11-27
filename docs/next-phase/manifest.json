@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "product": "Merveille Designs",
+  "kind": "active-free-tier-next-phase-plan",
+  "recordedDate": "2026-11-27",
+  "applicationBranch": "implement/merveille-portal",
+  "auditedSourceCommit": "7b8966f0921bedb58f9429546a0729fd78dcb2ae",
+  "entryPoint": "docs/next-phase/README.md",
+  "acceptanceFile": "docs/next-phase/06-verification-and-rollout.md",
+  "sourcesFile": "docs/next-phase/sources.md",
+  "historicalManifests": [
+    "docs/remediation/manifest.json",
+    "docs/implementation/manifest.json"
+  ],
+  "status": "Implementation work order prepared. Application implementation, local verification, hosted verification and team acceptance under this new scope have not started.",
+  "constraints": {
+    "cloudflarePlan": "free",
+    "paidFallback": false,
+    "speech": "open-source-models-on-free-compute",
+    "whatsapp": "manual-prepared-share",
+    "externalWhatsAppDispatch": false,
+    "billing": "external",
+    "existingData": "preserve",
+    "actualFreeDeploymentRequired": true
+  },
+  "dependencyPolicy": "Follow stages in listed order. Implementation and local contracts unlock independent downstream work. A blocked hosted account/device check does not halt unrelated implementation, but blocks activation and readiness claims for the dependent feature. No paid fallback is authorized.",
+  "stages": [
+    {
+      "id": "N00",
+      "title": "Baseline and enforceable free-tier envelope",
+      "dependsOn": [],
+      "file": "docs/next-phase/01-scope-and-free-tier-baseline.md",
+      "read": [
+        "docs/next-phase/README.md",
+        "docs/next-phase/sources.md",
+        "docs/next-phase/06-verification-and-rollout.md"
+      ],
+      "acceptance": ["NAC-001", "NAC-002"],
+      "implementation": "not-started",
+      "localVerification": "not-started",
+      "hostedVerification": "not-started",
+      "teamAcceptance": "not-started",
+      "evidence": [],
+      "blockers": []
+    },
+    {
+      "id": "N01",
+      "title": "Simple workspace and preserved business authority",
+      "dependsOn": ["N00"],
+      "file": "docs/next-phase/02-simple-workspace.md",
+      "read": [
+        "docs/product/roles-and-permissions.md",
+        "docs/design/appearance-and-celebrations.md"
+      ],
+      "acceptance": ["NAC-003", "NAC-004", "NAC-005"],
+      "implementation": "not-started",
+      "localVerification": "not-started",
+      "hostedVerification": "not-started",
+      "teamAcceptance": "not-started",
+      "evidence": [],
+      "blockers": []
+    },
+    {
+      "id": "N02",
+      "title": "Simple leads and reviewed spreadsheet imports",
+      "dependsOn": ["N01"],
+      "file": "docs/next-phase/03-leads-and-imports.md",
+      "read": ["docs/next-phase/02-simple-workspace.md"],
+      "acceptance": ["NAC-006", "NAC-007"],
+      "implementation": "not-started",
+      "localVerification": "not-started",
+      "hostedVerification": "not-started",
+      "teamAcceptance": "not-started",
+      "evidence": [],
+      "blockers": []
+    },
+    {
+      "id": "N03",
+      "title": "Open-source dictation and reviewed structured entry",
+      "dependsOn": ["N02"],
+      "file": "docs/next-phase/04-open-source-voice.md",
+      "read": [
+        "docs/next-phase/01-scope-and-free-tier-baseline.md",
+        "docs/next-phase/03-leads-and-imports.md",
+        "docs/next-phase/sources.md"
+      ],
+      "acceptance": ["NAC-008", "NAC-009"],
+      "implementation": "not-started",
+      "localVerification": "not-started",
+      "hostedVerification": "not-started",
+      "teamAcceptance": "not-started",
+      "evidence": [],
+      "blockers": []
+    },
+    {
+      "id": "N04",
+      "title": "In-app reminders and manual WhatsApp messages",
+      "dependsOn": ["N01", "N02"],
+      "file": "docs/next-phase/05-reminders-and-manual-whatsapp.md",
+      "read": [
+        "docs/next-phase/01-scope-and-free-tier-baseline.md",
+        "docs/next-phase/02-simple-workspace.md"
+      ],
+      "acceptance": ["NAC-010", "NAC-011"],
+      "implementation": "not-started",
+      "localVerification": "not-started",
+      "hostedVerification": "not-started",
+      "teamAcceptance": "not-started",
+      "evidence": [],
+      "blockers": []
+    },
+    {
+      "id": "N05",
+      "title": "Integrated verification, migration, recovery and pilot",
+      "dependsOn": ["N01", "N02", "N03", "N04"],
+      "file": "docs/next-phase/06-verification-and-rollout.md",
+      "read": [
+        "docs/next-phase/README.md",
+        "docs/next-phase/evidence/README.md",
+        "docs/operations/company-account-setup.md"
+      ],
+      "acceptance": ["NAC-012", "NAC-013"],
+      "implementation": "not-started",
+      "localVerification": "not-started",
+      "hostedVerification": "not-started",
+      "teamAcceptance": "not-started",
+      "evidence": [],
+      "blockers": []
+    }
+  ]
+}

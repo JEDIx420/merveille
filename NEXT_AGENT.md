@@ -1,13 +1,13 @@
-# Next agent — improve the existing Merveille Designs app
+# Next agent
 
-The application already exists on **`implement/merveille-portal`**. Resume that branch or a safely based feature branch. If starting in an empty folder, clone this repository and check out the existing implementation branch; do not create a fresh scaffold from `main`.
+The application exists on **`implement/merveille-portal`**. Continue that branch or a safely based feature branch; preserve local work and do not scaffold from main.
 
 ## Copyable kickoff
 
-Continue the existing app in `https://github.com/JEDIx420/merveille` on `implement/merveille-portal`. Read `AGENTS.md`, `START_HERE.md`, then `docs/remediation/README.md` and its ordered files. Follow `docs/remediation/manifest.json` through R00–R05, keeping `task.md` and evidence current. Implement the neutral premium UI, real Cloudflare-managed accounts, admin-managed invitations/access, and functional repairs. Keep the existing Merveille Designs logo and Cloudflare/Wrangler foundation. Remove all deployed demo logins and role/view switching. Jay is the initial admin; obtain his exact sign-in email privately when setup requires it. Use reviewed project-local skills from `docs/implementation/skills-and-tools.md`. Continue through implementation and meaningful verification; give the team a real-account browser testing walkthrough. Preserve existing work and records, and report external setup blockers honestly.
+Continue the existing Merveille app in `https://github.com/JEDIx420/merveille` on `implement/merveille-portal`. Read `AGENTS.md`, `START_HERE.md`, `task.md`, then `docs/next-phase/README.md` and its ordered documents. Implement N00–N05 from `docs/next-phase/manifest.json`: simpler Asana-style work views, client visibility, minimal leads/imports, free open-source voice entry, in-portal reminders and manually prepared WhatsApp messages. Cloudflare Free only; no paid services or upgrades. Keep WhatsApp API delivery disabled; people choose the group and send. Billing is external; preserve version-bound acceptance/clearance, consultant approval then manager drawing release, roles, history, email-code access, logo and themes. Verify actual Free-plan limits first, then proceed in complete slices with meaningful local/browser checks and independent review. Keep progress/evidence current, preserve completed remediation and report blocked external gates honestly.
 
-## Read before executing
+## Current work order
 
-The complete current work order is [docs/remediation/README.md](docs/remediation/README.md). Its product amendment and visual contract supersede the old warm/gold interface specimen and P00-first instructions. Existing business workflow specifications remain binding where unchanged. Historical checked boxes are not evidence of current release readiness.
+The detailed prompt is [docs/next-phase/README.md](docs/next-phase/README.md). It supersedes conflicting older billing, paid-provider and automated WhatsApp instructions. Historical [remediation evidence](docs/remediation/manifest.json) remains available; do not restart completed work.
 
-This update supplies instructions only. Application remediation, live account setup and deployment have not been performed by this documentation change.
+The documentation handoff is not application implementation or deployment. New-phase status is recorded separately in the active manifest.

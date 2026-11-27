@@ -1,5 +1,7 @@
 # Agent handoff and continuity
 
+**27 November 2026 next-phase scope:** [The active N00–N05 plan](../next-phase/README.md) supersedes conflicting instructions below. Use Cloudflare Free only, bounded open-source voice, external billing with version-bound ADMIN commercial clearance, and manually prepared WhatsApp messages with API delivery disabled. Preserve completed work, historical records, access/approval rules and applicable recovery gates. Older finance/provider setup and execution sequences below are retained as reference; they are not current work or permission to enable paid services.
+
 ## Canonical entry points
 
 Read [START_HERE.md](../../START_HERE.md). [AGENTS.md](../../AGENTS.md) contains repository-wide rules; [GEMINI.md](../../GEMINI.md) and [agent.md](../../agent.md) are short compatibility pointers. The active plan is [docs/remediation](../remediation/README.md), with R00–R05 dependencies. The [original roadmap](roadmap.md) is historical specification; the existing application must not be scaffolded again.

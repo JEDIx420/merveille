@@ -1,5 +1,7 @@
 # Changes, estimates and authorization for extra work
 
+**27 November 2026 next-phase scope:** [The active plan](../next-phase/01-scope-and-free-tier-baseline.md) moves billing outside the portal. Retain this specification for historical financial integrity and unchanged acceptance/authority rules; do not extend in-portal accounting or configure new billing/provider services from it. Implement the version-bound ADMIN external commercial-clearance transition without bypassing main-client acceptance or manager authorization, and preserve existing records/access.
+
 **Requirements:** REQ-CHG-001–005, REQ-IAM-005, REQ-FIN-002/005/006, REQ-MAT-003.
 
 **Confirmed gate:** Main-client estimate acceptance + administrator-confirmed required payment + manager authorization are required before additional work starts.

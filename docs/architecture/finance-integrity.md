@@ -1,5 +1,7 @@
 # Financial integrity and reporting
 
+**27 November 2026 next-phase scope:** [The active plan](../next-phase/01-scope-and-free-tier-baseline.md) moves billing outside the portal. Retain this specification for historical financial integrity and unchanged acceptance/authority rules; do not extend in-portal accounting or configure new billing/provider services from it. Implement the version-bound ADMIN external commercial-clearance transition without bypassing main-client acceptance or manager authorization, and preserve existing records/access.
+
 This portal maintains the firm's operational accounts. It must support the requested quotations, schedules, invoices, confirmed receipts, project expenses, consultant fees, salaries and profit reporting. The requirement does not establish tax rates, statutory filing rules, payroll tax calculations, or a legally compliant invoice format. Those are owner/accountant configuration inputs before real accounting use.
 
 ## Authoritative actions

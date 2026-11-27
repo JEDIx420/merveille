@@ -1,5 +1,7 @@
 # Architecture overview
 
+**27 November 2026 next-phase scope:** [The active N00–N05 plan](../next-phase/README.md) supersedes conflicting instructions below. Use Cloudflare Free only, bounded open-source voice, external billing with version-bound ADMIN commercial clearance, and manually prepared WhatsApp messages with API delivery disabled. Preserve completed work, historical records, access/approval rules and applicable recovery gates. Older finance/provider setup and execution sequences below are retained as reference; they are not current work or permission to enable paid services.
+
 Status: architecture contract for the existing foundation, with open integration/verification work. Follow the [current remediation plan](../remediation/README.md), [product requirements](../product/requirements.md) and [permissions](../product/roles-and-permissions.md). Technical source notes below were checked 24 November 2026; they do not prove deployed readiness.
 
 ## Decision

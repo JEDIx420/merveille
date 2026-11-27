@@ -1,5 +1,7 @@
 # Product amendment — existing foundation, premium interface, real people
 
+**27 November 2026 next-phase scope:** [The active N00–N05 plan](../next-phase/README.md) supersedes conflicting instructions below. Use Cloudflare Free only, bounded open-source voice, external billing with version-bound ADMIN commercial clearance, and manually prepared WhatsApp messages with API delivery disabled. Preserve completed work, historical records, access/approval rules and applicable recovery gates. Older finance/provider setup and execution sequences below are retained as reference; they are not current work or permission to enable paid services.
+
 **Later user amendment (24 November 2026):** Cloudflare-managed authentication replaces the Google-only constraint. Jay's account remains build/staging; the company will have its own Cloudflare account and deployment. Ordinary company administration must be browser-only, with automatic invitation admission after one-time operator setup. See [company account setup](../operations/company-account-setup.md). Keep earlier Google setup/evidence as history, not a continuing dependency.
 
 Recorded **24 November 2026** from the user's latest correction. This document takes precedence over conflicting earlier presentation, demo-login and first-build instructions. It changes how the existing product is delivered and accessed; it does not remove the agreed business workflows.

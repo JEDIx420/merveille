@@ -1,7 +1,7 @@
-# Antigravity kickoff — current remediation
+# Implementation kickoff
 
-Use [NEXT_AGENT.md](../../NEXT_AGENT.md) for the complete short copyable prompt. It applies to an existing checkout or an empty folder on the laptop.
+Use [NEXT_AGENT.md](../../NEXT_AGENT.md) for the short copyable prompt, for an existing checkout or an empty folder. This older filename remains a compatibility entry.
 
-The app already exists on `implement/merveille-portal`. Clone/check out that existing branch, preserve local work, read AGENTS.md and START_HERE.md, then execute the ordered [remediation work order](../remediation/README.md) and R00–R05 manifest. Do not create a new scaffold from the planning-only main branch or restart the historical P00 sequence.
+The app exists on `implement/merveille-portal`. Preserve its work, read AGENTS.md, START_HERE.md and task.md, then follow the ordered [next-phase plan](../next-phase/README.md) and N00–N05 manifest. Do not scaffold from planning-only main or restart completed R00–R05/P00–P14 work.
 
-The full setup guide is [skills and tools](skills-and-tools.md). It selects only useful reviewed project-local skills. The new neutral UI, actual Google-account administration and functional repair contracts take precedence over generic upstream aesthetic or architecture defaults.
+The [skills and tools guide](skills-and-tools.md) covers project-local tools. Current Free-only, open-source voice, manual WhatsApp, external billing, access and design constraints override generic upstream defaults.

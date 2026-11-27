@@ -1,7 +1,7 @@
 # Current implementation plan
 
-Use [docs/remediation/manifest.json](docs/remediation/manifest.json) in R00–R05 dependency order. The old P00–P14 plan is historical reference.
+Follow the [next-phase work order](docs/next-phase/README.md) and [N00–N05 manifest](docs/next-phase/manifest.json). The 27 November amendment requires Cloudflare Free only, open-source voice, manual prepared WhatsApp sharing and external billing. Preserve the existing application and unchanged business/access rules.
 
-Local containment, identity/capability repairs, shared neutral UI, business integrity, background jobs and independent recovery have been implemented. Final integrated browser/workerd verification and external onboarding gates are tracked in [task.md](task.md). See [session evidence](docs/evidence/remediation/session.md) for exact results.
+The documentation handoff is complete only after its recorded checks. Application work starts separately; no implementation, configuration or deployment is implied. [task.md](task.md) records the actual checkpoint.
 
-Hosted Google/Access onboarding and real-person acceptance are distinct gates. The [operator and browser-only handoff](docs/operations/real-account-handoff.md) explains the remaining steps. No unconfigured provider or unrun team test may be described as passed.
+The [R00–R05 manifest](docs/remediation/manifest.json) and [session evidence](docs/evidence/remediation/session.md) retain prior results. Carry forward applicable real-account, recovery and backup gates under [the new verification contract](docs/next-phase/06-verification-and-rollout.md). Old API WhatsApp/provider checks are deferred out of current scope, not passed. Do not restart P00–P14 or completed remediation.

@@ -1,3 +1,3 @@
 # Agent entry point
 
-The canonical rules are [AGENTS.md](AGENTS.md). Read [NEXT_AGENT.md](NEXT_AGENT.md) and [START_HERE.md](START_HERE.md), then follow the current [remediation work order](docs/remediation/README.md). This singular filename is a compatibility pointer, not a second instruction set.
+Read [AGENTS.md](AGENTS.md), [NEXT_AGENT.md](NEXT_AGENT.md), [START_HERE.md](START_HERE.md) and [task.md](task.md), then follow the active [next-phase work order](docs/next-phase/README.md) and N00–N05 manifest. This compatibility filename is a pointer, not a second instruction set.

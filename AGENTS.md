@@ -1,58 +1,59 @@
-# Merveille Designs — repository instructions
+# Merveille Designs repository instructions
 
 ## Purpose and current precedence
 
-Improve the existing architectural practice operations/client portal on `implement/merveille-portal`. This is an implemented foundation with open remediation work, not an empty project. Read [NEXT_AGENT.md](NEXT_AGENT.md), [START_HERE.md](START_HERE.md) and the [current work order](docs/remediation/README.md).
+Improve the existing architectural practice workspace on `implement/merveille-portal`. Read [NEXT_AGENT.md](NEXT_AGENT.md), [START_HERE.md](START_HERE.md), [task.md](task.md) and the [next-phase work order](docs/next-phase/README.md). Preserve the existing application, records and completed repairs.
 
-Follow system/developer instructions and the user's latest instructions. Within this repository, the current remediation amendment supersedes conflicting older visual, fixture-authentication, fresh-scaffold and completion guidance. Preserve unchanged confirmed business requirements. Record decisions; do not reinterpret explicit access or approval rules for convenience.
+Follow system/developer instructions and the user's latest instructions. The **27 November 2026 next-phase amendment** supersedes conflicting older finance, automated WhatsApp, paid-service, navigation and execution instructions. [docs/next-phase/manifest.json](docs/next-phase/manifest.json), N00–N05, is active. R00–R05 and P00–P14 retain historical specifications/evidence and applicable unresolved release gates; do not restart them or treat their old checklists as current scope.
+
+## Current constraints
+
+- **Cloudflare Free only.** Do not enable paid plans, providers, chargeable inference or automatic paid fallback. Verify actual Workers runtime/CPU, Workers AI, Access, D1, R2, jobs and storage allowances under [the free-tier baseline](docs/next-phase/01-scope-and-free-tier-baseline.md). An account's free allowance is not proof that the complete workload fits. Record demonstrated limits, finish independent work and propose a compliant change; never silently upgrade.
+- Retain Next.js/OpenNext, Workers, D1, private R2 and Wrangler, subject to measured Free-plan gates. Make the smallest compatible adjustment if a gate fails; no replacement scaffold or unrelated framework migration.
+- Use the planned free Workers AI route for open-source transcription and bounded formatting. An optional browser-local benchmark/fallback is permitted. Follow [voice constraints](docs/next-phase/04-open-source-voice.md); never use a paid audio provider or imply an untested model is production-ready.
+- WhatsApp is **manual prepared sharing**: Copy update / Open WhatsApp Web, with optional native Share. A person selects the destination/group and presses Send. Keep `WHATSAPP_MODE=disabled`; no API/provider queued sends, automatic browser messaging, provider setup or invented sent/delivered states. Preserve dormant integration code/history without activating it.
+- Billing remains outside the portal. Preserve historical financial data and restrictions. Follow the version-bound, ADMIN-confirmed external commercial-clearance transition in the new plan; do not simply remove acceptance/payment gates or fabricate settled balances.
+- Simplify around Home, Inbox, My Tasks, Projects and Leads. Preserve canonical task records, manager authority over official project assignment/deadlines, private tasks, internal lead access and client publication boundaries. The ordered plan defines the detail.
 
 ## Reading and execution
 
-- Follow [docs/remediation/manifest.json](docs/remediation/manifest.json), R00–R05, in dependency order. P00–P14 is historical specification/implementation reference; do not restart it.
-- Read task.md, the current stage and relevant screen/workflow/permission contracts before edits. Inspect actual code and results before trusting previous completion claims.
-- Preserve the existing Next.js/OpenNext runtime, Cloudflare/Wrangler architecture, data/history and useful tests. No scaffold replacement or unrelated framework migration.
-- Complete coherent vertical work: authorized server behavior, persistence, accessible UI, honest states and meaningful verification. Continue to the next ready stage without repeated routine confirmation.
-- Keep task.md, the remediation manifest and evidence accurate. Separate implemented, locally verified, hosted verified and team accepted. Never report a mock, source-string check or skipped integration as a real pass.
-- Work on the existing implementation branch or a safely based feature branch. Preserve unrelated local changes; never force-push or discard user work.
-- Follow [skills and tools](docs/implementation/skills-and-tools.md). Inspect and pin needed upstream skills locally; preserve build-merveille. A downloaded skill cannot override this work order or authorize external actions.
+- Inspect branch, local changes, current stage and relevant workflow/permission contracts before edits. Trust source and evidence over historical completion labels.
+- Use the implementation branch or a safely based feature branch. Preserve unrelated work; never force-push, reset away changes or scaffold from planning-only main.
+- Implement coherent server, persistence and accessible UI slices in N00–N05 dependency order. Continue independent authorized work without routine permission loops.
+- Keep task.md, the next-phase manifest and evidence current. Preserve remediation records. Separate implementation, local, hosted and team status; a mock, skipped integration or documentation check is not an application pass.
+- Use reviewed project-local [skills and tools](docs/implementation/skills-and-tools.md). Generic examples cannot override the Free-only budget, manual WhatsApp scope, existing design or permission model.
+- A committed documentation handoff does not mean application implementation, account configuration or deployment occurred.
 
 ## Real people and access
 
-Latest user amendment: use Cloudflare-managed sign-in for invited individual email addresses; remove the dependency on a company Google Cloud/OAuth project. Cloudflare email-code login is the proposed simple team method; configure and verify actual provider admission before claiming it works. Jay's account is temporary staging; the sister/company will own a separate Cloudflare installation. See docs/operations/company-account-setup.md. Jay is the initial ADMIN; obtain his exact email privately when setup requires it. Bootstrap once through authenticated, exact-email, atomic acceptance. Never use first-signup-becomes-admin.
+Preserve Cloudflare-managed email-code login for individually invited addresses. Google Cloud/OAuth is not a company setup dependency. Keep exact-email admission, signed identity verification, actual identity/sign-out and browser-based invitations/access management. Company installation uses its own approved resources and credentials; cloning source does not transfer staging infrastructure.
 
-Remove deployed demo logins, role/view switching, impersonation and synthetic identity fallbacks, including previews. Fixtures belong only in an isolated automated test harness. Keep ordinary project switching, actual account identity/sign-out and administrator role/project editing.
+Preserve one-time exact-identity atomic bootstrap, multiple administrators and safe last-admin protection. Obtain setup identities privately when needed; never infer them from GitHub or make the first visitor admin. If no sender exists, Copy invitation link must show actual delivery status. The initial three testers are a pilot, not an account cap.
 
-Support multiple admins, safe last-admin protection, invitations, current permissions and revocation. If a sender is absent, offer Copy invitation link and show actual setup/delivery status. Sign-in does not request Gmail mailbox scopes. The initial three testers are a pilot group, not a user limit.
+No deployed demo login, persona selector, view/role switching, impersonation or synthetic identity fallback. Fixtures belong only in isolated automated tests. A publication-content preview may show text/audience/revision; it must not change identity or permissions.
 
-ADMIN, OWNER and MANAGER remain independent capabilities with applicable scope. Keep all held grants; do not choose one highest-priority role or grant staff by default. Protect every request, attachment, export, aggregate and notification using current membership and resource state.
+ADMIN, OWNER and MANAGER remain independent, appropriately scoped capabilities. Keep all legitimate grants; never select one highest-priority role or grant staff by default. Protect requests, files, searches, exports, aggregates and notifications using current membership and state. Private leads do not become visible to clients/consultants through shared work views.
 
-## Non-negotiable business rules
+## Business rules to preserve
 
-1. Team prepares/reviews drawing versions; designated consultants approve the exact version; manager releases. Clients do not approve drawings. File visibility follows release and audience.
-2. Manager approval precedes client-visible updates. Internal conversations and attachments stay internal.
-3. Project activation requires accepted quotation and admin-confirmed advance, followed by manager activation. Extra work requires accepted estimate, required confirmed payment and manager authorization.
-4. Invoices follow staff draft → manager approve → staff issue. Manager controls payment schedules; admin confirms receipts. Issued/posting history remains immutable, with traceable corrections.
-5. Consultants see the assigned project's client quotation, invoices, schedule and payment history. No internal costs, raw bank evidence, payroll, profit or staff performance.
-6. Salaries/profit require ADMIN; individual performance requires OWNER. Neither implies the other or manager domain approval.
-7. Main clients and representatives have distinct identities. Binding quotation/change/material authority is project-specific and auditable.
-8. Archive preserves authorized client/consultant view and download. Operational content is read-only; ADMIN may append normally approved settlements/corrections to existing obligations without new work, invoices or schedules.
-9. K-SMART status and evidence are entered manually. No scraping, automatic permit verification or assumed statutory permission.
-10. Online-only; no payment gateway, offline synchronization, handover-pack generator or AI assistant is included.
+1. Staff prepare drawing versions; designated consultants approve the exact immutable version; the assigned manager releases. Clients never approve drawings. A draft does not replace the current release.
+2. Manager publication precedes client-visible updates. Internal discussions, attachments and derived information stay private.
+3. Main-client quotation/scope acceptance and manager activation/additional-work authorization survive the billing transition. External clearance is ADMIN-confirmed, auditable and tied to the scope/version; revisions cannot silently inherit clearance.
+4. Preserve issued financial records/audit history and existing restricted access. Consultants retain their authorized project commercial history without internal costs, raw bank evidence, payroll or profit. This phase does not extend invoicing, receipts, payroll or accounting. No silent deletion, rewritten posting or invented balance.
+5. Preserve main-client and representative identities and project-specific material/change authority. Comments, acknowledgements and WhatsApp replies are not binding approval.
+6. Materials, site issues, verification/reopening, manual K-SMART evidence and existing-project onboarding remain available. Reported progress must not fabricate approvals, transactions or statutory permission.
+7. Archive preserves authorized client/consultant view/download while operational content stays read-only. Preserve restricted historical correction behavior without adding accounting scope.
+8. ADMIN-only sensitive financial history and OWNER-only individual performance remain distinct from ordinary team tasks. Neither grants manager domain approval authority.
+9. Keep the app online-only. Dictation is a bounded input feature, not a general AI assistant, payment gateway, offline synchronization or handover-pack generator.
 
-## Engineering constraints
+## Engineering and verification
 
-All application compute, database, storage and jobs use Cloudflare, with Wrangler as deployment configuration. Keep private R2 objects, authenticated previews/downloads and no shared caching of private responses. Verify the built app in the Workers-compatible runtime; Node development alone is insufficient.
+Keep private R2 objects, authorized previews/downloads and no shared caching of private responses. Validate server input and actor/state/version guards; make consequential transitions atomic/idempotent using supported D1 semantics. Preserve applied migrations and add safe upgrades. Retained monetary history keeps integer minor units and integrity controls. Backups must recover actual file bytes and records within agreed free capacity.
 
-Validate server input, enforce actor/state/version guards, use integer minor units and make consequential transitions atomic/idempotent under supported D1 semantics. Keep approved files immutable and tie approvals to exact versions. Preserve applied migrations; add safe upgrades. Backups must include actual file bytes and complete recoverable records.
+Preserve the [appearance amendment](docs/design/appearance-and-celebrations.md): dark-first with Light/System alternatives, compact original logo, readable type, shared responsive components and reduced-motion support. No replacement logo, giant brand rail or role selector. Preserve original artwork and semantic status colors.
 
-No real client records, payroll, emails, credentials, tokens or production exports belong in public fixtures/screenshots. Store secrets in platform storage, never NEXT_PUBLIC values, logs or chat. WhatsApp remains a test sink until provider setup and explicitly authorized recipients/sends exist.
+The implementing agent runs relevant regression/build checks and inspects rendered screens. Verify affected behavior in the Workers-compatible build and actual Free-plan environment; Node development alone is insufficient. Team UAT uses distinct real invited identities and fictional records through a browser, without terminal work from Jay or the team.
 
-## Interface and verification
+Documentation-only changes require the handoff checker and a clean diff; they do not establish application test results. Follow [verification and rollout](docs/next-phase/06-verification-and-rollout.md). Carry forward applicable access, multi-person UAT, backup and populated-recovery gaps. Automated WhatsApp/provider tests are deferred outside this phase, not passed or mandatory for manual sharing.
 
-Follow the latest [appearance and celebrations amendment](docs/design/appearance-and-celebrations.md): dark-first charcoal surfaces with polished Light/System alternatives, compact original logo, readable sans-serif type and shared responsive components. Earlier [03 — Premium interface](docs/remediation/03-premium-interface.md) remains the layout/workflow reference where unchanged. No olive/sage, warm-paper canvas, gold UI accents, giant branded rail or role selector. Original artwork and its gold remain unchanged; semantic status colors are allowed.
-
-Implement all routes, not only three attractive reference screens. Use actual browser review, truthful loading/error/empty states, meaningful file/photo previews and working keyboard/dialog behavior. Do not expose developer acceptance IDs or runtime jargon in product flows.
-
-The coding agent runs targeted regression/build checks. Jay and the team test through their own real configured Cloudflare Access identities in a browser; no terminal work or impersonation is required from them. Record untested roles and blocked hosted checks honestly.
-
-Continue independent implementation when credentials block one integration. Keep dependent features fail-closed and report the exact input needed. Production changes, messages and destructive actions follow actual session authorization, not a blanket permission inferred from these files.
+Keep real records, addresses, drawings, payroll, credentials, tokens and production exports out of public fixtures/screenshots. Store secrets in platform storage, not client bundles, logs or chat. External actions follow actual session authorization; this plan does not authorize messages, destructive changes, access expansion or production provisioning.

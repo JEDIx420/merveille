@@ -2,55 +2,47 @@
 
 <img src="assets/brand/merveille-designs-logo.png" alt="Merveille Designs existing company logo" width="80">
 
-**An architectural practice workspace for projects, clients and the people delivering them.**
+An architectural practice workspace for projects, clients and the people delivering them.
 
-This branch contains an existing Next.js/OpenNext application on Cloudflare, its specifications and brand assets. The current assignment is to improve the foundation: consistent premium styling, real Google-account access and targeted functional repairs. It is **not yet a verified production release**.
+This branch contains the existing Next.js/OpenNext application on Cloudflare and its specifications. The next upgrade simplifies everyday work around the client's Asana examples, adds a small leads tracker and voice entry, and prepares WhatsApp updates for staff to send manually. **Cloudflare Free only; billing remains outside the portal.**
 
-## Next agent: start here
+## Implementation handoff
 
-Read **[NEXT_AGENT.md](NEXT_AGENT.md)** for the short kickoff, then [START_HERE.md](START_HERE.md) and the **[current remediation work order](docs/remediation/README.md)**. The application lives on `implement/merveille-portal`; do not scaffold a replacement from the planning-only default branch.
+Start with [NEXT_AGENT.md](NEXT_AGENT.md), then [START_HERE.md](START_HERE.md), [AGENTS.md](AGENTS.md) and the [detailed next-phase plan](docs/next-phase/README.md). The application lives on `implement/merveille-portal`; preserve it rather than scaffolding from planning-only main.
 
-| Current document | Purpose |
-|---|---|
-| [Product amendment](docs/remediation/01-product-amendment.md) | Latest user decisions and preserved business scope |
-| [Real accounts and testing](docs/remediation/02-identity-and-real-user-testing.md) | Google sign-in, Jay bootstrap, admins, invitations and scoped access |
-| [Premium interface](docs/remediation/03-premium-interface.md) | Neutral design system, shared shells/components and every route |
-| [Functional repairs](docs/remediation/04-functional-repairs.md) | Publication, permissions, financial integrity, reminders and recovery |
-| [Delivery and acceptance](docs/remediation/05-delivery-and-acceptance.md) | R00–R05 work sequence, verification and real-person UAT |
-| [Task state](task.md) and [manifest](docs/remediation/manifest.json) | Honest progress and resumable dependencies |
-| [AGENTS.md](AGENTS.md) and [skills/tools](docs/implementation/skills-and-tools.md) | Repository rules and reviewed project-local guidance |
+| Document | Purpose |
+| --- | --- |
+| [Next-phase plan](docs/next-phase/README.md) and [manifest](docs/next-phase/manifest.json) | Active N00–N05 implementation order |
+| [Scope and free-tier baseline](docs/next-phase/01-scope-and-free-tier-baseline.md) | Constraints, preservation, billing transition and feasibility |
+| [Simple workspace](docs/next-phase/02-simple-workspace.md) | Home, Inbox, My Tasks, Projects and client visibility |
+| [Leads and imports](docs/next-phase/03-leads-and-imports.md) | Minimal tracking, follow-ups, Excel and Asana migration |
+| [Open-source voice](docs/next-phase/04-open-source-voice.md) | Free transcription, formatting and device pilot |
+| [Reminders and manual WhatsApp](docs/next-phase/05-reminders-and-manual-whatsapp.md) | In-portal automation and human-sent messages |
+| [Verification and rollout](docs/next-phase/06-verification-and-rollout.md) | Runtime, access, recovery and real-team acceptance |
+| [Task state](task.md) | Actual checkpoint and prior evidence |
 
-## Current direction
+This handoff changes documentation only. Next-phase application implementation has not started, and the plan is not a production-readiness claim.
 
-The interface will use white, cool gray and graphite, readable typography and a compact existing logo at the top. The old warm/gold specimen is superseded. Branding remains **Merveille Designs**; the supplied company artwork is preserved.
+## Preserve the existing foundation
 
-People use their own invited Google accounts. Jay is the initial administrator and can add another admin; admins assign teammates, consultants and clients appropriate project access. The final app has no demo login, role selector or impersonation. Approximately three real people perform initial testing, without an account cap.
+Keep Next.js App Router/OpenNext, Workers, D1, private R2 and Wrangler, subject to actual Free-plan runtime/capacity gates. Extend the existing separate jobs Worker and notification records. Do not assume the account's plan or workload fits without verification, or enable paid services to clear a gate.
 
-This documentation update prepares that work; it does not change or deploy the application. The previously inspected preview is [merveille-web.rhelo-bible.workers.dev](https://merveille-web.rhelo-bible.workers.dev). Its current deployment must be verified during remediation. Historical phase checkmarks do not establish that real authentication, integrations, recovery or the redesigned screens are complete.
+Keep invited Cloudflare email-code accounts, separate ADMIN/OWNER/project roles and browser-based administration. No role switching, impersonation or deployed demo identities. Preserve the original compact logo and Dark/Light/System appearance.
 
-## Product scope
+Drawings retain staff preparation, designated consultant approval of the immutable version and manager release. Clients never approve drawings. Manager publication controls client updates. Materials, additional work, snags, manual permits, project onboarding and authorized archive access remain available. Internal information stays private.
 
-- Enquiries, requirements, site feasibility and quotations; activation after acceptance and admin-confirmed advance.
-- Multiple client projects and separate representative identities.
-- Tasks, drawings, site updates, manual K-SMART records, materials, changes and snags.
-- Consultant approval of an exact drawing version followed by manager final release; manager publication of ordinary updates.
-- Quotations, schedules, invoices, receipts, expenses and consultant fees. Salaries/profit are ADMIN-only; individual performance is OWNER-only.
-- Consultants see assigned client quotation/payment history while internal records stay private.
-- Waiting-on-you, in-portal/WhatsApp reminders and unresolved overdue escalation.
-- Archived records remain available to authorized clients/consultants, with recoverable long-term storage.
+Billing is handled elsewhere. Historical financial records and restricted access survive; activation/additional-work gates transition to version-bound external commercial clearance without bypassing accepted scope or manager authority.
 
-Operating baseline: around 30 projects and 10–15 concurrent users, desktop/phone, online-only, documents/photos/large drawings/site videos. No payment gateway, offline sync, handover-pack generator or AI assistant is requested.
+Voice uses the planned free Workers AI route for open-source transcription and bounded formatting, with a browser-local option assessed under the documented budget/device constraints. WhatsApp offers Copy update / Open WhatsApp Web: staff select the group and press Send. API delivery remains disabled; opening a share window is not proof of sending.
 
-## Architecture and specifications
+## Evidence and older specifications
 
-Preserve the existing Next.js App Router/OpenNext adapter and Cloudflare Workers, D1, private R2 and Wrangler configuration. Complete durable jobs and integrations through the current repair plan. No framework migration is part of the visual redesign.
+The [documentation index](docs/README.md) links workflows, screens, architecture and quality records. [Remediation](docs/remediation/manifest.json) and the [original roadmap](docs/implementation/roadmap.md) remain evidence/reference, not active execution. Preserve applicable real-account, backup and recovery gaps; automated WhatsApp/provider tests are outside this phase.
 
-The [documentation index](docs/README.md) links the original requirements, 20 screen contracts, workflows, architecture and acceptance catalogue. They remain useful specifications where unchanged. [P00–P14](docs/implementation/roadmap.md) is the historical build sequence; **R00–R05 is active**.
+Earlier planning assumed around 30 projects and 10–15 concurrent users with phone/desktop access and drawings/photos/videos. These are workload inputs to validate against Free allowances, not proven capacity. The company needs its own installation; cloning this repository does not move staging infrastructure.
 
-The [brand package](assets/brand/README.md) records the original artwork from [Merveille Designs' Refrens profile](https://www.refrens.com/merveille-designs), source URLs and hashes. Preserve the PNGs; interface tokens are separate implementation choices.
+## Documentation verification
 
-## Verify the documentation
-
-Run `node scripts/check-handoff.mjs` from the repository root. It checks links, original phase/acceptance mappings and brand integrity. It does not test the application or prove release readiness. Application verification belongs to the implementing agent and the recorded real-account UAT.
+Run `node scripts/check-handoff.mjs` from the repository root. It checks documentation links, manifests, historical requirement/acceptance mappings and original brand integrity. It does not test the application or prove Free-plan feasibility. Application checks belong to the implementing agent and real-team acceptance record.
 
 No private client records, personal addresses, drawings, payroll or credentials belong in this public repository.

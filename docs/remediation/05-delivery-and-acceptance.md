@@ -1,5 +1,7 @@
 # Delivery sequence and acceptance
 
+**27 November 2026 next-phase scope:** [The active N00–N05 plan](../next-phase/README.md) supersedes conflicting instructions below. Use Cloudflare Free only, bounded open-source voice, external billing with version-bound ADMIN commercial clearance, and manually prepared WhatsApp messages with API delivery disabled. Preserve completed work, historical records, access/approval rules and applicable recovery gates. Older finance/provider setup and execution sequences below are retained as reference; they are not current work or permission to enable paid services.
+
 Use [manifest.json](manifest.json) for dependencies and [task.md](../../task.md) for the session checkpoint. R00–R05 is the current work; P00–P14 remains reference history. Every stage starts **not started** in this documentation handoff. Only the implementing agent can change that status after obtaining evidence.
 
 ## R00 — Establish the actual baseline and contain demo behavior

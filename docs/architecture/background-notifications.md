@@ -1,5 +1,7 @@
 # Background work and notifications
 
+**27 November 2026 next-phase scope:** [The active N00–N05 plan](../next-phase/README.md) supersedes conflicting instructions below. Use Cloudflare Free only, bounded open-source voice, external billing with version-bound ADMIN commercial clearance, and manually prepared WhatsApp messages with API delivery disabled. Preserve completed work, historical records, access/approval rules and applicable recovery gates. Older finance/provider setup and execution sequences below are retained as reference; they are not current work or permission to enable paid services.
+
 ## Required behavior
 
 Send in-portal and WhatsApp reminders for payments due, overdue drawings and overdue tasks. Escalate unresolved overdue items to ADMIN. Add notifications for assigned reviews or decisions where they support “Waiting on you.” A notification describes the state of a real entity; dismissing it does not resolve that entity.

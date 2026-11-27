@@ -1,6 +1,6 @@
 ---
 trigger: always_on
-description: "Follow the current Merveille Designs remediation work order and repository instructions."
+description: "Follow the current Merveille Designs next-phase plan and repository instructions."
 ---
 
-Read AGENTS.md, NEXT_AGENT.md and START_HERE.md. Continue the existing application on implement/merveille-portal through docs/remediation/manifest.json (R00–R05); do not restart P00 or scaffold from main. The current amendment supersedes old visual/demo guidance. Preserve confirmed workflows, use real Google-account access without a role switcher, and record actual verification in task.md. Read detailed screen/workflow files when their stage requires them.
+Read AGENTS.md, NEXT_AGENT.md, START_HERE.md and task.md. Continue the existing application on implement/merveille-portal through docs/next-phase/manifest.json (N00–N05). Cloudflare Free only; open-source voice under bounded free inference; manual prepared WhatsApp sharing with API delivery disabled; billing external. Preserve roles, exact-version consultant approval then manager release, current email-code access, logo/themes and history. No role switcher, impersonation or paid fallback. R00–R05/P00–P14 are prior evidence/reference; do not restart completed work. Record actual verification separately from this documentation handoff.

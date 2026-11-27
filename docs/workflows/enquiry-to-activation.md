@@ -1,5 +1,7 @@
 # Enquiry, feasibility, quotation and activation
 
+**27 November 2026 next-phase scope:** [The active plan](../next-phase/01-scope-and-free-tier-baseline.md) moves billing outside the portal. Retain this specification for historical financial integrity and unchanged acceptance/authority rules; do not extend in-portal accounting or configure new billing/provider services from it. Implement the version-bound ADMIN external commercial-clearance transition without bypassing main-client acceptance or manager authorization, and preserve existing records/access.
+
 **Requirements:** REQ-PRJ-001–007, REQ-IAM-005, REQ-FIN-002/005, REQ-CHG-001–005.
 
 **Provenance:** Confirmed lifecycle DEC-007. Internal quote review, intake fields and manager activation are engineering defaults that make the lifecycle implementable.

@@ -1,8 +1,20 @@
 # Merveille Designs — current task state
 
-Updated 25 November 2026. The application foundation exists on `implement/merveille-portal`. The current assignment is [remediation](docs/remediation/README.md), based on audited source `813ef8b765045b95ff713665a3217e4487491d75`. Remediation is locally verified; isolated staging provisioning is underway and real-account acceptance remains a separate gate.
+## Active next phase recorded 27 November 2026
 
-## Active stages
+The current work order is [docs/next-phase/README.md](docs/next-phase/README.md), with [N00–N05 dependencies](docs/next-phase/manifest.json). This documentation handoff covers a simpler Asana-style workspace, minimal leads/imports, open-source voice using bounded free inference, in-portal reminders and manual prepared WhatsApp sharing. Cloudflare Free only; no paid providers/upgrades. Billing remains external, with preserved history and version-bound commercial clearance.
+
+All N00–N05 application stages are **not started**. This change does not implement application features, configure accounts, deploy, send messages or establish Free-plan capacity. [Documentation handoff verification](docs/next-phase/evidence/handoff-2026-11-27.md) records the passing documentation checker and diff review separately from later application evidence.
+
+**Next exact action:** read the new ordered plan, inspect the latest source and measure N00's actual Free-plan/runtime/quota gates before implementation. Preserve completed remediation and current email-code access, roles, logo/themes and consultant-approval/manager-release workflow. Keep WhatsApp API mode disabled; no provider credentials or webhook smoke test is required for manual sharing.
+
+Carry forward applicable multi-person access/business UAT, backup automation/monitoring and populated-recovery gaps. Historical automated WhatsApp/provider checks are deferred out of this phase, not passed. The previous checkpoints below retain their original evidence and statuses; their old next-action wording is historical, not the active assignment.
+
+## Previous remediation baseline
+
+Recorded 25 November 2026. The foundation exists on `implement/merveille-portal`; [remediation](docs/remediation/README.md) began from audited source `813ef8b765045b95ff713665a3217e4487491d75`. Its implementation/evidence is retained below. Current next-phase work does not reopen completed stages or convert blocked hosted checks into passes.
+
+## Recorded remediation stages
 
 | Stage | Work | Implementation | Local verification | Hosted verification | Team acceptance |
 |---|---|---|---|---|---|

@@ -1,5 +1,7 @@
 # Merveille Designs — current remediation work order
 
+**27 November 2026 next-phase scope:** [The active N00–N05 plan](../next-phase/README.md) supersedes conflicting instructions below. Use Cloudflare Free only, bounded open-source voice, external billing with version-bound ADMIN commercial clearance, and manually prepared WhatsApp messages with API delivery disabled. Preserve completed work, historical records, access/approval rules and applicable recovery gates. Older finance/provider setup and execution sequences below are retained as reference; they are not current work or permission to enable paid services.
+
 **25 November appearance amendment:** [Dark-first themes and permission-aware celebrations](../design/appearance-and-celebrations.md) supersedes earlier light-only defaults. Cloudflare-managed email-code sign-in remains the current identity method.
 
 **Active instruction, 24 November 2026.** Build on the existing application. Deliver a consistent premium SaaS interface, genuine Google-account access and reliable workflows. Preserve working domain code and records; complete the repairs below without restarting the project.

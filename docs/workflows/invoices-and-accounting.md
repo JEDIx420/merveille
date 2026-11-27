@@ -1,5 +1,7 @@
 # Invoices, schedules, receipts and accounting
 
+**27 November 2026 next-phase scope:** [The active plan](../next-phase/01-scope-and-free-tier-baseline.md) moves billing outside the portal. Retain this specification for historical financial integrity and unchanged acceptance/authority rules; do not extend in-portal accounting or configure new billing/provider services from it. Implement the version-bound ADMIN external commercial-clearance transition without bypassing main-client acceptance or manager authorization, and preserve existing records/access.
+
 **Requirements:** REQ-FIN-001–013, REQ-IAM-004/006, REQ-DAS-002, REQ-ARC-005.
 
 **Confirmed:** The portal maintains accounts. Manager controls payment schedules; administrator confirms money received. Salaries/profit are administrator-only. There is no portal payment checkout.

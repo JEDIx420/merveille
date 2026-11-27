@@ -1,5 +1,7 @@
 # Merveille Designs — remediation walkthrough
 
+**27 November 2026 next-phase scope:** The [new ordered plan](docs/next-phase/README.md) is active. Its application work has not started; this handoff changes documentation only. The walkthrough below preserves earlier implementation evidence and is not proof that the Free-only, open-source voice, external-billing or manual-WhatsApp upgrade is implemented. Follow [current task state](task.md) for the next action and retain applicable access/recovery gates.
+
 The existing application was repaired in place on `implement/merveille-portal`, starting from `82921d6`. Next.js 15.5.29, React 19, OpenNext 1.20.18, Cloudflare Workers/D1/private R2 and Wrangler 4.167.0 remain the foundation. The original logo is unchanged.
 
 This is local implementation evidence, not a declaration of production readiness. The old P00–P14 release claims are superseded. See the [current checkpoint](task.md), [remediation evidence](docs/evidence/remediation/session.md) and [real-account handoff](docs/operations/real-account-handoff.md).

@@ -1,5 +1,7 @@
 # Move the portal to the company's Cloudflare account
 
+**27 November 2026 next-phase scope:** [The active N00–N05 plan](../next-phase/README.md) supersedes conflicting instructions below. Use Cloudflare Free only, bounded open-source voice, external billing with version-bound ADMIN commercial clearance, and manually prepared WhatsApp messages with API delivery disabled. Preserve completed work, historical records, access/approval rules and applicable recovery gates. Older finance/provider setup and execution sequences below are retained as reference; they are not current work or permission to enable paid services.
+
 ## Ownership and daily use
 
 Jay's account hosts development/staging only. The user will create a separate Cloudflare account owned by the sister/company, clone this repository, and perform the one-time infrastructure setup there. The sister's day-to-day work must use the portal in a browser: invite a person, assign explicit capabilities/projects, copy a private invitation link, and suspend or remove access. She should not need Wrangler, SQL, Google Cloud, or code for those operations.

@@ -1,6 +1,6 @@
 # Roles, authority and permissions
 
-The current [real-account contract](../remediation/02-identity-and-real-user-testing.md) adds Google sign-in, Jay’s one-time private-email bootstrap, multiple admins, invitation/edge admission and real-person UAT. No role/view switcher or deployed synthetic identities are allowed. The capabilities and business authority below remain unchanged.
+The [27 November next-phase work order](../next-phase/README.md) is current: invited Cloudflare email-code sign-in, Free-account admission limits, bounded voice entry, manual WhatsApp sharing and billing handled externally. Preserve the capability and scope rules below; [the external-commercial transition](../next-phase/02-simple-workspace.md) replaces new in-portal billing while retaining restricted historical access and version-bound authorization. The earlier [real-account contract](../remediation/02-identity-and-real-user-testing.md) remains background for exact-email bootstrap, multiple admins, invitation/edge admission and real-person UAT. No role/view switcher or deployed synthetic identities are allowed.
 
 ## Model
 

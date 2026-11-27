@@ -1,5 +1,7 @@
 # Functional repairs and release evidence
 
+**27 November 2026 next-phase scope:** [The active N00–N05 plan](../next-phase/README.md) supersedes conflicting instructions below. Use Cloudflare Free only, bounded open-source voice, external billing with version-bound ADMIN commercial clearance, and manually prepared WhatsApp messages with API delivery disabled. Preserve completed work, historical records, access/approval rules and applicable recovery gates. Older finance/provider setup and execution sequences below are retained as reference; they are not current work or permission to enable paid services.
+
 This is an implementation brief for the existing application, based on source commit `813ef8b765045b95ff713665a3217e4487491d75`. It does not authorize live messages, production migrations or deployment changes. Preserve working domain services, historical records, identifiers and migrations. Improve the existing Cloudflare application; do not replace it with a new product.
 
 Read [identity and real-person testing](02-identity-and-real-user-testing.md), [interface requirements](03-premium-interface.md), [confirmed requirements](../product/requirements.md), [permissions](../product/roles-and-permissions.md) and the relevant [workflows](../workflows/README.md). The current source has real implementation work, but comments, synthetic results and checked task boxes are not release evidence.

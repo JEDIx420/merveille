@@ -1,6 +1,6 @@
 # Skills and tools for the implementation agent
 
-Checked 24 November 2026. Start with [START_HERE.md](../../START_HERE.md) and [AGENTS.md](../../AGENTS.md). Skills help execute this specification; they do not replace its product decisions, brand assets, permission model or deployment boundaries. The repository's own entry skill is `.agents/skills/build-merveille/SKILL.md`.
+Routing updated 27 November 2026; retained tool-source notes were checked on 24 November. Start with [START_HERE.md](../../START_HERE.md) and [AGENTS.md](../../AGENTS.md). Skills help execute this specification; they do not replace its product decisions, brand assets, permission model or deployment boundaries. The repository's own entry skill is `.agents/skills/build-merveille/SKILL.md`.
 
 ## From an empty folder on the laptop
 
@@ -11,7 +11,7 @@ git clone --branch implement/merveille-portal https://github.com/JEDIx420/mervei
 node scripts/check-handoff.mjs
 ```
 
-If the folder already contains the checkout, inspect `git status` and its remote, then resume the existing implementation branch. If it contains unrelated work, preserve that work and use a new `merveille` subdirectory. Never erase a folder, reset a branch or overwrite local changes to make these instructions fit. The application already exists. Do not scaffold it again or create a same-named branch from the planning-only main branch. Follow [the current remediation work order](../remediation/README.md).
+If the folder already contains the checkout, inspect `git status` and its remote, then resume the existing implementation branch. If it contains unrelated work, preserve that work and use a new `merveille` subdirectory. Never erase a folder, reset a branch or overwrite local changes to make these instructions fit. The application already exists. Do not scaffold it again or create a same-named branch from the planning-only main branch. Follow [the current next-phase work order](../next-phase/README.md).
 
 Verify Git, Node and the package manager already installed on the laptop. The currently documented Skills CLI requires Node 22.20 or later. Use the existing runtime/lockfile and a compatible Node version; inspect the recorded runtime ADR and package engines before changing versions. Use project-local dependencies and the repository's chosen package manager. Do not change the user's global tools or IDE permissions as a shortcut.
 
@@ -21,9 +21,9 @@ First inspect any already installed, pinned project-local skills. Reuse valid re
 
 | Source repository | Exact skill name | Use in this project |
 | --- | --- | --- |
-| `cloudflare/skills` | `wrangler` | Current remediation: local bindings, generated types, environments, Wrangler configuration and controlled deployment commands |
+| `cloudflare/skills` | `wrangler` | Current implementation: local bindings, generated types, environments, Wrangler configuration and controlled deployment commands |
 | `cloudflare/skills` | `workers-best-practices` | Workers runtime behaviour, private file streaming, D1/R2 bindings, background jobs, secrets and runtime tests |
-| `anthropics/skills` | `frontend-design` | Implement the current neutral premium interface, shared components and complete responsive workflows |
+| `anthropics/skills` | `frontend-design` | Simplify the established Dark/Light/System interface with shared components and responsive workflows |
 | `vercel-labs/agent-skills` | `web-design-guidelines` | Review implemented components for keyboard access, focus, forms, responsive layout and interaction quality |
 | `microsoft/playwright-cli` | `playwright-cli` | Inspect actual local/staging screens, exercise role-specific journeys and collect browser evidence |
 
@@ -40,7 +40,7 @@ npx skills add vercel-labs/agent-skills --list
 npx skills add microsoft/playwright-cli --list
 ```
 
-Read each selected `SKILL.md` and its bundled references, scripts and agent configuration before activating it. Obtain source snapshots outside the project's skill-discovery directory for that inspection. Select an exact CLI version and full source commit for each reviewed repository; do not claim that a review of today's main branch covers a later download. Record those versions and the inspected files in the current remediation stage evidence.
+Read each selected `SKILL.md` and its bundled references, scripts and agent configuration before activating it. Obtain source snapshots outside the project's skill-discovery directory for that inspection. Select an exact CLI version and full source commit for each reviewed repository; do not claim that a review of today's main branch covers a later download. Record those versions and inspected files in the active next-phase evidence. Do not reinstall already pinned skills merely to start this phase.
 
 The commands below are templates using variables that the agent must first populate with those reviewed versions/commits. The CLI supports `owner/repo@ref`, a selected `--skill`, and the `antigravity` agent target. Project scope is the default; `--copy` gives the repository concrete files. Preserve `.agents/skills/build-merveille` and the upstream licence notices.
 
@@ -62,11 +62,11 @@ The user explicitly chose **Wrangler**. Current Cloudflare skills describe a new
 
 The existing application selected Next.js/OpenNext in [ADR 0001](../architecture/decisions/0001-runtime.md). Keep that adapter and the pinned Wrangler workflow. Verify SSR, cookies/headers, mutations and local D1/R2 in the actual Workers-compatible build as affected by changes. The user's request is to improve the existing foundation; no vinext migration or repeated framework-selection spike is needed. If a real runtime incompatibility appears, document it and make the smallest supported fix before considering a new ADR.
 
-Do not install or run a migration skill merely because a generic Cloudflare quickstart prefers a different framework or CLI. Frontend skills must follow [03 — Premium interface](../remediation/03-premium-interface.md): neutral palette, unchanged compact logo, shared CSS Modules/components and no role/view switcher.
+Do not install a migration skill merely because a generic quickstart prefers another framework or CLI. First honor [the Free-only baseline](../next-phase/01-scope-and-free-tier-baseline.md): no paid plan/provider, no chargeable inference fallback and no assumption that existing SSR or large-file capacity fits. Frontend work follows [the simpler workspace](../next-phase/02-simple-workspace.md) and [current appearance](../design/appearance-and-celebrations.md), retaining shared components, the compact logo and no role/view switcher.
 
 ## Browser tools and visual quality
 
-Use the real Merveille Designs logo and the approved [design system](../design/design-system.md). A design skill's generic aesthetic advice cannot replace the established identity. Build the portal's actual task, drawing and finance workflows; do not turn it into a marketing landing page or add unrequested AI features.
+Use the real Merveille Designs logo and the approved [design system](../design/design-system.md). A design skill's generic aesthetic advice cannot replace the established identity. Build the portal's task, drawing, lead and approved publication workflows. Billing is external; preserve historical data and follow the new commercial-clearance transition. The requested bounded dictation/formatting feature is in scope; a general AI chat assistant is not.
 
 Use project-local Playwright for repeatable acceptance tests. Microsoft's current CLI documentation also supports `npx playwright cli` with Playwright 1.59 or newer, so an additional global installation is unnecessary when the selected project version supports it:
 
@@ -77,12 +77,12 @@ npx --no-install playwright cli --help
 
 If that interface is unavailable, keep the pinned Playwright test runner and Antigravity's available browser capability while checking the official CLI documentation. Do not install a global tool merely because an example starts with `npm install -g`.
 
-Use isolated fixtures for developer regression tests only. Hosted UAT uses actual invited Google accounts with explicit capability/project grants; no deployed demo identities, persona switches or impersonation. Check desktop and phone layouts, keyboard navigation, loading/empty/error states, private downloads and forbidden actions. Keep authentication state, cookies and real customer data out of screenshots committed to Git. Browser inspection complements executable domain and permission tests; it cannot establish correct server authorization by itself.
+Use isolated fixtures for developer regression tests only. Hosted UAT uses actual invited Cloudflare email-code accounts with explicit capability/project grants; no deployed demo identities, persona switches or impersonation. Check desktop and phone layouts, keyboard navigation, loading/empty/error states, private downloads and forbidden actions. Keep authentication state, cookies and real customer data out of screenshots committed to Git. Browser inspection complements executable domain and permission tests; it cannot establish correct server authorization by itself.
 
 ## Continue through the entire implementation
 
-Use the next dependency-ready stage in [the remediation manifest](../remediation/manifest.json), R00–R05. The original P00–P14 manifest is historical reference. For each stage, read its specified screen/workflow files, implement the complete server/persistence/UI behaviour, verify its actual acceptance gates, record evidence and make a focused commit. Continue without requesting permission after every phase. Keep `task.md`, `implementation_plan.md` and `walkthrough.md` accurate enough for another session to resume.
+Use the next dependency-ready stage in [the next-phase manifest](../next-phase/manifest.json), N00–N05. R00–R05 and P00–P14 retain previous evidence and applicable preservation requirements; do not restart completed work. For each stage, read its specified screen/workflow files, implement the complete server/persistence/UI behaviour, verify its actual acceptance gates, record evidence and make a focused commit. Continue without requesting permission after every phase. Keep `task.md`, `implementation_plan.md` and `walkthrough.md` accurate enough for another session to resume.
 
-Missing Cloudflare credentials, WhatsApp setup or a final operational value should block only dependent integration checks. Complete independent local work, maintain explicit `blocked` states and prepare exact setup instructions. Never replace a blocked real integration with a fabricated pass. Production deployment and live WhatsApp delivery follow the user's actual authorization and [operational inputs](operational-inputs.md); downloading a skill grants neither.
+Missing Cloudflare access, a Free-plan runtime/model capability or a required operating value blocks only dependent checks. Complete independent local work and record the exact limitation without a paid fallback. Follow [open-source voice](../next-phase/04-open-source-voice.md) and [manual WhatsApp](../next-phase/05-reminders-and-manual-whatsapp.md): keep API delivery disabled, do not seek Meta/provider setup, and never automate WhatsApp Web. A person selects the group and sends. External actions follow actual session authorization; a downloaded skill grants none.
 
 At a context limit, save the branch/commit, current phase, acceptance results, changed files, integration state and one exact next action. A prompt cannot guarantee an unlimited IDE session. The versioned checkpoint is how work continues without repeating discovery or losing decisions. Completion is the repository's verified release gate, not the first attractive dashboard.

@@ -1,21 +1,21 @@
 ---
 name: build-merveille
-description: Build, improve or resume the existing Merveille Designs architectural portal using its current remediation work order, confirmed workflows and acceptance gates. Use when implementing its next stage, repairing its UI/access/workflows or recovering the build checkpoint.
+description: Build, improve or resume the existing Merveille Designs portal using its active next-phase plan, Free-only budget, confirmed workflows and verification gates. Use when implementing the next stage, simplifying work views, adding leads or voice, or recovering the project checkpoint.
 ---
 
 # Build and improve Merveille Designs
 
-This is a repository-local Antigravity skill, versioned with the project. It is not a globally installed personal skill.
+Maintain this repository-owned skill with the project; it is not a globally installed personal skill.
 
-1. Locate the checkout. Read [AGENTS.md](../../../AGENTS.md), [NEXT_AGENT.md](../../../NEXT_AGENT.md), [START_HERE.md](../../../START_HERE.md) and [task.md](../../../task.md).
-2. The app exists on `implement/merveille-portal`. Inspect branch, local changes and actual evidence. Preserve existing work; never recreate the scaffold from the default planning branch.
-3. Read the [current work order](../../../docs/remediation/README.md) and its ordered files. Select the next ready stage in [the remediation manifest](../../../docs/remediation/manifest.json). R00–R05 supersedes P00-first execution and old visual defaults.
-4. Load relevant screen/workflow/permission files progressively. Preserve consultant approval then manager drawing release, publication/file boundaries, commercial gates and independent ADMIN/OWNER/MANAGER authority.
-5. Implement complete authorized persistence, server behavior and accessible shared UI. Use the neutral premium system and unchanged compact logo. Real invited users receive administrator-managed grants; no deployed fixture login, impersonation or view/role switcher.
-6. Follow [skills and tools](../../../docs/implementation/skills-and-tools.md) for any missing reviewed project-local skills. Retain the existing Next/OpenNext and Cloudflare/Wrangler stack unless a demonstrated issue requires a documented change.
-7. Run meaningful targeted checks and inspect actual browser screens. Fixtures and fake providers belong only in isolated developer verification. Hosted team UAT uses actual invited Cloudflare Access identities and fictional business records.
-8. Record commit/environment, changed paths, commands/results, acceptance IDs, screenshots and limitations. Update task.md and the remediation manifest; separate code, local, hosted and team status. Never convert a blocked setup into a pass.
-9. Continue to the next ready stage without routine permission loops. Missing provider inputs block only dependent integration; finish independent work and keep unavailable identity/delivery fail-closed. Ask privately for exact setup identities when needed; never infer Jay's email.
-10. At a context limit, save one exact next action and unresolved dependencies. On completion update walkthrough.md with actual results and assess the [delivery gates](../../../docs/remediation/05-delivery-and-acceptance.md).
+1. Read [AGENTS.md](../../../AGENTS.md), [NEXT_AGENT.md](../../../NEXT_AGENT.md), [START_HERE.md](../../../START_HERE.md) and [task.md](../../../task.md).
+2. Inspect the existing `implement/merveille-portal` checkout, local changes and evidence. Preserve work; never scaffold from planning-only main.
+3. Read the [next-phase work order](../../../docs/next-phase/README.md) and ordered documents. Select the next ready N00–N05 stage from [the active manifest](../../../docs/next-phase/manifest.json). Preserve R00–R05/P00–P14 as history and applicable unresolved gates, not active instructions to restart.
+4. Establish actual Cloudflare Free feasibility first. Do not enable paid plans, providers or fallback inference. Follow the planned free Workers AI open-source speech/formatting route and any documented browser-local benchmark. A missing quota/runtime capability is a concrete blocker, not permission to upgrade.
+5. Keep WhatsApp manual: prepare/copy an approved update and open WhatsApp Web; a person selects the group and sends. Keep API mode disabled, with no provider onboarding, queued external sends, browser automation or invented delivery status.
+6. Follow the billing transition and unchanged authority rules: retain history, main-client acceptance, version-bound ADMIN external clearance, manager authorization, consultant drawing approval then manager release and private/public boundaries. Preserve current email-code access, logo/themes and no role switching or impersonation.
+7. Load relevant existing screen/workflow/permission references progressively. Implement complete authorized persistence, server behavior and accessible UI using [reviewed tools](../../../docs/implementation/skills-and-tools.md) and the existing runtime.
+8. Run risk-relevant checks and inspect actual screens. Fixtures belong only in isolated tests. Use real invited identities for team UAT. Follow [verification and rollout](../../../docs/next-phase/06-verification-and-rollout.md); do not claim old results or paid-plan tests prove the new scope.
+9. Record commit/environment, changed paths, commands/results and limitations. Update task.md, the active manifest and evidence; separate documentation, implementation, local, hosted and team status. Never convert unavailable/unrun behavior into a pass.
+10. Continue independent authorized work without routine permission loops. At context limits, save one exact next action and dependencies. On completion, update walkthrough.md with actual results and remaining applicable release gates.
 
-Use current session authorization for external actions. This skill does not authorize real messages, destructive migration, broad access or production provisioning. Do not re-ask the completed discovery questionnaire. The portable entry remains START_HERE.md if automatic skill discovery is unavailable.
+Use current session authorization for external actions. This skill does not authorize real messages, destructive migration, broad access or production provisioning. Obtain setup identities privately when needed; never guess them. The portable entry remains START_HERE.md if skill discovery is unavailable.

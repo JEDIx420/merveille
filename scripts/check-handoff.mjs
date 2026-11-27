@@ -217,7 +217,82 @@ for(const stage of stages){
  for(const evidence of stage.evidence??[])if(!inventory.has(evidence))fail(stage.id+': missing evidence '+evidence);
  seenStages.add(stage.id);
 }
-if(stages.length!==6)fail('Expected six active remediation stages');
+if(stages.length!==6)fail('Expected six preserved remediation stages');
+
+// The next-phase work order is additive. Keep checking the historical manifests,
+// requirement coverage and brand integrity rather than replacing their evidence.
+const nextPhase = await json("docs/next-phase/manifest.json");
+const nextStages = nextPhase?.stages || [];
+const nextStageIds = new Set();
+const nextAssigned = new Set();
+const nextAcceptancePath = nextPhase?.acceptanceFile;
+let nextAcceptanceText = "";
+if (inventory.has(nextAcceptancePath)) {
+  nextAcceptanceText = await text(resolve(root, nextAcceptancePath));
+} else {
+  fail("Next phase: missing acceptance file " + nextAcceptancePath);
+}
+const nextCases = new Set(
+  [...nextAcceptanceText.matchAll(/^\|\s*(NAC-\d{3})\s*\|/gm)].map(
+    (match) => match[1],
+  ),
+);
+if (nextPhase?.kind !== "active-free-tier-next-phase-plan")
+  fail("Next phase: missing active work-order kind");
+for (const path of [
+  nextPhase?.entryPoint,
+  nextPhase?.sourcesFile,
+  ...(nextPhase?.historicalManifests || []),
+]) {
+  if (!inventory.has(path)) fail("Next phase: missing referenced file " + path);
+}
+const expectedConstraints = {
+  cloudflarePlan: "free",
+  paidFallback: false,
+  speech: "open-source-models-on-free-compute",
+  whatsapp: "manual-prepared-share",
+  externalWhatsAppDispatch: false,
+  billing: "external",
+  existingData: "preserve",
+  actualFreeDeploymentRequired: true,
+};
+for (const [key, value] of Object.entries(expectedConstraints)) {
+  if (nextPhase?.constraints?.[key] !== value)
+    fail("Next phase: current scope constraint mismatch for " + key);
+}
+for (const stage of nextStages) {
+  if (nextStageIds.has(stage.id)) fail("Duplicate next-phase stage " + stage.id);
+  for (const dependency of stage.dependsOn || []) {
+    if (!nextStageIds.has(dependency))
+      fail(stage.id + ": unordered/unknown dependency " + dependency);
+  }
+  for (const path of [stage.file, ...(stage.read || []), ...(stage.evidence || [])]) {
+    if (!inventory.has(path)) fail(stage.id + ": missing referenced file " + path);
+  }
+  for (const field of [
+    "implementation", "localVerification", "hostedVerification", "teamAcceptance",
+  ]) {
+    if (!statuses.has(stage[field])) fail(stage.id + ": invalid " + field);
+    if (stage[field] === "passed" && !stage.evidence?.length)
+      fail(stage.id + ": " + field + " passed without evidence");
+    if (stage[field] === "blocked" && !stage.blockers?.length)
+      fail(stage.id + ": " + field + " blocked without an explanation");
+  }
+  if (!stage.acceptance?.length) fail(stage.id + ": no acceptance cases");
+  for (const id of stage.acceptance || []) {
+    if (!nextCases.has(id)) fail(stage.id + ": unknown acceptance " + id);
+    nextAssigned.add(id);
+  }
+  nextStageIds.add(stage.id);
+}
+if (nextStages.map((stage) => stage.id).join(",") !== "N00,N01,N02,N03,N04,N05")
+  fail("Expected next-phase stages N00-N05 in order");
+for (const id of nextCases) {
+  if (!nextAssigned.has(id)) fail("Next-phase acceptance has no stage: " + id);
+}
+if (nextCases.size !== 13) fail("Expected thirteen next-phase acceptance cases");
+if (remediation?.supersededForExecutionBy !== "docs/next-phase/manifest.json")
+  fail("Remediation manifest must identify the current execution manifest");
 const result = {
   ok: failures.length === 0,
   files: files.length,
@@ -225,6 +300,8 @@ const result = {
   checkedLocalLinks: checkedLinks,
   phases: phases.length,
   remediationStages: stages.length,
+  nextPhaseStages: nextStages.length,
+  nextPhaseAcceptanceCases: nextCases.size,
   acceptanceCases: cases.length,
   requirements: requirements.size,
   coveredRequirements: [...requirements].filter((x) => covered.has(x)).length,
