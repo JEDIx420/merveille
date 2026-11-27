@@ -15,6 +15,11 @@ import {
 } from "../../auth/policy";
 import { atomicGuard } from "../../db/atomic";
 import { ArchiveService } from "../archive/service";
+import {
+  assertLegacyBillingAllowed,
+  getCommercialMode,
+  getLatestExternalClearance,
+} from "./external-clearance";
 export type ScheduleTriggerType =
   | "DATE_ONLY"
   | "STAGE_ONLY"
@@ -441,6 +446,7 @@ export class FinanceService {
     params: CreateScheduleParams,
   ) {
     await project(db, p, params.projectId);
+    await assertLegacyBillingAllowed(db, p.orgId, "create or revise payment schedules");
     if (!canPublishProjectUpdates(p, params.projectId))
       throw new AuthorizationError(
         "Only project managers can create or revise payment schedules",
@@ -575,6 +581,7 @@ export class FinanceService {
   ) {
     await project(db, p, params.projectId);
     assertFinanceAuthor(p, params.projectId);
+    await assertLegacyBillingAllowed(db, p.orgId, "draft new invoices");
     date(params.dueDate);
     currency(params.currency);
     const items = lines(params.lineItems),
@@ -654,6 +661,7 @@ export class FinanceService {
     const inv = await row(db, "invoices", params.invoiceId, p.orgId);
     await project(db, p, inv.project_id);
     assertFinanceAuthor(p, inv.project_id);
+    await assertLegacyBillingAllowed(db, p.orgId, "edit draft invoices");
     if (!["DRAFT", "IN_REVIEW", "APPROVED"].includes(inv.status))
       throw new AuthorizationError(
         "Issued invoices cannot be edited directly.",
@@ -773,6 +781,7 @@ export class FinanceService {
     const inv = await row(db, "invoices", params.invoiceId, p.orgId);
     await project(db, p, inv.project_id);
     assertFinanceAuthor(p, inv.project_id, true);
+    await assertLegacyBillingAllowed(db, p.orgId, "issue new invoices");
     const key = `issue:${params.idempotencyKey ?? `${inv.id}:${params.versionNumber}`}`,
       input = { invoiceId: inv.id, versionNumber: params.versionNumber };
     const previous = await replay(db, p, key, input);
@@ -1213,6 +1222,47 @@ export class FinanceService {
         "Project cannot be activated: missing accepted quotation",
         "MISSING_ACCEPTED_QUOTATION",
       );
+
+    const mode = await getCommercialMode(db, p.orgId);
+    const clearance = await getLatestExternalClearance(
+      db,
+      projectId,
+      "QUOTATION",
+      q.id,
+      q.version_number,
+    );
+    const hasValidClearance =
+      clearance &&
+      (clearance.status === "CONFIRMED" || clearance.status === "CORRECTED");
+
+    if (mode === "EXTERNAL") {
+      if (!hasValidClearance) {
+        throw new AuthorizationError(
+          "Project activation requires ADMIN-confirmed external commercial clearance for the current accepted quotation version.",
+          "MISSING_EXTERNAL_CLEARANCE",
+        );
+      }
+      await commit(db, [
+        activeGuard(db, p),
+        atomicGuard(
+          db,
+          "EXISTS(SELECT 1 FROM projects p JOIN quotations q ON q.project_id=p.id WHERE p.id=? AND p.org_id=? AND p.status='DRAFT' AND p.is_archived=0 AND p.revision=? AND q.id=? AND q.status='ACCEPTED' AND (SELECT status FROM external_commercial_clearances c WHERE c.project_id=p.id AND c.entity_type='QUOTATION' AND c.entity_id=q.id AND c.version_number=q.version_number ORDER BY c.recorded_at DESC, c.rowid DESC LIMIT 1) IN ('CONFIRMED','CORRECTED'))",
+          [projectId, p.orgId, prj.revision, q.id],
+        ),
+        db
+          .prepare(
+            "UPDATE projects SET status='ACTIVE',activated_at=?,activated_by_user_id=?,revision=revision+1 WHERE id=?",
+          )
+          .bind(Date.now(), p.id, projectId),
+        audit(db, p, "PROJECT", projectId, "PROJECT_ACTIVATED", {
+          quotationId: q.id,
+          quotationVersion: q.version_number,
+          externalClearanceId: clearance.id,
+        }),
+      ]);
+      return { projectId, status: "ACTIVE", isCommercialActivated: true };
+    }
+
     money(q.required_advance_minor);
     const paid = await db
       .prepare(

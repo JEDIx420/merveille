@@ -19,6 +19,7 @@ import {
 import { FinanceService, money } from "../finance/service";
 import { atomicGuard } from "../../db/atomic";
 import { ArchiveService } from "../archive/service";
+import { assertLegacyBillingAllowed } from "../finance/external-clearance";
 
 export interface SubmitExpenseParams {
   projectId?: string;
@@ -102,6 +103,7 @@ export class AccountingService {
       );
     if (params.projectId)
       await ArchiveService.assertProjectNotArchived(db, params.projectId);
+    await assertLegacyBillingAllowed(db, principal.orgId, "submit new expenses");
     await this.assertPeriodNotClosed(db, params.incurredDate);
 
     const expenseId = generateId("exp");
@@ -271,6 +273,7 @@ export class AccountingService {
         "Consultant bills require an explicit finance author grant",
       );
     await ArchiveService.assertProjectNotArchived(db, params.projectId);
+    await assertLegacyBillingAllowed(db, principal.orgId, "submit consultant bills");
     await this.assertPeriodNotClosed(db, params.billDate);
 
     const billId = generateId("cbl");
@@ -426,6 +429,7 @@ export class AccountingService {
       throw new AuthorizationError(
         "Salaries and payroll records are strictly restricted to administrators",
       );
+    await assertLegacyBillingAllowed(db, principal.orgId, "record payroll entries");
     money(params.grossSalaryMinor);
     if (!/^\d{4}-\d{2}$/.test(params.periodMonth))
       throw new AuthorizationError("Invalid payroll period", "INVALID_INPUT");

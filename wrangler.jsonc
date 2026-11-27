@@ -32,6 +32,9 @@
       "bucket_name": "merveille-files"
     }
   ],
+  "ai": {
+    "binding": "AI"
+  },
   "env": {
     "staging": {
       "name": "merveille-web-staging",

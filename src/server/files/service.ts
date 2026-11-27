@@ -13,6 +13,7 @@ import {
 } from "@/server/auth/policy";
 import { query, queryFirst, execute } from "@/server/db";
 import { recordAuditEvent } from "@/server/domain/identity/service";
+import { QuotaService } from "@/server/quota/service";
 
 export type FileClass = "IMAGE" | "PDF" | "CAD" | "VIDEO" | "DOCUMENT";
 
@@ -197,10 +198,12 @@ export async function initUploadSession(
     input.fileClass,
   );
 
-  // 3. Assign server-side immutable storage key
+  // 3. Assign server-side immutable storage key & reserve Free-tier storage budget (N00)
   const fileId = `fil_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
   const sessionId = `ses_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
   const storageKey = `org/${actor.orgId}/project/${input.projectId}/file/${fileId}/original`;
+  await QuotaService.reserveStorageBytes(db, actor.orgId, fileId, input.sizeBytes, "PRIMARY");
+  await QuotaService.recordR2Ops(db, actor.orgId, "R2_CLASS_A", 1);
 
   // 4. Create R2 multipart upload
   const mp = await bucket.createMultipartUpload(storageKey);
@@ -410,6 +413,10 @@ export async function completeUploadSession(
   }>(db, "SELECT id, file_name, storage_key FROM files WHERE storage_key = ?", [
     session.storage_key,
   ]);
+  if (file?.id) {
+    await QuotaService.commitStorageReservation(db, session.org_id, file.id, r2Head.size, "PRIMARY");
+    await QuotaService.recordR2Ops(db, session.org_id, "R2_CLASS_A", 1);
+  }
 
   await recordAuditEvent(db, {
     orgId: session.org_id,

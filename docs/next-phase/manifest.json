@@ -12,7 +12,7 @@
     "docs/remediation/manifest.json",
     "docs/implementation/manifest.json"
   ],
-  "status": "Implementation work order prepared. Application implementation, local verification, hosted verification and team acceptance under this new scope have not started.",
+  "status": "Stages N00-N05 implemented and locally verified. Hosted Free-plan CPU/Workers AI measurement, separate company Cloudflare installation, and multi-person team/voice pilot remain open.",
   "constraints": {
     "cloudflarePlan": "free",
     "paidFallback": false,
@@ -36,12 +36,12 @@
         "docs/next-phase/06-verification-and-rollout.md"
       ],
       "acceptance": ["NAC-001", "NAC-002"],
-      "implementation": "not-started",
-      "localVerification": "not-started",
-      "hostedVerification": "not-started",
+      "implementation": "passed",
+      "localVerification": "passed",
+      "hostedVerification": "blocked",
       "teamAcceptance": "not-started",
-      "evidence": [],
-      "blockers": []
+      "evidence": ["docs/next-phase/evidence/n00.md"],
+      "blockers": ["Live Workers CPU profiling on target Free account pending hosted deploy."]
     },
     {
       "id": "N01",
@@ -53,11 +53,11 @@
         "docs/design/appearance-and-celebrations.md"
       ],
       "acceptance": ["NAC-003", "NAC-004", "NAC-005"],
-      "implementation": "not-started",
-      "localVerification": "not-started",
+      "implementation": "passed",
+      "localVerification": "passed",
       "hostedVerification": "not-started",
       "teamAcceptance": "not-started",
-      "evidence": [],
+      "evidence": ["docs/next-phase/evidence/n01.md"],
       "blockers": []
     },
     {
@@ -67,11 +67,11 @@
       "file": "docs/next-phase/03-leads-and-imports.md",
       "read": ["docs/next-phase/02-simple-workspace.md"],
       "acceptance": ["NAC-006", "NAC-007"],
-      "implementation": "not-started",
-      "localVerification": "not-started",
+      "implementation": "passed",
+      "localVerification": "passed",
       "hostedVerification": "not-started",
       "teamAcceptance": "not-started",
-      "evidence": [],
+      "evidence": ["docs/next-phase/evidence/n02.md"],
       "blockers": []
     },
     {
@@ -85,12 +85,15 @@
         "docs/next-phase/sources.md"
       ],
       "acceptance": ["NAC-008", "NAC-009"],
-      "implementation": "not-started",
-      "localVerification": "not-started",
-      "hostedVerification": "not-started",
-      "teamAcceptance": "not-started",
-      "evidence": [],
-      "blockers": []
+      "implementation": "passed",
+      "localVerification": "passed",
+      "hostedVerification": "blocked",
+      "teamAcceptance": "blocked",
+      "evidence": ["docs/next-phase/evidence/n03.md"],
+      "blockers": [
+        "Hosted Workers AI Free-tier invocation (@cf/openai/whisper-large-v3-turbo, @cf/openai/gpt-oss-20b) pending live account check.",
+        "~50-recording staff acoustic pilot pending team availability."
+      ]
     },
     {
       "id": "N04",
@@ -102,11 +105,11 @@
         "docs/next-phase/02-simple-workspace.md"
       ],
       "acceptance": ["NAC-010", "NAC-011"],
-      "implementation": "not-started",
-      "localVerification": "not-started",
+      "implementation": "passed",
+      "localVerification": "passed",
       "hostedVerification": "not-started",
       "teamAcceptance": "not-started",
-      "evidence": [],
+      "evidence": ["docs/next-phase/evidence/n04.md"],
       "blockers": []
     },
     {
@@ -120,12 +123,14 @@
         "docs/operations/company-account-setup.md"
       ],
       "acceptance": ["NAC-012", "NAC-013"],
-      "implementation": "not-started",
-      "localVerification": "not-started",
-      "hostedVerification": "not-started",
-      "teamAcceptance": "not-started",
-      "evidence": [],
-      "blockers": []
+      "implementation": "passed",
+      "localVerification": "passed",
+      "hostedVerification": "blocked",
+      "teamAcceptance": "blocked",
+      "evidence": ["docs/next-phase/evidence/n05.md"],
+      "blockers": [
+        "Separate company Cloudflare account setup, remote migration 0024-0027, and multi-role team UAT pending."
+      ]
     }
   ]
 }

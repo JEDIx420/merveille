@@ -6,6 +6,7 @@ import layout from "./page.module.css";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { formatBusinessDate } from "@/shared/config";
+import { MyTasksPanel } from "@/components/my-tasks-panel";
 
 interface WaitingItem {
   id: string;
@@ -106,10 +107,9 @@ export default function WaitingOnYouPage() {
       {/* Header */}
       <header className={cx(layout.block2)}>
         <div>
-          <h1 className={cx("text-display")}>Waiting on you</h1>
+          <h1 className={cx("text-display")}>My Tasks & Waiting on you</h1>
           <p className={cx(["text-muted", layout.block3].join(" "))}>
-            Direct actionable responsibilities requiring your decision or
-            completion.
+            Your canonical tasks across List, Board, and Calendar views plus items awaiting your action.
           </p>
         </div>
         <button
@@ -119,6 +119,8 @@ export default function WaitingOnYouPage() {
           Refresh Queue
         </button>
       </header>
+
+      <MyTasksPanel />
 
       {/* Filter and Search Bar */}
       <div className={cx(layout.block5)}>

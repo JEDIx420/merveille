@@ -14,6 +14,10 @@ import {
 } from "@/server/auth/policy";
 import { query, queryFirst, execute } from "@/server/db";
 import { FinanceService, money } from "../finance/service";
+import {
+  getCommercialMode,
+  getLatestExternalClearance,
+} from "../finance/external-clearance";
 import { atomicGuard } from "../../db/atomic";
 import { ArchiveService } from "../archive/service";
 
@@ -675,6 +679,65 @@ export class ChangesService {
         "Change request requires main client estimate acceptance before authorization",
         "ESTIMATE_NOT_ACCEPTED",
       );
+    }
+
+    const mode = await getCommercialMode(db, principal.orgId);
+    if (mode === "EXTERNAL") {
+      const clearance = await getLatestExternalClearance(
+        db,
+        cr.project_id,
+        "CHANGE_REQUEST",
+        cr.id,
+        cr.current_version_number,
+      );
+      if (
+        !clearance ||
+        (clearance.status !== "CONFIRMED" && clearance.status !== "CORRECTED")
+      ) {
+        throw new AuthorizationError(
+          "Change request requires ADMIN-confirmed external commercial clearance for the current accepted estimate version.",
+          "MISSING_EXTERNAL_CLEARANCE",
+        );
+      }
+
+      const now = Date.now();
+      await FinanceService.commit(db, [
+        FinanceService.activeGuard(db, principal),
+        atomicGuard(
+          db,
+          "EXISTS(SELECT 1 FROM change_requests c JOIN change_request_versions v ON v.change_request_id=c.id AND v.version_number=c.current_version_number JOIN projects p ON p.id=c.project_id WHERE c.id=? AND c.org_id=? AND c.current_version_number=? AND c.status IN ('PAYMENT_CONFIRMED','ACCEPTED_AWAITING_PAYMENT') AND p.is_archived=0 AND v.id=? AND v.status='ACCEPTED' AND v.accepted_by_user_id IS NOT NULL AND (SELECT status FROM external_commercial_clearances ec WHERE ec.project_id=c.project_id AND ec.entity_type='CHANGE_REQUEST' AND ec.entity_id=c.id AND ec.version_number=c.current_version_number ORDER BY ec.recorded_at DESC, ec.rowid DESC LIMIT 1) IN ('CONFIRMED','CORRECTED'))",
+          [cr.id, principal.orgId, cr.current_version_number, version.id],
+        ),
+        db
+          .prepare(
+            "UPDATE change_request_versions SET authorized_by_user_id=?,authorized_at=? WHERE id=?",
+          )
+          .bind(principal.id, now, version.id),
+        db
+          .prepare(
+            "UPDATE change_requests SET status='AUTHORIZED',updated_at=? WHERE id=?",
+          )
+          .bind(now, cr.id),
+        FinanceService.audit(
+          db,
+          principal,
+          "CHANGE",
+          cr.id,
+          "CHANGE_AUTHORIZED",
+          {
+            version: cr.current_version_number,
+            externalClearanceId: clearance.id,
+          },
+        ),
+      ]);
+
+      return {
+        changeRequestId: params.changeRequestId,
+        versionNumber: cr.current_version_number,
+        status: "AUTHORIZED" as ChangeRequestStatus,
+        authorizedAt: now,
+        authorizedByUserId: principal.id,
+      };
     }
 
     // Condition 2: Admin-confirmed payment check

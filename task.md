@@ -2,11 +2,18 @@
 
 ## Active next phase recorded 27 November 2026
 
-The current work order is [docs/next-phase/README.md](docs/next-phase/README.md), with [N00–N05 dependencies](docs/next-phase/manifest.json). This documentation handoff covers a simpler Asana-style workspace, minimal leads/imports, open-source voice using bounded free inference, in-portal reminders and manual prepared WhatsApp sharing. Cloudflare Free only; no paid providers/upgrades. Billing remains external, with preserved history and version-bound commercial clearance.
+The current work order is [docs/next-phase/README.md](docs/next-phase/README.md), with [N00–N05 dependencies](docs/next-phase/manifest.json).
 
-All N00–N05 application stages are **not started**. This change does not implement application features, configure accounts, deploy, send messages or establish Free-plan capacity. [Documentation handoff verification](docs/next-phase/evidence/handoff-2026-11-27.md) records the passing documentation checker and diff review separately from later application evidence.
+| Stage | Work | Implementation | Local verification | Hosted verification | Team acceptance | Evidence |
+|---|---|---|---|---|---|---|
+| N00 | Baseline and enforceable free-tier envelope | Passed | Passed | Blocked | Not started | [N00](docs/next-phase/evidence/n00.md) |
+| N01 | Simple workspace and preserved business authority | Passed | Passed | Not started | Not started | [N01](docs/next-phase/evidence/n01.md) |
+| N02 | Simple leads and reviewed spreadsheet imports | Passed | Passed | Not started | Not started | [N02](docs/next-phase/evidence/n02.md) |
+| N03 | Open-source dictation and reviewed structured entry | Passed | Passed | Blocked | Blocked | [N03](docs/next-phase/evidence/n03.md) |
+| N04 | In-app reminders and manual WhatsApp messages | Passed | Passed | Not started | Not started | [N04](docs/next-phase/evidence/n04.md) |
+| N05 | Integrated verification, migration, recovery and pilot | Passed | Passed | Blocked | Blocked | [N05](docs/next-phase/evidence/n05.md) |
 
-**Next exact action:** read the new ordered plan, inspect the latest source and measure N00's actual Free-plan/runtime/quota gates before implementation. Preserve completed remediation and current email-code access, roles, logo/themes and consultant-approval/manager-release workflow. Keep WhatsApp API mode disabled; no provider credentials or webhook smoke test is required for manual sharing.
+**Next exact action:** apply migrations `0024`–`0027` to the target Free Cloudflare installation after a verified D1 snapshot, deploy web + jobs workers, measure live Workers CPU / Workers AI (`@cf/openai/whisper-large-v3-turbo`, `@cf/openai/gpt-oss-20b`) within the 8,000-neuron/day ceiling, and complete multi-role team + ~50-sample voice pilot.
 
 Carry forward applicable multi-person access/business UAT, backup automation/monitoring and populated-recovery gaps. Historical automated WhatsApp/provider checks are deferred out of this phase, not passed. The previous checkpoints below retain their original evidence and statuses; their old next-action wording is historical, not the active assignment.
 

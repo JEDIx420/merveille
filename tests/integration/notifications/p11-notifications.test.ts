@@ -156,8 +156,8 @@ describe("Phase 11: In-Portal Notifications, WhatsApp, and Escalation", () => {
     const simulatedClock = new Date("2026-11-24T04:30:00Z"); // 10:00 AM IST
     const scanResult = await NotificationService.scanDueAndOverdueItems(db, testOrgId, simulatedClock);
 
-    // Creates portal and WhatsApp notifications
-    expect(scanResult.createdCount).toBe(6); // 2 portal + 2 WhatsApp
+    // Creates PORTAL-only notifications per Stage N04 (2 user + 2 admin escalations)
+    expect(scanResult.createdCount).toBe(4);
     // Unresolved overdue items escalate to admin
     expect(scanResult.escalationCount).toBe(2); // 1 task escalation + 1 invoice escalation
 

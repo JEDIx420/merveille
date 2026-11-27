@@ -17,7 +17,7 @@ export type NotificationStatus =
 const uid = (prefix: string) => `${prefix}_${crypto.randomUUID()}`;
 interface Candidate {
   orgId: string;
-  projectId: string;
+  projectId: string | null;
   userId: string;
   type: string;
   entityId: string;
@@ -48,7 +48,7 @@ export class NotificationService {
     );
     const candidates: Candidate[] = [];
     const add = (
-      projectId: string,
+      projectId: string | null,
       userId: string,
       type: string,
       entityId: string,
@@ -56,6 +56,7 @@ export class NotificationService {
       body: string,
       path: string,
       overdue: boolean,
+      windowOverride?: string,
     ) => {
       if (userId)
         candidates.push({
@@ -67,7 +68,7 @@ export class NotificationService {
           title,
           body,
           path,
-          window: date,
+          window: windowOverride || date,
         });
       if (overdue)
         for (const admin of admins)
@@ -87,7 +88,7 @@ export class NotificationService {
     };
     const tasks = await query<any>(
       db,
-      `SELECT t.* FROM tasks t JOIN projects p ON p.id=t.project_id WHERE t.org_id=? AND p.is_archived=0 AND t.status IN ('TODO','IN_PROGRESS','BLOCKED') AND t.effective_due_date<=?`,
+      `SELECT t.* FROM tasks t JOIN projects p ON p.id=t.project_id WHERE t.org_id=? AND p.is_archived=0 AND t.status IN ('TODO','IN_PROGRESS','BLOCKED') AND t.effective_due_date<=? LIMIT 100`,
       [orgId, date],
     );
     for (const t of tasks)
@@ -100,26 +101,37 @@ export class NotificationService {
         `Review your assigned task: ${t.title}`,
         `/projects/${t.project_id}/tasks`,
         t.effective_due_date < date,
+        `${date}:${t.effective_due_date}`,
       );
-    const invoices = await query<any>(
+
+    // Skip new invoice/payment reminders when organization is in EXTERNAL billing mode (N04)
+    const orgModeRow = await queryFirst<{ commercial_mode?: string }>(
       db,
-      `SELECT i.*,p.main_client_user_id FROM invoices i JOIN projects p ON p.id=i.project_id WHERE i.org_id=? AND i.status='ISSUED' AND i.outstanding_minor>0 AND i.due_date<=?`,
-      [orgId, date],
+      `SELECT commercial_mode FROM organizations WHERE id=?`,
+      [orgId],
     );
-    for (const i of invoices)
-      add(
-        i.project_id,
-        i.main_client_user_id,
-        "INVOICE",
-        i.id,
-        i.due_date < date ? "Payment overdue" : "Payment due today",
-        "Review the outstanding payment in your project.",
-        `/projects/${i.project_id}/finance`,
-        i.due_date < date,
+    if (orgModeRow?.commercial_mode !== "EXTERNAL") {
+      const invoices = await query<any>(
+        db,
+        `SELECT i.*,p.main_client_user_id FROM invoices i JOIN projects p ON p.id=i.project_id WHERE i.org_id=? AND i.status='ISSUED' AND i.outstanding_minor>0 AND i.due_date<=? LIMIT 100`,
+        [orgId, date],
       );
+      for (const i of invoices)
+        add(
+          i.project_id,
+          i.main_client_user_id,
+          "INVOICE",
+          i.id,
+          i.due_date < date ? "Payment overdue" : "Payment due today",
+          "Review the outstanding payment in your project.",
+          `/projects/${i.project_id}/finance`,
+          i.due_date < date,
+        );
+    }
+
     const reviews = await query<any>(
       db,
-      `SELECT r.*,d.project_id,v.created_at FROM drawing_reviews r JOIN drawing_versions v ON v.id=r.version_id JOIN drawings d ON d.id=v.drawing_id JOIN projects p ON p.id=d.project_id WHERE d.org_id=? AND p.is_archived=0 AND r.status='PENDING' AND v.status='IN_REVIEW'`,
+      `SELECT r.*,d.project_id,v.created_at FROM drawing_reviews r JOIN drawing_versions v ON v.id=r.version_id JOIN drawings d ON d.id=v.drawing_id JOIN projects p ON p.id=d.project_id WHERE d.org_id=? AND p.is_archived=0 AND r.status='PENDING' AND v.status='IN_REVIEW' LIMIT 100`,
       [orgId],
     );
     for (const r of reviews)
@@ -133,12 +145,97 @@ export class NotificationService {
         `/projects/${r.project_id}/drawings`,
         now.getTime() - r.created_at > 86400000,
       );
+
+    // N04 Preset: Manager release waiting (all consultant reviews approved for version)
+    const readyToRelease = await query<any>(
+      db,
+      `SELECT v.id as version_id, d.project_id, d.title, p.manager_user_id
+       FROM drawing_versions v
+       JOIN drawings d ON d.id=v.drawing_id
+       JOIN projects p ON p.id=d.project_id
+       WHERE d.org_id=? AND p.is_archived=0 AND v.status='CONSULTANT_APPROVED' AND p.manager_user_id IS NOT NULL
+       LIMIT 100`,
+      [orgId],
+    );
+    for (const rv of readyToRelease)
+      add(
+        rv.project_id,
+        rv.manager_user_id,
+        "DRAWING_RELEASE",
+        rv.version_id,
+        "Drawing ready for release",
+        `Consultant approvals complete for ${rv.title}.`,
+        `/projects/${rv.project_id}/drawings`,
+        false,
+      );
+
+    // N04 Preset: Lead follow-up due
+    const leadFollowups = await query<any>(
+      db,
+      `SELECT f.*, e.contact_name FROM lead_followups f
+       JOIN enquiries e ON e.id=f.enquiry_id
+       WHERE f.org_id=? AND f.is_completed=0 AND f.due_date IS NOT NULL AND f.due_date<=?
+         AND e.lead_stage NOT IN ('WON','LOST')
+       LIMIT 100`,
+      [orgId, date],
+    );
+    for (const lf of leadFollowups)
+      add(
+        null,
+        lf.owner_user_id,
+        "LEAD_FOLLOWUP",
+        lf.id,
+        lf.due_date < date ? `Lead follow-up overdue: ${lf.contact_name}` : `Lead follow-up due: ${lf.contact_name}`,
+        lf.action_text,
+        `/enquiries/${lf.enquiry_id}`,
+        false,
+        `${date}:v${lf.revision}`,
+      );
+
+    // N04 Preset: Lead needs attention (active lead with no open follow-up >= 3 days, held until 09:00-18:00 IST)
+    const istHour = Number(
+      new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", hour12: false }).format(now),
+    );
+    if (istHour >= 9 && istHour < 18) {
+      const threeDaysAgo = now.getTime() - 3 * 86400 * 1000;
+      const staleLeads = await query<any>(
+        db,
+        `SELECT e.id, e.contact_name, e.lead_manager_id
+         FROM enquiries e
+         WHERE e.org_id=? AND e.lead_stage NOT IN ('WON','LOST')
+           AND (e.snoozed_until IS NULL OR e.snoozed_until <= ?)
+           AND e.created_at <= ?
+           AND e.lead_manager_id IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM lead_followups f WHERE f.enquiry_id=e.id AND f.is_completed=0)
+         LIMIT 100`,
+        [orgId, now.getTime(), threeDaysAgo],
+      );
+      for (const sl of staleLeads)
+        add(
+          null,
+          sl.lead_manager_id,
+          "LEAD_NEEDS_ATTENTION",
+          sl.id,
+          `Lead needs attention: ${sl.contact_name}`,
+          "No next action scheduled for 3+ days.",
+          `/enquiries/${sl.id}`,
+          false,
+        );
+    }
+
     let createdCount = 0,
       escalationCount = 0;
-    for (const c of candidates)
-      for (const channel of c.escalation
-        ? ["PORTAL"]
-        : ["PORTAL", "WHATSAPP"]) {
+    for (const c of candidates) {
+      // Respect user snoozes without altering underlying deadline
+      const snoozed = await queryFirst<any>(
+        db,
+        `SELECT id FROM reminder_snoozes WHERE org_id=? AND user_id=? AND source_entity_type=? AND source_entity_id=? AND snoozed_until>?`,
+        [orgId, c.userId, c.type, c.entityId, now.getTime()],
+      );
+      if (snoozed) continue;
+
+      // Stage N04: Active generation is PORTAL only (WhatsApp is manual sharing)
+      for (const channel of ["PORTAL"]) {
         const id = uid("not");
         const dedupe = [
           orgId,
@@ -195,7 +292,28 @@ export class NotificationService {
           if (c.escalation) escalationCount++;
         }
       }
+    }
     return { createdCount, escalationCount };
+  }
+  static async snoozeReminder(
+    db: D1Database,
+    actor: UserPrincipal,
+    input: { sourceEntityType: string; sourceEntityId: string; snoozedUntilMs: number },
+  ) {
+    if (!Number.isFinite(input.snoozedUntilMs) || input.snoozedUntilMs <= Date.now()) {
+      throw new AuthorizationError("Snooze timestamp must be in the future.", "INVALID_INPUT");
+    }
+    const id = uid("snz");
+    await db
+      .prepare(
+        `INSERT INTO reminder_snoozes (id, org_id, user_id, source_entity_type, source_entity_id, snoozed_until, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(org_id, user_id, source_entity_type, source_entity_id) DO UPDATE SET
+           snoozed_until = excluded.snoozed_until`,
+      )
+      .bind(id, actor.orgId, actor.id, input.sourceEntityType, input.sourceEntityId, input.snoozedUntilMs, Date.now())
+      .run();
+    return { id, snoozedUntil: input.snoozedUntilMs };
   }
   static async eligible(db: D1Database, n: any) {
     const user = await queryFirst<any>(
@@ -204,6 +322,22 @@ export class NotificationService {
       [n.user_id, n.org_id],
     );
     if (!user) return false;
+    if (n.source_entity_type === "LEAD_FOLLOWUP") {
+      const f = await queryFirst<any>(
+        db,
+        `SELECT f.is_completed, f.owner_user_id, e.lead_stage FROM lead_followups f JOIN enquiries e ON e.id=f.enquiry_id WHERE f.id=? AND f.org_id=?`,
+        [n.source_entity_id, n.org_id],
+      );
+      return !!f && f.is_completed === 0 && f.owner_user_id === n.user_id && !["WON", "LOST"].includes(f.lead_stage);
+    }
+    if (n.source_entity_type === "LEAD_NEEDS_ATTENTION") {
+      const e = await queryFirst<any>(
+        db,
+        `SELECT lead_stage, lead_manager_id FROM enquiries WHERE id=? AND org_id=?`,
+        [n.source_entity_id, n.org_id],
+      );
+      return !!e && e.lead_manager_id === n.user_id && !["WON", "LOST"].includes(e.lead_stage);
+    }
     const admin = await queryFirst<any>(
       db,
       `SELECT id FROM role_assignments WHERE user_id=? AND org_id=? AND role='ADMIN' AND revoked_at IS NULL`,

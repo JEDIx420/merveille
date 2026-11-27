@@ -116,24 +116,46 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         ["MANAGER", "TEAM_MEMBER", "STAFF"].includes(r || ""),
       ),
     );
-  const links: [string, string, any][] = [
-    ["/overview", "Overview", LayoutDashboard],
-    ["/projects", "Projects", FolderOpen],
-    ["/waiting", "Waiting on you", ListTodo],
-    ["/archive", "Archive", Archive],
-  ];
+  const isConsultant =
+    !internal &&
+    principal.projectMemberships.some((m) =>
+      (m.roles || [m.projectRole]).includes("CONSULTANT"),
+    );
+
+  const links: [string, string, any][] = internal
+    ? [
+        ["/overview", "Today", LayoutDashboard],
+        ["/waiting", "My Tasks", ListTodo],
+        ["/projects", "Projects", FolderOpen],
+        ["/notifications", "Inbox", Inbox],
+      ]
+    : isConsultant
+      ? [
+          ["/projects", "Assigned Projects", FolderOpen],
+          ["/reviews", "Reviews", ListTodo],
+          ["/notifications", "Inbox", Inbox],
+          ["/archive", "Archive", Archive],
+        ]
+      : [
+          ["/projects", "My Projects", FolderOpen],
+          ["/notifications", "Inbox", Inbox],
+          ["/archive", "Archive", Archive],
+        ];
+
   if (
-    principal.intakeAccess ||
-    hasCapability(principal, "ADMIN") ||
-    hasCapability(principal, "OWNER")
+    internal &&
+    (principal.intakeAccess ||
+      hasCapability(principal, "ADMIN") ||
+      hasCapability(principal, "OWNER"))
   )
-    links.splice(3, 0, ["/enquiries", "Enquiries", Building2]);
-  if (hasCapability(principal, "ADMIN") || hasCapability(principal, "OWNER"))
-    links.push(["/finance", "Finance", Wallet]);
+    links.splice(3, 0, ["/enquiries", "Leads", Building2]);
+  if (internal) links.push(["/archive", "Archive", Archive]);
   if (hasCapability(principal, "ADMIN"))
     links.push(["/people", "People & access", Users]);
   if (hasCapability(principal, "OWNER"))
     links.push(["/performance", "Performance", ChartNoAxesCombined]);
+  if (hasCapability(principal, "ADMIN") || hasCapability(principal, "OWNER"))
+    links.push(["/finance", "Commercial History", Wallet]);
   return (
     <FeedbackProvider>
       <div className={styles.workspace}>

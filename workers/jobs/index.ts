@@ -1,5 +1,6 @@
 import { reconcileAccessAdmission } from "../../src/server/auth/admission";
 import { NotificationService } from "../../src/server/notifications/service";
+import { QuotaService } from "../../src/server/quota/service";
 import {
   createWhatsAppAdapter,
   type WhatsAppSettings,
@@ -26,16 +27,27 @@ export async function publishPending(env: Env) {
   ).all<{ id: string }>();
   for (const org of orgs.results) {
     await reconcileAccessAdmission(env, org.id);
-    await NotificationService.scanDueAndOverdueItems(env.DB, org.id);
+    const scanRes = await NotificationService.scanDueAndOverdueItems(env.DB, org.id);
+    await QuotaService.recordJobRun(env.DB, org.id, "notification_scanner", "OK", scanRes.createdCount);
   }
   const events = await env.DB.prepare(
-    "SELECT id,entity_id FROM outbox_events WHERE event_type='NOTIFICATION_READY' AND status='PENDING' ORDER BY created_at LIMIT 100",
-  ).all<{ id: string; entity_id: string }>();
+    "SELECT id,org_id,entity_id FROM outbox_events WHERE event_type='NOTIFICATION_READY' AND status='PENDING' ORDER BY created_at LIMIT 100",
+  ).all<{ id: string; org_id: string; entity_id: string }>();
   for (const event of events.results) {
-    await env.JOB_QUEUE.send({
-      notificationId: event.entity_id,
-      outboxId: event.id,
-    });
+    const canQueue = await QuotaService.reserveQueueOps(env.DB, event.org_id, 3);
+    if (canQueue) {
+      await env.JOB_QUEUE.send({
+        notificationId: event.entity_id,
+        outboxId: event.id,
+      });
+    } else {
+      // Free-tier Queue ceiling reached: materialize PORTAL notification directly without failing
+      await NotificationService.dispatchQueuedNotifications(
+        env.DB,
+        createWhatsAppAdapter({ WHATSAPP_MODE: "disabled" }),
+        event.entity_id,
+      );
+    }
     await env.DB.prepare(
       "UPDATE outbox_events SET status='DISPATCHED',dispatched_at=? WHERE id=? AND status='PENDING'",
     )

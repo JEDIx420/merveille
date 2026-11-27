@@ -9,6 +9,7 @@ import {
 } from "@/server/auth/policy";
 import { query, queryFirst, execute } from "@/server/db";
 import { AccessJwtPayload } from "@/server/auth/jwt";
+import { QuotaService } from "@/server/quota/service";
 const id = (prefix: string) => `${prefix}_${crypto.randomUUID()}`;
 const normalize = (email: string) => email.trim().toLowerCase();
 const allowed = new Set([
@@ -213,6 +214,7 @@ export async function inviteUser(
       "A disabled account requires a deliberate recovery.",
       "ACCOUNT_DISABLED",
     );
+  await QuotaService.assertAccessSeatAvailable(db, actor.orgId, email);
   const raw = token(),
     invitationId = id("inv"),
     now = Date.now(),

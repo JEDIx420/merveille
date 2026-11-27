@@ -104,6 +104,14 @@ describe("Durable reminder repairs", () => {
       org,
       new Date("2026-11-24T06:00:00Z"),
     );
+    // Seed a legacy/dormant WHATSAPP row to verify fail-closed suppression when provider is absent
+    await db
+      .prepare(
+        `INSERT INTO notifications(id,org_id,user_id,project_id,source_entity_type,source_entity_id,dedupe_key,channel,title,body_text,target_url,status,created_at)
+         SELECT 'not_wa_dormant',org_id,user_id,project_id,source_entity_type,source_entity_id,'dormant_wa_key','WHATSAPP',title,body_text,target_url,'QUEUED',1 FROM notifications WHERE user_id=? LIMIT 1`,
+      )
+      .bind(staff.id)
+      .run();
     const adapter = createWhatsAppAdapter({ WHATSAPP_MODE: "fake" });
     const res = await NotificationService.dispatchQueuedNotifications(
       db,
@@ -137,12 +145,14 @@ describe("Durable reminder repairs", () => {
       org,
       new Date("2026-11-24T06:00:00Z"),
     );
-    const n = await db
+    await db
       .prepare(
-        "SELECT id FROM notifications WHERE user_id=? AND channel='WHATSAPP'",
+        `INSERT INTO notifications(id,org_id,user_id,project_id,source_entity_type,source_entity_id,dedupe_key,channel,title,body_text,target_url,status,created_at)
+         SELECT 'not_wa_claim',org_id,user_id,project_id,source_entity_type,source_entity_id,'claim_wa_key','WHATSAPP',title,body_text,target_url,'QUEUED',1 FROM notifications WHERE user_id=? LIMIT 1`,
       )
       .bind(staff.id)
-      .first<any>();
+      .run();
+    const n = { id: "not_wa_claim" };
     const fake = new SyntheticWhatsAppAdapter();
     fake.simulateTimeout = true;
     await NotificationService.dispatchQueuedNotifications(db, fake, n.id);
