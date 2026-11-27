@@ -1,8 +1,21 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession } from "@/components/session";
+import { hasCapability } from "@/server/auth/principal";
 import { readResponse } from "@/components/ui";
 export function FavoriteProjects() {
+  const { principal } = useSession();
+  const internal = (id: string) =>
+    hasCapability(principal, "ADMIN") ||
+    hasCapability(principal, "OWNER") ||
+    principal?.projectMemberships.some(
+      (m) =>
+        m.projectId === id &&
+        (m.roles || [m.projectRole]).some((r) =>
+          ["MANAGER", "TEAM_MEMBER", "STAFF"].includes(r || ""),
+        ),
+    );
   const [projects, setProjects] = useState<any[]>([]);
   useEffect(() => {
     const load = () =>
@@ -40,7 +53,7 @@ export function FavoriteProjects() {
             overflowWrap: "anywhere",
           }}
           key={p.id}
-          href={`/projects/${p.id}/tasks`}
+          href={`/projects/${p.id}/${internal(p.id) ? "tasks" : "overview"}`}
         >
           {p.code} · {p.name}
         </Link>

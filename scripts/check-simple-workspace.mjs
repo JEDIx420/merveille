@@ -20,7 +20,9 @@ try {
         ),
       theme,
     );
-    let observer = false;
+    let external = false;
+    let observer = false,
+      failDetail = false;
     let mode = "LIST",
       favorites = [],
       conflict = false,
@@ -111,7 +113,24 @@ try {
         allowedActions: actions,
         link: `/projects/${p.id}/tasks?taskId=${task.id}`,
       };
-      if (path === "/api/session") d = { principal };
+      if (path === "/api/session")
+        d = {
+          principal: external
+            ? {
+                ...principal,
+                roles: [],
+                role: "MAIN_CLIENT",
+                intakeAccess: false,
+                projectMemberships: [
+                  {
+                    projectId: p.id,
+                    projectRole: "MAIN_CLIENT",
+                    roles: ["MAIN_CLIENT"],
+                  },
+                ],
+              }
+            : principal,
+        };
       else if (path === "/api/preferences/appearance")
         d = { theme, celebrations: "off" };
       else if (path === "/api/celebrations") d = { events: [] };
@@ -155,6 +174,16 @@ try {
         }
         d = { tasks: [{ ...task, isOverdue: false, allowedActions: actions }] };
       } else if (path.startsWith("/api/tasks/")) {
+        if (!post && failDetail) {
+          failDetail = false;
+          return r.fulfill({
+            status: 503,
+            contentType: "application/json",
+            body: JSON.stringify({
+              error: "Task details are temporarily unavailable.",
+            }),
+          });
+        }
         if (post) {
           if (conflict) {
             conflict = false;
@@ -425,6 +454,10 @@ try {
     await page
       .getByRole("heading", { name: "My Tasks", exact: true })
       .waitFor();
+    await page
+      .locator('[role="tab"][aria-selected="true"]')
+      .filter({ hasText: "Board" })
+      .waitFor();
     await check(
       "board preference survives navigation",
       (await page
@@ -465,6 +498,30 @@ try {
     await check(
       "read-only status cards cannot be dragged",
       (await page.locator('article[draggable="true"]').count()) === 0,
+    );
+    failDetail = true;
+    await page.getByRole("button", { name: task.title, exact: true }).click();
+    await page.getByRole("alert").waitFor();
+    await page.getByRole("button", { name: "Try again", exact: true }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("heading", { name: task.title, exact: true })
+      .waitFor();
+    await check("task detail failure offers a working retry");
+    await page
+      .getByRole("button", { name: "Close dialog", exact: true })
+      .click();
+    external = true;
+    await page.goto(base + "/projects");
+    await page.getByRole("navigation", { name: "Favorite projects" }).waitFor();
+    await check(
+      "client favorites open authorized overview instead of internal tasks",
+      (
+        await page
+          .getByRole("navigation", { name: "Favorite projects" })
+          .locator("a")
+          .getAttribute("href")
+      ).endsWith("/overview"),
     );
     await check("no page JavaScript errors", errors.length === 0);
     await context.close();

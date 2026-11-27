@@ -361,6 +361,16 @@
   },
   {
     "theme": "dark",
+    "case": "task detail failure offers a working retry",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "client favorites open authorized overview instead of internal tasks",
+    "passed": true
+  },
+  {
+    "theme": "dark",
     "case": "no page JavaScript errors",
     "passed": true
   },
@@ -722,6 +732,16 @@
   {
     "theme": "light",
     "case": "read-only status cards cannot be dragged",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "task detail failure offers a working retry",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "client favorites open authorized overview instead of internal tasks",
     "passed": true
   },
   {

@@ -18,6 +18,7 @@ import {
   updatePersonalTask,
   addTaskChecklistItem,
 } from "@/server/domain/tasks/personal-service";
+import {listProjects} from "@/server/domain/projects/service";
 import { POST as disabledVoice } from "@/app/api/voice/dictate/route";
 const org = "org_merveille_main",
   project = "simple_project";
@@ -58,6 +59,7 @@ beforeEach(async () => {
     )
     .bind(project, org, "SIMPLE")
     .run();
+  for(const p of [manager,staff,client]) await db.prepare('INSERT INTO project_memberships(id,org_id,project_id,user_id,project_role,is_active,assigned_at) VALUES(?,?,?,?,?,1,1)').bind('pm_'+p.id,org,project,p.id,p.projectMemberships[0].projectRole).run();
 });
 describe("Simpler workspace boundaries", () => {
   it("persists separate personal view/favorites and rejects unavailable project IDs", async () => {
@@ -97,6 +99,10 @@ describe("Simpler workspace boundaries", () => {
     expect(d.total).toBe(2);
     expect(d.completed).toBe(1);
     expect(d.percent).toBe(50);
+    const clientProjects=await listProjects(client,db);
+    expect(clientProjects).toHaveLength(1);
+    expect(clientProjects[0]).not.toHaveProperty("task_count");
+    expect(clientProjects[0]).not.toHaveProperty("member_names");
     expect(d.weeks.reduce((s, w) => s + w.count, 0)).toBe(1);
     await expect(projectProgress(db, client, project)).rejects.toThrow(
       /internal/,

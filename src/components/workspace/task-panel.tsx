@@ -6,6 +6,7 @@ import {
   Button,
   Field,
   LoadingState,
+  ErrorState,
   readResponse,
   useFeedback,
 } from "@/components/ui";
@@ -249,10 +250,17 @@ function TaskPanel({
   return (
     <Dialog title={t?.title || "Task details"} onClose={requestClose} side>
       {!data ? (
-        <>
+        error ? (
+          <ErrorState
+            message={error}
+            retry={() => {
+              setError("");
+              load();
+            }}
+          />
+        ) : (
           <LoadingState label="Opening task…" />
-          {error && <p role="alert">{error}</p>}
-        </>
+        )
       ) : (
         <div className={styles.detail}>
           <div className={styles.muted}>
@@ -279,7 +287,7 @@ function TaskPanel({
             <div role="alert" className={styles.error}>
               {error}
               <p>
-                Your draft is kept. Current task details have been reloaded.
+                Your draft is kept. Review the task details before retrying.
               </p>
             </div>
           )}
