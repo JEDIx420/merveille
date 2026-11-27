@@ -20,6 +20,7 @@ try {
         ),
       theme,
     );
+    let observer = false;
     let mode = "LIST",
       favorites = [],
       conflict = false,
@@ -92,6 +93,9 @@ try {
         edit: true,
         cancel: true,
       };
+      if (observer)
+        for (const key of Object.keys(actions))
+          if (key !== "edit") actions[key] = false;
       const item = {
         id: task.id,
         scope: "PROJECT",
@@ -338,15 +342,25 @@ try {
       task.status === "IN_PROGRESS",
     );
     await page.keyboard.press("Escape");
-    await page.getByRole('tab',{name:'Board',exact:true}).focus();
-    await page.keyboard.press('ArrowLeft');
-    await check('view tabs support arrow-key navigation',await page.getByRole('tab',{name:'List',exact:true}).getAttribute('aria-selected')==='true');
-    await page.keyboard.press('ArrowRight');
+    await page.getByRole("tab", { name: "Board", exact: true }).focus();
+    await page.keyboard.press("ArrowLeft");
+    await check(
+      "view tabs support arrow-key navigation",
+      (await page
+        .getByRole("tab", { name: "List", exact: true })
+        .getAttribute("aria-selected")) === "true",
+    );
+    await page.keyboard.press("ArrowRight");
     await page.getByLabel(`Move ${task.title}`).selectOption("COMPLETED");
     await page.getByRole("dialog").waitFor();
-    await page.emulateMedia({reducedMotion:'reduce'});
-    await check('task panel honors reduced motion',await page.getByRole('dialog').evaluate(el=>getComputedStyle(el).animationName==='none'));
-    await page.emulateMedia({reducedMotion:'no-preference'});
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await check(
+      "task panel honors reduced motion",
+      await page
+        .getByRole("dialog")
+        .evaluate((el) => getComputedStyle(el).animationName === "none"),
+    );
+    await page.emulateMedia({ reducedMotion: "no-preference" });
     await page
       .getByLabel("Completion note", { exact: true })
       .fill("Coordinated with structural set.");
@@ -438,6 +452,20 @@ try {
     await page.getByText("More", { exact: true }).click();
     await page.getByRole("link", { name: "Permits", exact: true }).waitFor();
     await check("specialist routes retained under More");
+    observer = true;
+    await page.reload();
+    await page.getByRole("heading", { name: "Tasks", exact: true }).waitFor();
+    await page.getByRole("tab", { name: "Board", exact: true }).click();
+    await page.getByRole("button", { name: task.title, exact: true }).waitFor();
+    await check(
+      "read-only status viewers have no redundant move control",
+      (await page.getByLabel(`Move ${task.title}`, { exact: true }).count()) ===
+        0,
+    );
+    await check(
+      "read-only status cards cannot be dragged",
+      (await page.locator('article[draggable="true"]').count()) === 0,
+    );
     await check("no page JavaScript errors", errors.length === 0);
     await context.close();
   }

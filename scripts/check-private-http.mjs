@@ -1,10 +1,15 @@
 /** Read-only privacy/containment checks against the built local app. No authenticated writes. */
 import assert from "node:assert/strict";
 const base = process.env.BASE_URL || "http://127.0.0.1:8799";
+const origin = process.env.HTTP_ORIGIN || base;
 const results = [];
 for (const [path, init, status] of [
   ["/api/session", {}, 401],
   ["/api/projects", {}, 401],
+  ["/api/workspace", {}, 401],
+  ["/api/workspace?personalTaskId=unknown", {}, 401],
+  ["/api/projects/unknown/progress", {}, 401],
+  ["/api/voice/dictate", {method:"POST",headers:{origin}}, 410],
   ["/api/projects/secret.png", {}, 401],
   [
     "/api/session",
@@ -28,7 +33,7 @@ for (const [path, init, status] of [
   ["/api/files/unknown/download", {}, 401],
   ["/api/files/unknown/download", { method: "HEAD" }, 401],
   ["/api/runtime/spike", {}, 404],
-  ["/api/runtime/spike", { method: "POST", headers: { origin: base } }, 404],
+  ["/api/runtime/spike", { method: "POST", headers: { origin } }, 404],
   [
     "/api/people",
     {
@@ -45,7 +50,7 @@ for (const [path, init, status] of [
     "/api/people",
     {
       method: "POST",
-      headers: { origin: base, "Content-Type": "application/json" },
+      headers: { origin, "Content-Type": "application/json" },
       body: "{}",
     },
     401,

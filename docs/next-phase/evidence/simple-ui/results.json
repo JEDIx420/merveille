@@ -351,6 +351,16 @@
   },
   {
     "theme": "dark",
+    "case": "read-only status viewers have no redundant move control",
+    "passed": true
+  },
+  {
+    "theme": "dark",
+    "case": "read-only status cards cannot be dragged",
+    "passed": true
+  },
+  {
+    "theme": "dark",
     "case": "no page JavaScript errors",
     "passed": true
   },
@@ -702,6 +712,16 @@
   {
     "theme": "light",
     "case": "specialist routes retained under More",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "read-only status viewers have no redundant move control",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "read-only status cards cannot be dragged",
     "passed": true
   },
   {

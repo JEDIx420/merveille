@@ -544,8 +544,7 @@ export function TaskWorkspace({
                       key={t.id}
                       draggable={
                         !readOnly &&
-                        (t.scope === "PERSONAL" ||
-                          Object.values(t.allowedActions || {}).some(Boolean))
+                        columns.some(([v]) => v !== t.status && canMove(t, v))
                       }
                       onDragStart={() => setDrag(t)}
                       onDragEnd={() => setDrag(null)}
@@ -564,21 +563,24 @@ export function TaskWorkspace({
                           ? formatBusinessDate(t.dueDate)
                           : "No due date"}
                       </p>
-                      {!readOnly && (
-                        <select
-                          aria-label={`Move ${t.title}`}
-                          value={t.status}
-                          onChange={(e) => move(t, e.target.value)}
-                        >
-                          {columns
-                            .filter(([v]) => v === t.status || canMove(t, v))
-                            .map(([v, l]) => (
-                              <option value={v} key={v}>
-                                {l}
-                              </option>
-                            ))}
-                        </select>
-                      )}
+                      {!readOnly &&
+                        columns.some(
+                          ([v]) => v !== t.status && canMove(t, v),
+                        ) && (
+                          <select
+                            aria-label={`Move ${t.title}`}
+                            value={t.status}
+                            onChange={(e) => move(t, e.target.value)}
+                          >
+                            {columns
+                              .filter(([v]) => v === t.status || canMove(t, v))
+                              .map(([v, l]) => (
+                                <option value={v} key={v}>
+                                  {l}
+                                </option>
+                              ))}
+                          </select>
+                        )}
                     </article>
                   ))}
               </section>
