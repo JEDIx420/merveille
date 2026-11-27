@@ -31,6 +31,7 @@ export interface CreateTaskInput {
   stageId?: string;
   changeRequestId?: string;
   snagId?: string;
+  parentTaskId?: string;
   title: string;
   description?: string;
   priority?: TaskPriority;
@@ -131,6 +132,21 @@ export async function createTask(
 
   if (input.proposedDueDate && !isBusinessDate(input.proposedDueDate))
     throw new AuthorizationError("Choose a valid deadline.", "INVALID_INPUT");
+
+  if (input.parentTaskId) {
+    const parent = await queryFirst<{ id: string; project_id: string; parent_task_id: string | null }>(
+      db,
+      `SELECT id, project_id, parent_task_id FROM tasks WHERE id = ? AND org_id = ?`,
+      [input.parentTaskId, actor.orgId],
+    );
+    if (!parent || parent.project_id !== input.projectId) {
+      throw new AuthorizationError("Parent task not found in this project.", "NOT_FOUND");
+    }
+    if (parent.parent_task_id) {
+      throw new AuthorizationError("Subtasks are limited to one level.", "INVALID_INPUT");
+    }
+  }
+
   const taskId = `tsk_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
   const now = Date.now();
 
@@ -149,8 +165,8 @@ export async function createTask(
   plan.push(
     db
       .prepare(
-        `INSERT INTO tasks (id, org_id, project_id, stage_id, change_request_id, snag_id, title, description, priority, status, creator_user_id, assignee_user_id, original_due_date, effective_due_date, reopen_count, revision, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, ?)`,
+        `INSERT INTO tasks (id, org_id, project_id, stage_id, change_request_id, snag_id, parent_task_id, title, description, priority, status, creator_user_id, assignee_user_id, original_due_date, effective_due_date, reopen_count, revision, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, ?)`,
       )
       .bind(
         ...[
@@ -160,6 +176,7 @@ export async function createTask(
           input.stageId || null,
           input.changeRequestId || null,
           input.snagId || null,
+          input.parentTaskId || null,
           input.title.trim(),
           input.description || null,
           input.priority || "MEDIUM",
@@ -222,6 +239,18 @@ export async function assignTask(
     throw new AuthorizationError(
       "Task was modified concurrently. Refresh and retry.",
       "CONCURRENCY_CONFLICT",
+    );
+  }
+
+  const openSubtasks = await queryFirst<{ cnt: number }>(
+    db,
+    `SELECT COUNT(*) as cnt FROM tasks WHERE parent_task_id = ? AND status NOT IN ('COMPLETED', 'CANCELLED')`,
+    [task.id],
+  );
+  if ((openSubtasks?.cnt ?? 0) > 0) {
+    throw new AuthorizationError(
+      "Complete or cancel all subtasks before completing this task.",
+      "HAS_UNFINISHED_SUBTASKS",
     );
   }
 
@@ -340,6 +369,18 @@ export async function changeTaskDeadline(
     throw new AuthorizationError(
       "Task was modified concurrently. Refresh and retry.",
       "CONCURRENCY_CONFLICT",
+    );
+  }
+
+  const openSubtasks = await queryFirst<{ cnt: number }>(
+    db,
+    `SELECT COUNT(*) as cnt FROM tasks WHERE parent_task_id = ? AND status NOT IN ('COMPLETED', 'CANCELLED')`,
+    [task.id],
+  );
+  if ((openSubtasks?.cnt ?? 0) > 0) {
+    throw new AuthorizationError(
+      "Complete or cancel all subtasks before completing this task.",
+      "HAS_UNFINISHED_SUBTASKS",
     );
   }
 
@@ -545,6 +586,18 @@ export async function completeTask(
     );
   }
 
+  const openSubtasks = await queryFirst<{ cnt: number }>(
+    db,
+    `SELECT COUNT(*) as cnt FROM tasks WHERE parent_task_id = ? AND status NOT IN ('COMPLETED', 'CANCELLED')`,
+    [task.id],
+  );
+  if ((openSubtasks?.cnt ?? 0) > 0) {
+    throw new AuthorizationError(
+      "Complete or cancel all subtasks before completing this task.",
+      "HAS_UNFINISHED_SUBTASKS",
+    );
+  }
+
   const now = Date.now();
   const guardId = crypto.randomUUID();
   plan.push(
@@ -627,6 +680,18 @@ export async function reopenTask(
     throw new AuthorizationError(
       "Task was modified concurrently. Refresh and retry.",
       "CONCURRENCY_CONFLICT",
+    );
+  }
+
+  const openSubtasks = await queryFirst<{ cnt: number }>(
+    db,
+    `SELECT COUNT(*) as cnt FROM tasks WHERE parent_task_id = ? AND status NOT IN ('COMPLETED', 'CANCELLED')`,
+    [task.id],
+  );
+  if ((openSubtasks?.cnt ?? 0) > 0) {
+    throw new AuthorizationError(
+      "Complete or cancel all subtasks before completing this task.",
+      "HAS_UNFINISHED_SUBTASKS",
     );
   }
 
@@ -922,9 +987,42 @@ export async function getTask(
     [taskId],
   );
 
+  const checklists = await query(
+    db,
+    `SELECT * FROM task_checklist_items WHERE task_id = ? ORDER BY item_order ASC, created_at ASC`,
+    [taskId],
+  );
+
+  const subtasks = await query(
+    db,
+    `SELECT t.*, a.display_name as assignee_name
+     FROM tasks t
+     LEFT JOIN users a ON a.id = t.assignee_user_id
+     WHERE t.parent_task_id = ?
+     ORDER BY t.created_at ASC`,
+    [taskId],
+  );
+
+  const collaborators = await query(
+    db,
+    `SELECT tc.user_id, tc.created_at, u.display_name, u.email
+     FROM task_collaborators tc
+     JOIN users u ON u.id = tc.user_id
+     WHERE tc.task_id = ?
+     ORDER BY tc.created_at ASC`,
+    [taskId],
+  );
+
   const isOverdue = computeIsOverdue(task);
 
-  return { task: { ...task, isOverdue }, events, comments };
+  return {
+    task: { ...task, isOverdue },
+    events,
+    comments,
+    checklists,
+    subtasks,
+    collaborators,
+  };
 }
 
 /**

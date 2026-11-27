@@ -7,6 +7,7 @@ import { CommercialForms } from "@/features/commercial-forms";
 import { PermissionGate } from "@/components/permission-gate";
 import { cx } from "@/components/utilities";
 import { Dialog, Field, ErrorState, readResponse } from "@/components/ui";
+import { ExternalClearancePanel } from "@/components/external-clearance-panel";
 import layout from "./page.module.css";
 import { useFeedback } from "@/components/ui";
 
@@ -488,6 +489,8 @@ export default function ProjectFinancePage() {
       </div>
 
       {error && <div className={cx(layout.block20)}>{error}</div>}
+
+      <ExternalClearancePanel projectId={projectId} />
 
       {/* Tabs */}
       <div className={cx(layout.block21)}>

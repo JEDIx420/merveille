@@ -281,6 +281,12 @@ export async function confirmLeadImportBatch(
         await QuotaService.recordR2Ops(db, actor.orgId, "R2_CLASS_A", 1);
         retentionMode = "R2_ORIGINAL_RETAINED";
       } catch {
+        await QuotaService.releaseStorageReservation(
+          db,
+          actor.orgId,
+          `imp_${input.batchId}`,
+          "PRIMARY"
+        ).catch(() => {});
         // Explicit documented no-original retention mode if R2 quota insufficient (never public URL)
         r2Key = null;
       }

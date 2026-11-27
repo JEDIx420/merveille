@@ -19,6 +19,7 @@ import {
   ui,
 } from "@/components/ui";
 import { formatBusinessDate } from "@/shared/config";
+import { ManualWhatsAppShare } from "@/components/manual-whatsapp-share";
 const disciplines = [
   "ARCHITECTURAL",
   "STRUCTURAL",
@@ -379,6 +380,20 @@ export default function Drawings({
                       >
                         Withdraw release
                       </Button>
+                    )}
+                    {version.status === "RELEASED" && (
+                      <ManualWhatsAppShare
+                        isPublishedOrReleased={version.status === "RELEASED"}
+                        input={{
+                          kind: "DRAWING_RELEASE",
+                          projectName: project?.name || "Project",
+                          title: `${drawing?.drawing_number || ""} ${drawing?.title || ""}`.trim(),
+                          revisionLabel: version.version_label,
+                          releasedAt: version.released_at || Date.now(),
+                          approvedSummary: version.submission_note,
+                          authenticatedPath: `/projects/${project.id}/drawings`,
+                        }}
+                      />
                     )}
                   </div>
                 </div>

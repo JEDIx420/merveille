@@ -155,4 +155,47 @@ describe("Stage N03: Open-Source Voice Entry & Bounded Free Quota (NAC-008, NAC-
     // Unused QuotaService import sanity check
     expect(QuotaService).toBeDefined();
   });
+
+  it("NAC-009: External client and consultant users are denied voice dictation (403 FORBIDDEN)", async () => {
+    const clientUser: UserPrincipal = {
+      id: "usr_client_v",
+      email: "client@example.com",
+      name: "Client",
+      role: "MAIN_CLIENT",
+      roles: ["MAIN_CLIENT"],
+      orgId,
+      projectMemberships: [{ projectId: "prj_1", projectRole: "MAIN_CLIENT" }],
+    };
+    const consultantUser: UserPrincipal = {
+      id: "usr_cons_v",
+      email: "cons@example.com",
+      name: "Consultant",
+      role: "CONSULTANT",
+      roles: ["CONSULTANT"],
+      orgId,
+      projectMemberships: [{ projectId: "prj_1", projectRole: "CONSULTANT" }],
+    };
+
+    const mockAi: WorkersAiRunner = {
+      async run() {
+        throw new Error("Should not invoke AI for unauthorized caller");
+      },
+    };
+
+    await expect(
+      processVoiceDictation(db, mockAi, clientUser, {
+        attemptId: "att_client_deny",
+        wavBytes: makeTestWav(1, 16000, 1),
+        targetKind: "TASK_NOTE",
+      })
+    ).rejects.toThrow(/authorized internal practice members/);
+
+    await expect(
+      processVoiceDictation(db, mockAi, consultantUser, {
+        attemptId: "att_cons_deny",
+        wavBytes: makeTestWav(1, 16000, 1),
+        targetKind: "LEAD",
+      })
+    ).rejects.toThrow(/authorized internal practice members/);
+  });
 });

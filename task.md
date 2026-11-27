@@ -6,14 +6,14 @@ The current work order is [docs/next-phase/README.md](docs/next-phase/README.md)
 
 | Stage | Work | Implementation | Local verification | Hosted verification | Team acceptance | Evidence |
 |---|---|---|---|---|---|---|
-| N00 | Baseline and enforceable free-tier envelope | Passed | Passed | Blocked | Not started | [N00](docs/next-phase/evidence/n00.md) |
-| N01 | Simple workspace and preserved business authority | Passed | Passed | Not started | Not started | [N01](docs/next-phase/evidence/n01.md) |
-| N02 | Simple leads and reviewed spreadsheet imports | Passed | Passed | Not started | Not started | [N02](docs/next-phase/evidence/n02.md) |
+| N00 | Baseline and enforceable free-tier envelope | Passed | Passed | In progress | Not started | [N00](docs/next-phase/evidence/n00.md) |
+| N01 | Simple workspace and preserved business authority | Passed | Passed | In progress | Not started | [N01](docs/next-phase/evidence/n01.md) |
+| N02 | Simple leads and reviewed spreadsheet imports | Passed | Passed | In progress | Not started | [N02](docs/next-phase/evidence/n02.md) |
 | N03 | Open-source dictation and reviewed structured entry | Passed | Passed | Blocked | Blocked | [N03](docs/next-phase/evidence/n03.md) |
-| N04 | In-app reminders and manual WhatsApp messages | Passed | Passed | Not started | Not started | [N04](docs/next-phase/evidence/n04.md) |
-| N05 | Integrated verification, migration, recovery and pilot | Passed | Passed | Blocked | Blocked | [N05](docs/next-phase/evidence/n05.md) |
+| N04 | In-app reminders and manual WhatsApp messages | Passed | Passed | In progress | Not started | [N04](docs/next-phase/evidence/n04.md) |
+| N05 | Integrated verification, migration, recovery and pilot | Passed | Passed | In progress | Blocked | [N05](docs/next-phase/evidence/n05.md) |
 
-**Next exact action:** apply migrations `0024`–`0027` to the target Free Cloudflare installation after a verified D1 snapshot, deploy web + jobs workers, measure live Workers CPU / Workers AI (`@cf/openai/whisper-large-v3-turbo`, `@cf/openai/gpt-oss-20b`) within the 8,000-neuron/day ceiling, and complete multi-role team + ~50-sample voice pilot.
+**Next exact action:** Have an invited tester (Jay / 3-person pilot) complete Cloudflare Access OTP login on `https://merveille-web-staging.rhelo-bible.workers.dev` to exercise the integrated UI, measure live Workers AI (`@cf/openai/whisper-large-v3-turbo`, `@cf/openai/gpt-oss-20b`) within the 8,000-neuron/day ceiling (~50-sample voice pilot), and authorize production provisioning.
 
 Carry forward applicable multi-person access/business UAT, backup automation/monitoring and populated-recovery gaps. Historical automated WhatsApp/provider checks are deferred out of this phase, not passed. The previous checkpoints below retain their original evidence and statuses; their old next-action wording is historical, not the active assignment.
 

@@ -7,9 +7,10 @@
  * and fails closed when daily neuron quota is exhausted (no paid fallback).
  */
 
-import { UserPrincipal } from "@/server/auth/principal";
+import { UserPrincipal, hasCapability } from "@/server/auth/principal";
 import { AuthorizationError } from "@/server/auth/policy";
 import { QuotaService } from "@/server/quota/service";
+import { assertLeadAccess } from "@/server/domain/enquiries/leads-service";
 import { validateMono16kPcmWav } from "./wav";
 
 export const VOICE_MODEL_ALLOWLIST = {
@@ -102,6 +103,26 @@ export async function processVoiceDictation(
     capturedAtMs?: number;
   }
 ): Promise<VoiceDraftProposal> {
+  // Authorization: clients and external consultants may not consume internal AI neuron quota
+  const isInternalVoiceUser =
+    hasCapability(actor, "ADMIN") ||
+    hasCapability(actor, "OWNER") ||
+    Boolean(actor.intakeAccess) ||
+    actor.projectMemberships.some((m) =>
+      (m.roles || [m.projectRole]).some((r) =>
+        ["MANAGER", "PROJECT_MANAGER", "TEAM_MEMBER", "STAFF", "ARCHITECT", "DIRECTOR"].includes(r || "")
+      )
+    );
+  if (!isInternalVoiceUser) {
+    throw new AuthorizationError(
+      "Voice dictation is restricted to authorized internal practice members.",
+      "FORBIDDEN"
+    );
+  }
+  if (input.targetKind === "LEAD" || input.targetKind === "FOLLOWUP") {
+    assertLeadAccess(actor);
+  }
+
   if (!input.attemptId?.trim()) {
     throw new AuthorizationError("Attempt ID is required.", "INVALID_INPUT");
   }

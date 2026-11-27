@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { setupMigratedTestDb, createTestR2Bucket } from "../test-db";
 import { UserPrincipal } from "@/server/auth/principal";
 import { ArchiveService } from "@/server/domain/archive/service";
+import { createRecoveryCheckpoint } from "@/server/domain/archive/recovery";
 import { NotificationService } from "@/server/notifications/service";
 
 describe("Stage N05: Integrated Populated Migration, Recovery, and Free-Tier Rollout (NAC-012, NAC-013)", () => {
@@ -105,5 +106,15 @@ describe("Stage N05: Integrated Populated Migration, Recovery, and Free-Tier Rol
       .prepare(`SELECT COUNT(*) as cnt FROM notifications WHERE channel='WHATSAPP' AND status='QUEUED'`)
       .first<{ cnt: number }>();
     expect(waCount?.cnt).toBe(0);
+
+    // Ensure createRecoveryCheckpoint accounts backup storage in quota_reservations & quota_usage_daily
+    const checkpoint = await createRecoveryCheckpoint(db, r2, backupR2, adminUser, projectId);
+    expect(checkpoint.backupKey).toContain("checkpoints/");
+    const resRow = await db
+      .prepare(`SELECT actual_amount as bytes, status FROM quota_reservations WHERE org_id = ? AND resource_type = 'R2_BACKUP_BYTES'`)
+      .bind(orgId)
+      .first<{ bytes: number; status: string }>();
+    expect(resRow?.status).toBe("COMMITTED");
+    expect((resRow?.bytes ?? 0) > 0).toBe(true);
   });
 });

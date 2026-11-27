@@ -24,6 +24,11 @@ interface MyTaskItem {
 
 export function MyTasksPanel() {
   const [items, setItems] = useState<MyTaskItem[]>([]);
+  const [teamMembers, setTeamMembers] = useState<{ id: string; name: string }[]>([]);
+  const [internalProjects, setInternalProjects] = useState<{ id: string; code: string; name: string }[]>([]);
+  const [selectedTeamUserId, setSelectedTeamUserId] = useState("");
+  const [promoteTaskId, setPromoteTaskId] = useState<string | null>(null);
+  const [promoteProjectId, setPromoteProjectId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [view, setView] = useState<"LIST" | "BOARD" | "CALENDAR">("LIST");
@@ -32,14 +37,22 @@ export function MyTasksPanel() {
   const [quickDue, setQuickDue] = useState("");
   const [saving, setSaving] = useState(false);
 
-  async function load() {
+  async function load(teamId = selectedTeamUserId) {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/my-tasks");
+      const url = teamId ? `/api/my-tasks?teamUserId=${encodeURIComponent(teamId)}` : "/api/my-tasks";
+      const res = await fetch(url);
       const json: any = await readResponse(res);
       if (!res.ok) throw new Error(json.error || "Failed to load tasks");
       setItems(json.items || []);
+      if (!teamId) {
+        setTeamMembers(json.teamMembers || []);
+        setInternalProjects(json.internalProjects || []);
+        if (!promoteProjectId && json.internalProjects?.length) {
+          setPromoteProjectId(json.internalProjects[0].id);
+        }
+      }
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -48,8 +61,30 @@ export function MyTasksPanel() {
   }
 
   useEffect(() => {
-    load();
-  }, []);
+    load(selectedTeamUserId);
+  }, [selectedTeamUserId]);
+
+  async function handlePromote(personalTaskId: string) {
+    if (!promoteProjectId) return;
+    setError("");
+    try {
+      const res = await fetch("/api/my-tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "promote",
+          personalTaskId,
+          projectId: promoteProjectId,
+        }),
+      });
+      const json: any = await readResponse(res);
+      if (!res.ok) throw new Error(json.error || "Could not move task to project");
+      setPromoteTaskId(null);
+      await load();
+    } catch (e: any) {
+      setError(e.message);
+    }
+  }
 
   async function handleQuickAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -131,23 +166,41 @@ export function MyTasksPanel() {
             Canonical project assignments and private personal tasks in List, Board, or Calendar view.
           </p>
         </div>
-        <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }} role="tablist" aria-label="Task view mode">
-          {(["LIST", "BOARD", "CALENDAR"] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              role="tab"
-              aria-selected={view === mode}
-              onClick={() => setView(mode)}
-              className={view === mode ? "btn-primary" : "btn-secondary"}
-              style={{ padding: "0.35rem 0.75rem", fontSize: "0.8rem" }}
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+          {teamMembers.length > 0 && (
+            <select
+              aria-label="Task scope"
+              value={selectedTeamUserId}
+              onChange={(e) => setSelectedTeamUserId(e.target.value)}
+              style={{ padding: "0.35rem 0.6rem", fontSize: "0.8rem", borderRadius: "6px", border: "1px solid var(--merveille-border)", background: "var(--merveille-surface)", color: "var(--merveille-ink)" }}
             >
-              {mode === "LIST" ? "List" : mode === "BOARD" ? "Board" : "Calendar"}
-            </button>
-          ))}
+              <option value="">My Tasks (Personal + Shared)</option>
+              {teamMembers.map((tm) => (
+                <option key={tm.id} value={tm.id}>
+                  Team: {tm.name} (Shared project tasks)
+                </option>
+              ))}
+            </select>
+          )}
+          <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }} role="tablist" aria-label="Task view mode">
+            {(["LIST", "BOARD", "CALENDAR"] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                role="tab"
+                aria-selected={view === mode}
+                onClick={() => setView(mode)}
+                className={view === mode ? "btn-primary" : "btn-secondary"}
+                style={{ padding: "0.35rem 0.75rem", fontSize: "0.8rem" }}
+              >
+                {mode === "LIST" ? "List" : mode === "BOARD" ? "Board" : "Calendar"}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
+      {!selectedTeamUserId && (
       <form onSubmit={handleQuickAdd} style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
         <input
           type="text"
@@ -168,6 +221,7 @@ export function MyTasksPanel() {
           {saving ? "Adding…" : "Add task"}
         </Button>
       </form>
+      )}
 
       <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
         {(["ALL", "UPCOMING", "OVERDUE", "COMPLETED"] as const).map((b) => (
@@ -237,6 +291,37 @@ export function MyTasksPanel() {
                   <Link href={item.link} className="btn-secondary" style={{ padding: "0.25rem 0.6rem", fontSize: "0.75rem" }}>
                     Open
                   </Link>
+                )}
+                {item.scope === "PERSONAL" && internalProjects.length > 0 && (
+                  promoteTaskId === item.id ? (
+                    <span style={{ display: "inline-flex", gap: "0.3rem", alignItems: "center" }}>
+                      <select
+                        aria-label="Target project"
+                        value={promoteProjectId}
+                        onChange={(e) => setPromoteProjectId(e.target.value)}
+                        style={{ padding: "0.2rem 0.4rem", fontSize: "0.75rem", borderRadius: "4px", border: "1px solid var(--merveille-border)", background: "var(--merveille-surface)", color: "var(--merveille-ink)" }}
+                      >
+                        {internalProjects.map((p) => (
+                          <option key={p.id} value={p.id}>{p.code} • {p.name}</option>
+                        ))}
+                      </select>
+                      <button type="button" className="btn-primary" style={{ padding: "0.2rem 0.5rem", fontSize: "0.75rem" }} onClick={() => handlePromote(item.id)}>
+                        Move
+                      </button>
+                      <button type="button" className="btn-secondary" style={{ padding: "0.2rem 0.4rem", fontSize: "0.75rem" }} onClick={() => setPromoteTaskId(null)}>
+                        Cancel
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      style={{ padding: "0.25rem 0.6rem", fontSize: "0.75rem" }}
+                      onClick={() => setPromoteTaskId(item.id)}
+                    >
+                      Move to project
+                    </button>
+                  )
                 )}
               </div>
             </div>

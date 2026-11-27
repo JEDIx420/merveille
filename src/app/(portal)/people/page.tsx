@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AccessGrants, AccessProject } from "@/components/access-form";
+import { AdminQuotaPanel } from "@/components/admin-quota-panel";
 import {
   PageHeader,
   LoadingState,
@@ -329,6 +330,7 @@ export default function People() {
           </form>
         </Dialog>
       )}
+      <AdminQuotaPanel />
     </div>
   );
 }

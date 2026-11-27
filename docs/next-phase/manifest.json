@@ -12,7 +12,7 @@
     "docs/remediation/manifest.json",
     "docs/implementation/manifest.json"
   ],
-  "status": "Stages N00-N05 implemented and locally verified. Hosted Free-plan CPU/Workers AI measurement, separate company Cloudflare installation, and multi-person team/voice pilot remain open.",
+  "status": "Stages N00-N05 implemented, independently audited, and locally verified (139 unit tests, 12 workerd tests, 132 browser checks). Staging D1 migrations 0024-0027 applied on populated staging DB (5 users, 1 project) and web/jobs workers deployed with AI binding. Authenticated hosted UI/Workers AI UAT and production rollout remain pending invited tester Access OTP login and company production authorization.",
   "constraints": {
     "cloudflarePlan": "free",
     "paidFallback": false,
@@ -38,10 +38,10 @@
       "acceptance": ["NAC-001", "NAC-002"],
       "implementation": "passed",
       "localVerification": "passed",
-      "hostedVerification": "blocked",
+      "hostedVerification": "in-progress",
       "teamAcceptance": "not-started",
       "evidence": ["docs/next-phase/evidence/n00.md"],
-      "blockers": ["Live Workers CPU profiling on target Free account pending hosted deploy."]
+      "blockers": ["Authenticated hosted CPU/quota UI check on staging pending invited tester Cloudflare Access OTP sign-in."]
     },
     {
       "id": "N01",
@@ -125,11 +125,11 @@
       "acceptance": ["NAC-012", "NAC-013"],
       "implementation": "passed",
       "localVerification": "passed",
-      "hostedVerification": "blocked",
+      "hostedVerification": "in-progress",
       "teamAcceptance": "blocked",
       "evidence": ["docs/next-phase/evidence/n05.md"],
       "blockers": [
-        "Separate company Cloudflare account setup, remote migration 0024-0027, and multi-role team UAT pending."
+        "Authenticated staging UAT (Access OTP sign-in by Jay / 3-person pilot), live Workers AI audio pilot, and separate company Cloudflare production provisioning pending."
       ]
     }
   ]

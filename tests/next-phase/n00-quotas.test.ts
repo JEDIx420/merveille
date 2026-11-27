@@ -160,4 +160,29 @@ describe("Stage N00: Free-Tier Quota & Admission Envelope (NAC-001, NAC-002)", (
     expect(snapshot.jobs[0].last_status).toBe("OK");
     expect(snapshot.jobs[0].items_processed).toBe(4);
   });
+
+  it("NAC-001: Concurrent reserveStorageBytes enforces ceiling atomically and AI attemptId replay is rejected", async () => {
+    await QuotaService.updateQuotaPolicy(db, adminUser, orgId, {
+      maxR2Bytes: 2_000_000,
+      maxR2PrimaryBytes: 1_000_000,
+      maxR2BackupBytes: 1_000_000,
+    });
+
+    // Parallel storage admission: 600k + 600k > 1M ceiling -> at most 1 succeeds
+    const results = await Promise.allSettled([
+      QuotaService.reserveStorageBytes(db, orgId, "attempt_conc_1", 600_000, "PRIMARY"),
+      QuotaService.reserveStorageBytes(db, orgId, "attempt_conc_2", 600_000, "PRIMARY"),
+    ]);
+    const fulfilled = results.filter((r) => r.status === "fulfilled");
+    const rejected = results.filter((r) => r.status === "rejected");
+    expect(fulfilled.length).toBe(1);
+    expect(rejected.length).toBe(1);
+
+    // AI reservation replay after COMMITTED must fail with ATTEMPT_ALREADY_USED
+    await QuotaService.reserveAiNeurons(db, orgId, "ai_replay_1", 50);
+    await QuotaService.settleAiNeurons(db, orgId, "ai_replay_1", 30);
+    await expect(
+      QuotaService.reserveAiNeurons(db, orgId, "ai_replay_1", 50)
+    ).rejects.toThrow(/already been processed/);
+  });
 });

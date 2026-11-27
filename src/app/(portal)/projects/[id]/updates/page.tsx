@@ -2,6 +2,8 @@
 import { ProjectMutation } from "@/components/project-mutation";
 import { cx } from "@/components/utilities";
 import { Dialog, readResponse } from "@/components/ui";
+import { ManualWhatsAppShare } from "@/components/manual-whatsapp-share";
+import { useProject } from "@/components/project-context";
 import layout from "./page.module.css";
 import { useFeedback } from "@/components/ui";
 
@@ -320,12 +322,13 @@ export default function UpdatesPage() {
             <div className={cx(layout.block17)}>
               {updates.map((item, idx) => {
                 const isInternalFormat = Boolean(item.versions);
+                const publishedVersion = item.versions?.find((v) => v.status === "PUBLISHED");
                 const publishedTitle =
-                  item.title || item.versions?.[0]?.title || "Update";
+                  item.title || publishedVersion?.title || item.versions?.[0]?.title || "Update";
                 const publishedBody =
-                  item.body_text || item.versions?.[0]?.body_text || "";
+                  item.body_text || publishedVersion?.body_text || item.versions?.[0]?.body_text || "";
                 const publishedDate =
-                  item.observed_date || item.versions?.[0]?.observed_date;
+                  item.observed_date || publishedVersion?.observed_date || item.versions?.[0]?.observed_date;
                 const author = item.author_name || "Team Member";
 
                 return (
@@ -351,6 +354,23 @@ export default function UpdatesPage() {
                     </div>
 
                     <p className={cx(layout.block23)}>{publishedBody}</p>
+
+                    {(!isInternalFormat || Boolean(publishedVersion)) && item.is_retracted !== 1 && (
+                      <div style={{ marginTop: "0.5rem" }}>
+                        <ManualWhatsAppShare
+                          isPublishedOrReleased={true}
+                          input={{
+                            kind: "PUBLISHED_UPDATE",
+                            projectName: `Project ${projectId}`,
+                            title: item.title || publishedVersion?.title || "Update",
+                            revisionLabel: `V${publishedVersion?.version_number || 1}`,
+                            releasedAt: item.published_at || publishedVersion?.published_at || Date.now(),
+                            approvedSummary: item.body_text || publishedVersion?.body_text || "",
+                            authenticatedPath: `/projects/${projectId}/updates`,
+                          }}
+                        />
+                      </div>
+                    )}
 
                     {/* Attachments */}
                     {item.attachments && item.attachments.length > 0 && (

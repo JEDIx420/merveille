@@ -12,7 +12,13 @@ import {
   blockTask,
   cancelTask,
   addTaskComment,
+  createTask,
 } from "@/server/domain/tasks/service";
+import {
+  addTaskChecklistItem,
+  toggleTaskChecklistItem,
+  addTaskCollaborator,
+} from "@/server/domain/tasks/personal-service";
 
 export async function GET(
   request: NextRequest,
@@ -150,6 +156,49 @@ export async function POST(
           env.DB,
         );
         return NextResponse.json({ ok: true, ...result }, { status: 201 });
+      }
+
+      case "ADD_CHECKLIST": {
+        const item = await addTaskChecklistItem(auth.principal, taskId, body.label, env.DB);
+        return NextResponse.json({ ok: true, item }, { status: 201 });
+      }
+
+      case "TOGGLE_CHECKLIST": {
+        const item = await toggleTaskChecklistItem(
+          auth.principal,
+          body.itemId,
+          Boolean(body.isCompleted),
+          env.DB,
+        );
+        return NextResponse.json({ ok: true, item });
+      }
+
+      case "ADD_COLLABORATOR": {
+        const collaborator = await addTaskCollaborator(
+          auth.principal,
+          taskId,
+          body.userId,
+          env.DB,
+        );
+        return NextResponse.json({ ok: true, collaborator }, { status: 201 });
+      }
+
+      case "CREATE_SUBTASK": {
+        const parentRes = await getTask(auth.principal, taskId, env.DB);
+        const subtask = await createTask(
+          auth.principal,
+          {
+            projectId: parentRes.task.project_id,
+            parentTaskId: taskId,
+            title: body.title,
+            description: body.description,
+            priority: body.priority,
+            proposedAssigneeId: body.proposedAssigneeId,
+            proposedDueDate: body.proposedDueDate,
+          },
+          env.DB,
+        );
+        return NextResponse.json({ ok: true, subtask }, { status: 201 });
       }
 
       default:

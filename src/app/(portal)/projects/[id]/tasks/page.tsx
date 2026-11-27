@@ -3,6 +3,7 @@ import { ProjectMutation } from "@/components/project-mutation";
 import { PermissionGate } from "@/components/permission-gate";
 import { cx } from "@/components/utilities";
 import { Dialog, readResponse } from "@/components/ui";
+import { VoiceDictationButton } from "@/components/voice-dictation";
 import layout from "./page.module.css";
 import { useFeedback } from "@/components/ui";
 
@@ -75,6 +76,12 @@ export default function ProjectTasksPage({
   >("CORRECTION_DEFECT");
   const [reopenDueDate, setReopenDueDate] = useState("");
 
+  const [detailTaskId, setDetailTaskId] = useState<string | null>(null);
+  const [detailData, setDetailData] = useState<any | null>(null);
+  const [newChecklistLabel, setNewChecklistLabel] = useState("");
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const [newCollaboratorId, setNewCollaboratorId] = useState("");
+
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -109,6 +116,91 @@ export default function ProjectTasksPage({
       setError(
         err.message || "Unable to load project participants. Try again.",
       );
+    }
+  }
+
+  async function openTaskDetails(taskId: string) {
+    setDetailTaskId(taskId);
+    setDetailData(null);
+    setError("");
+    try {
+      const res = await fetch(`/api/tasks/${taskId}`);
+      const json: any = await readResponse(res);
+      if (!res.ok) throw new Error(json.error || "Failed to load task details");
+      setDetailData(json);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }
+
+  async function handleAddChecklist(e: React.FormEvent) {
+    e.preventDefault();
+    if (!detailTaskId || !newChecklistLabel.trim()) return;
+    try {
+      const res = await fetch(`/api/tasks/${detailTaskId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "ADD_CHECKLIST", label: newChecklistLabel.trim() }),
+      });
+      const json: any = await readResponse(res);
+      if (!res.ok) throw new Error(json.error || "Could not add checklist item");
+      setNewChecklistLabel("");
+      await openTaskDetails(detailTaskId);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }
+
+  async function handleToggleChecklist(itemId: string, nextCompleted: boolean) {
+    if (!detailTaskId) return;
+    try {
+      const res = await fetch(`/api/tasks/${detailTaskId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "TOGGLE_CHECKLIST", itemId, isCompleted: nextCompleted }),
+      });
+      const json: any = await readResponse(res);
+      if (!res.ok) throw new Error(json.error || "Could not update checklist item");
+      await openTaskDetails(detailTaskId);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }
+
+  async function handleAddSubtask(e: React.FormEvent) {
+    e.preventDefault();
+    if (!detailTaskId || !newSubtaskTitle.trim()) return;
+    try {
+      const res = await fetch(`/api/tasks/${detailTaskId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "CREATE_SUBTASK", title: newSubtaskTitle.trim() }),
+      });
+      const json: any = await readResponse(res);
+      if (!res.ok) throw new Error(json.error || "Could not create subtask");
+      setNewSubtaskTitle("");
+      await openTaskDetails(detailTaskId);
+      loadTasks();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }
+
+  async function handleAddCollaborator(e: React.FormEvent) {
+    e.preventDefault();
+    if (!detailTaskId || !newCollaboratorId) return;
+    try {
+      const res = await fetch(`/api/tasks/${detailTaskId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "ADD_COLLABORATOR", userId: newCollaboratorId }),
+      });
+      const json: any = await readResponse(res);
+      if (!res.ok) throw new Error(json.error || "Could not add collaborator");
+      setNewCollaboratorId("");
+      await openTaskDetails(detailTaskId);
+    } catch (err: any) {
+      setError(err.message);
     }
   }
 
@@ -456,6 +548,13 @@ export default function ProjectTasksPage({
 
               {/* Actions */}
               <div className={cx(layout.block26)}>
+                <button
+                  type="button"
+                  onClick={() => openTaskDetails(task.id)}
+                  className={cx("btn-secondary")}
+                >
+                  Details
+                </button>
                 {task.status === "TODO" && (
                   <ProjectMutation>
                     <button
@@ -551,9 +650,17 @@ export default function ProjectTasksPage({
               </div>
 
               <div>
-                <label className={cx(layout.block38)}>
-                  Description & Deliverable Scope
-                </label>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
+                  <label className={cx(layout.block38)} style={{ marginBottom: 0 }}>
+                    Description & Deliverable Scope
+                  </label>
+                  <VoiceDictationButton
+                    targetKind="TASK_NOTE"
+                    onApplyDraft={(p) =>
+                      setNewDescription((prev) => (prev ? `${prev}\n${p.cleanedText}` : p.cleanedText))
+                    }
+                  />
+                </div>
                 <textarea
                   rows={3}
                   placeholder="Detail the technical specifications, reference drawings, or coordination notes..."
@@ -798,6 +905,109 @@ export default function ProjectTasksPage({
               </div>
             </form>
           </div>
+        </Dialog>
+      )}
+
+      {/* Task Details Modal: Checklists, Subtasks, Collaborators */}
+      {detailTaskId && (
+        <Dialog
+          title={detailData?.task?.title || "Task Details"}
+          onClose={() => {
+            setDetailTaskId(null);
+            setDetailData(null);
+          }}
+        >
+          {!detailData ? (
+            <p className="text-muted">Loading task details…</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <div style={{ fontSize: "0.82rem" }} className="text-muted">
+                  Status: {detailData.task.status} • Priority: {detailData.task.priority}
+                  {detailData.task.effective_due_date ? ` • Due ${formatBusinessDate(detailData.task.effective_due_date)}` : ""}
+                </div>
+                {detailData.task.description && (
+                  <p style={{ marginTop: "0.4rem", fontSize: "0.9rem" }}>{detailData.task.description}</p>
+                )}
+              </div>
+
+              {/* Checklist */}
+              <div style={{ borderTop: "1px solid var(--merveille-border)", paddingTop: "0.75rem" }}>
+                <h4 style={{ fontSize: "0.9rem", fontWeight: 600, marginBottom: "0.4rem" }}>Checklist</h4>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", marginBottom: "0.5rem" }}>
+                  {(detailData.checklists || []).map((c: any) => (
+                    <label key={c.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem" }}>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(c.is_completed)}
+                        onChange={(e) => handleToggleChecklist(c.id, e.target.checked)}
+                      />
+                      <span style={{ textDecoration: c.is_completed ? "line-through" : "none" }}>{c.label}</span>
+                    </label>
+                  ))}
+                </div>
+                <form onSubmit={handleAddChecklist} style={{ display: "flex", gap: "0.4rem" }}>
+                  <input
+                    type="text"
+                    placeholder="Add checklist item…"
+                    value={newChecklistLabel}
+                    onChange={(e) => setNewChecklistLabel(e.target.value)}
+                    style={{ flex: 1, padding: "0.35rem 0.6rem", borderRadius: "6px", border: "1px solid var(--merveille-border)" }}
+                  />
+                  <button type="submit" className="btn-secondary">Add</button>
+                </form>
+              </div>
+
+              {/* 1-level Subtasks */}
+              {!detailData.task.parent_task_id && (
+                <div style={{ borderTop: "1px solid var(--merveille-border)", paddingTop: "0.75rem" }}>
+                  <h4 style={{ fontSize: "0.9rem", fontWeight: 600, marginBottom: "0.4rem" }}>Subtasks</h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", marginBottom: "0.5rem" }}>
+                    {(detailData.subtasks || []).map((st: any) => (
+                      <div key={st.id} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", padding: "0.35rem 0.5rem", border: "1px solid var(--merveille-border)", borderRadius: "6px" }}>
+                        <span>{st.title}</span>
+                        <span className="text-muted">{st.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <form onSubmit={handleAddSubtask} style={{ display: "flex", gap: "0.4rem" }}>
+                    <input
+                      type="text"
+                      placeholder="Add 1-level subtask…"
+                      value={newSubtaskTitle}
+                      onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                      style={{ flex: 1, padding: "0.35rem 0.6rem", borderRadius: "6px", border: "1px solid var(--merveille-border)" }}
+                    />
+                    <button type="submit" className="btn-secondary">Add Subtask</button>
+                  </form>
+                </div>
+              )}
+
+              {/* Project-scoped Collaborators */}
+              <div style={{ borderTop: "1px solid var(--merveille-border)", paddingTop: "0.75rem" }}>
+                <h4 style={{ fontSize: "0.9rem", fontWeight: 600, marginBottom: "0.4rem" }}>Collaborators</h4>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem", marginBottom: "0.5rem" }}>
+                  {(detailData.collaborators || []).map((col: any) => (
+                    <span key={col.user_id} className="badge">{col.display_name}</span>
+                  ))}
+                </div>
+                <form onSubmit={handleAddCollaborator} style={{ display: "flex", gap: "0.4rem" }}>
+                  <select
+                    aria-label="Add collaborator"
+                    value={newCollaboratorId}
+                    onChange={(e) => setNewCollaboratorId(e.target.value)}
+                    style={{ flex: 1, padding: "0.35rem 0.6rem", borderRadius: "6px", border: "1px solid var(--merveille-border)" }}
+                  >
+                    <option value="">Select project member…</option>
+                    {usersList.map((u) => (
+                      <option key={u.id} value={u.id}>{u.name}</option>
+                    ))}
+                  </select>
+                  <button type="submit" className="btn-secondary">Add</button>
+                </form>
+              </div>
+            </div>
+          )}
         </Dialog>
       )}
     </div>

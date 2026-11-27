@@ -3,6 +3,7 @@ import type { UserPrincipal } from "@/server/auth/principal";
 import { hasCapability } from "@/server/auth/principal";
 import { AuthorizationError } from "@/server/auth/policy";
 import { query, queryFirst } from "@/server/db";
+import { QuotaService } from "@/server/quota/service";
 const CHUNK = 8 * 1024 * 1024,
   MAX_MANIFEST = 20 * 1024 * 1024;
 const quote = (v: string) => {
@@ -67,6 +68,19 @@ export async function createRecoveryCheckpoint(
   const checkpointId = crypto.randomUUID();
   const prefix = `backups/checkpoints/${checkpointId}`;
   const now = Date.now();
+  const filesSizeRow = await queryFirst<{ total: number }>(
+    db,
+    `SELECT COALESCE(SUM(size_bytes), 0) as total FROM files WHERE org_id=? AND status='READY'`,
+    [p.orgId],
+  );
+  const estimatedBackupBytes = Math.max(1024, (filesSizeRow?.total ?? 0) + 65536);
+  await QuotaService.reserveStorageBytes(
+    db,
+    p.orgId,
+    `bkp_${checkpointId}`,
+    estimatedBackupBytes,
+    "BACKUP",
+  );
   await db
     .prepare(
       "INSERT INTO backup_runs(id,org_id,project_id,status,created_by,created_at) VALUES(?,?,?,'COPYING',?,?)",
@@ -245,6 +259,22 @@ export async function createRecoveryCheckpoint(
       httpMetadata: { contentType: "application/json" },
       customMetadata: { sha256: manifestSha256 },
     });
+    const totalBackupBytes =
+      new TextEncoder().encode(json).byteLength +
+      manifest.objects.reduce((s, o) => s + o.size, 0);
+    await QuotaService.commitStorageReservation(
+      db,
+      p.orgId,
+      `bkp_${checkpointId}`,
+      Math.max(1, totalBackupBytes),
+      "BACKUP",
+    );
+    await QuotaService.recordR2Ops(
+      db,
+      p.orgId,
+      "R2_CLASS_A",
+      1 + manifest.objects.reduce((s, o) => s + Math.max(1, o.chunks.length), 0),
+    );
     await db
       .prepare(
         "UPDATE backup_runs SET status='COMPLETE',manifest_key=?,manifest_sha256=?,completed_at=? WHERE id=?",
@@ -263,6 +293,12 @@ export async function createRecoveryCheckpoint(
       filesVerifiedCount: manifest.objects.length,
     };
   } catch (error) {
+    await QuotaService.releaseStorageReservation(
+      db,
+      p.orgId,
+      `bkp_${checkpointId}`,
+      "BACKUP",
+    ).catch(() => {});
     await db
       .prepare(
         "UPDATE backup_runs SET status='INCOMPLETE',failure_code=? WHERE id=?",

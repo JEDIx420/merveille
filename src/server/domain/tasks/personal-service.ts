@@ -330,7 +330,8 @@ export async function addTaskCollaborator(
 }
 
 /**
- * Unified My Tasks read combining assigned project tasks and the owner's private personal tasks.
+ * Unified My Tasks read combining assigned project tasks (only for active project memberships)
+ * and the owner's private personal tasks.
  */
 export async function getMyTasksUnified(
   actor: UserPrincipal,
@@ -341,11 +342,13 @@ export async function getMyTasksUnified(
     `SELECT t.*, p.name as project_name, p.code as project_code, u.display_name as assignee_name
      FROM tasks t
      JOIN projects p ON p.id = t.project_id
+     JOIN project_memberships pm ON pm.project_id = t.project_id AND pm.user_id = ? AND pm.is_active = 1
+       AND pm.project_role IN ('MANAGER', 'PROJECT_MANAGER', 'TEAM_MEMBER', 'STAFF', 'ARCHITECT', 'DIRECTOR')
      LEFT JOIN users u ON u.id = t.assignee_user_id
      WHERE t.org_id = ? AND (t.assignee_user_id = ? OR EXISTS (SELECT 1 FROM task_collaborators tc WHERE tc.task_id = t.id AND tc.user_id = ?))
        AND p.is_archived = 0
      ORDER BY CASE WHEN t.effective_due_date IS NULL THEN 1 ELSE 0 END, t.effective_due_date ASC, t.created_at DESC`,
-    [actor.orgId, actor.id, actor.id]
+    [actor.id, actor.orgId, actor.id, actor.id]
   );
 
   const personal = await listPersonalTasks(actor, db);
@@ -386,4 +389,63 @@ export async function getMyTasksUnified(
   ];
 
   return { items };
+}
+
+/**
+ * Authorized Team-Member Task View (NAC-003 / 02-simple-workspace.md).
+ * Shows only shared project tasks assigned to targetUserId in projects where actor also holds
+ * internal read access. Never exposes private personal_tasks or out-of-scope projects.
+ */
+export async function getTeamMemberProjectTasks(
+  actor: UserPrincipal,
+  targetUserId: string,
+  db: D1Database
+) {
+  const isInternalActor =
+    hasCapability(actor, "ADMIN") ||
+    hasCapability(actor, "OWNER") ||
+    actor.projectMemberships.some((m) =>
+      (m.roles || [m.projectRole]).some((r) =>
+        ["MANAGER", "PROJECT_MANAGER", "TEAM_MEMBER", "STAFF", "ARCHITECT", "DIRECTOR"].includes(r || "")
+      )
+    );
+  if (!isInternalActor) {
+    throw new AuthorizationError(
+      "Team task views are restricted to internal practice members.",
+      "FORBIDDEN"
+    );
+  }
+
+  const rows = await query<any>(
+    db,
+    `SELECT t.*, p.name as project_name, p.code as project_code, u.display_name as assignee_name
+     FROM tasks t
+     JOIN projects p ON p.id = t.project_id
+     JOIN project_memberships target_pm ON target_pm.project_id = t.project_id AND target_pm.user_id = ? AND target_pm.is_active = 1
+     LEFT JOIN users u ON u.id = t.assignee_user_id
+     WHERE t.org_id = ? AND p.is_archived = 0
+       AND (t.assignee_user_id = ? OR EXISTS (SELECT 1 FROM task_collaborators tc WHERE tc.task_id = t.id AND tc.user_id = ?))
+     ORDER BY CASE WHEN t.effective_due_date IS NULL THEN 1 ELSE 0 END, t.effective_due_date ASC`,
+    [targetUserId, actor.orgId, targetUserId, targetUserId]
+  );
+
+  // Filter strictly to projects the viewing actor has internal permission to read
+  const visible = rows.filter((t) => canReadInternalNotes(actor, t.project_id));
+  return {
+    targetUserId,
+    items: visible.map((t) => ({
+      id: t.id,
+      scope: "PROJECT" as const,
+      projectId: t.project_id,
+      projectCode: t.project_code,
+      projectName: t.project_name,
+      title: t.title,
+      status: t.status,
+      priority: t.priority,
+      dueDate: t.effective_due_date,
+      isOverdue: computeIsOverdue(t),
+      assigneeName: t.assignee_name || "Unassigned",
+      link: `/projects/${t.project_id}/tasks?taskId=${t.id}`,
+    })),
+  };
 }

@@ -271,70 +271,76 @@ export class QuotaService {
     const now = Date.now();
     await this.expireStaleReservations(db, orgId, now);
 
-    // Idempotent return if this attemptId already has an active or committed reservation
+    // Idempotent return ONLY if this attemptId is still actively RESERVED (unexpired)
+    const resourceType = bucketKind === "BACKUP" ? "R2_BACKUP_BYTES" : "R2_PRIMARY_BYTES";
     const existing = await queryFirst<any>(
       db,
-      `SELECT id, reserved_amount, status FROM quota_reservations
+      `SELECT id, reserved_amount, status, expires_at FROM quota_reservations
        WHERE org_id = ? AND resource_type = ? AND attempt_id = ?`,
-      [orgId, bucketKind === "BACKUP" ? "R2_BACKUP_BYTES" : "R2_PRIMARY_BYTES", attemptId]
+      [orgId, resourceType, attemptId]
     );
-    if (existing && (existing.status === "RESERVED" || existing.status === "COMMITTED")) {
-      return { reservationId: existing.id, reservedBytes: existing.reserved_amount };
+    if (existing) {
+      if (existing.status === "RESERVED" && existing.expires_at >= now) {
+        return { reservationId: existing.id, reservedBytes: existing.reserved_amount };
+      }
+      if (existing.status === "COMMITTED") {
+        return { reservationId: existing.id, reservedBytes: existing.reserved_amount };
+      }
     }
 
     const policy = await this.getQuotaPolicy(db, orgId);
-    const primaryUsedRow = await queryFirst<{ total: number }>(
-      db,
-      `SELECT COALESCE(SUM(size_bytes), 0) as total FROM files WHERE org_id = ? AND status != 'DELETED'`,
-      [orgId]
-    );
-    const activeReservationsRow = await queryFirst<{ primary_res: number; backup_res: number }>(
-      db,
-      `SELECT
-         COALESCE(SUM(CASE WHEN resource_type = 'R2_PRIMARY_BYTES' THEN reserved_amount ELSE 0 END), 0) as primary_res,
-         COALESCE(SUM(CASE WHEN resource_type = 'R2_BACKUP_BYTES' THEN reserved_amount ELSE 0 END), 0) as backup_res
-       FROM quota_reservations
-       WHERE org_id = ? AND status = 'RESERVED' AND expires_at >= ?`,
-      [orgId, now]
-    );
-
-    const primaryUsed = (primaryUsedRow?.total ?? 0) + (activeReservationsRow?.primary_res ?? 0);
-    const backupRes = activeReservationsRow?.backup_res ?? 0;
-
-    if (bucketKind === "PRIMARY" && primaryUsed + bytes > policy.maxR2PrimaryBytes) {
-      throw new AuthorizationError(
-        `Primary storage ceiling reached (${Math.round(primaryUsed / 1_000_000)} MB used/reserved of ${Math.round(policy.maxR2PrimaryBytes / 1_000_000)} MB ceiling). Pause uploads or free space without deleting required history.`,
-        "STORAGE_QUOTA_EXHAUSTED"
-      );
-    }
-    if (bucketKind === "BACKUP" && backupRes + bytes > policy.maxR2BackupBytes) {
-      throw new AuthorizationError(
-        `Backup storage ceiling reached (${Math.round(backupRes / 1_000_000)} MB reserved of ${Math.round(policy.maxR2BackupBytes / 1_000_000)} MB ceiling).`,
-        "STORAGE_QUOTA_EXHAUSTED"
-      );
-    }
-    if (primaryUsed + backupRes + bytes > policy.maxR2Bytes) {
-      throw new AuthorizationError(
-        `Total R2 Free-tier ceiling (${Math.round(policy.maxR2Bytes / 1_000_000)} MB) would be exceeded.`,
-        "STORAGE_QUOTA_EXHAUSTED"
-      );
-    }
-
     const resId = `qres_${crypto.randomUUID()}`;
-    const resourceType = bucketKind === "BACKUP" ? "R2_BACKUP_BYTES" : "R2_PRIMARY_BYTES";
     const expiresAt = now + 2 * 60 * 60 * 1000; // 2-hour upload window
 
-    await db
-      .prepare(
-        `INSERT INTO quota_reservations (id, org_id, resource_type, attempt_id, reserved_amount, status, expires_at, created_at)
-         VALUES (?, ?, ?, ?, ?, 'RESERVED', ?, ?)
-         ON CONFLICT(org_id, resource_type, attempt_id) DO UPDATE SET
-           reserved_amount = excluded.reserved_amount,
-           status = 'RESERVED',
-           expires_at = excluded.expires_at`
-      )
-      .bind(resId, orgId, resourceType, attemptId, bytes, expiresAt, now)
-      .run();
+    // Atomic D1 batch guard prevents concurrent storage admission race conditions (NAC-002)
+    const primaryUsedExpr = `(SELECT COALESCE(SUM(size_bytes), 0) FROM files WHERE org_id = ? AND status != 'DELETED') + (SELECT COALESCE(SUM(reserved_amount), 0) FROM quota_reservations WHERE org_id = ? AND resource_type = 'R2_PRIMARY_BYTES' AND status = 'RESERVED' AND expires_at >= ?)`;
+    const backupUsedExpr = `(SELECT COALESCE(SUM(COALESCE(actual_amount, reserved_amount)), 0) FROM quota_reservations WHERE org_id = ? AND resource_type = 'R2_BACKUP_BYTES' AND status IN ('RESERVED', 'COMMITTED') AND (status = 'COMMITTED' OR expires_at >= ?))`;
+
+    const guardPredicate =
+      bucketKind === "PRIMARY"
+        ? `((${primaryUsedExpr}) + ? <= ?) AND ((${primaryUsedExpr}) + (${backupUsedExpr}) + ? <= ?)`
+        : `((${backupUsedExpr}) + ? <= ?) AND ((${primaryUsedExpr}) + (${backupUsedExpr}) + ? <= ?)`;
+
+    const guardParams =
+      bucketKind === "PRIMARY"
+        ? [
+            orgId, orgId, now, bytes, policy.maxR2PrimaryBytes,
+            orgId, orgId, now, orgId, now, bytes, policy.maxR2Bytes,
+          ]
+        : [
+            orgId, now, bytes, policy.maxR2BackupBytes,
+            orgId, orgId, now, orgId, now, bytes, policy.maxR2Bytes,
+          ];
+
+    try {
+      await db.batch([
+        db
+          .prepare(
+            `INSERT INTO command_assertions(id, ok) SELECT ?, CASE WHEN (${guardPredicate}) THEN 1 ELSE 0 END`
+          )
+          .bind(`guard_${crypto.randomUUID()}`, ...guardParams),
+        db
+          .prepare(
+            `INSERT INTO quota_reservations (id, org_id, resource_type, attempt_id, reserved_amount, status, expires_at, created_at)
+             VALUES (?, ?, ?, ?, ?, 'RESERVED', ?, ?)
+             ON CONFLICT(org_id, resource_type, attempt_id) DO UPDATE SET
+               reserved_amount = excluded.reserved_amount,
+               status = 'RESERVED',
+               expires_at = excluded.expires_at`
+          )
+          .bind(resId, orgId, resourceType, attemptId, bytes, expiresAt, now),
+      ]);
+    } catch (err: any) {
+      if (err instanceof Error && /CHECK constraint failed: ok/i.test(err.message)) {
+        throw new AuthorizationError(
+          bucketKind === "PRIMARY"
+            ? `Primary storage ceiling reached (${Math.round(policy.maxR2PrimaryBytes / 1_000_000)} MB ceiling). Pause uploads or free space without deleting required history.`
+            : `Backup storage ceiling reached (${Math.round(policy.maxR2BackupBytes / 1_000_000)} MB ceiling).`,
+          "STORAGE_QUOTA_EXHAUSTED"
+        );
+      }
+      throw err;
+    }
 
     return { reservationId: resId, reservedBytes: bytes };
   }
@@ -391,15 +397,21 @@ export class QuotaService {
     const now = Date.now();
     const dayUtc = getUtcDayString(now);
 
-    // Idempotency check
+    // Replay protection: COMMITTED or EXPIRED attemptIds cannot be replayed for free inference
     const existing = await queryFirst<any>(
       db,
-      `SELECT id, reserved_amount, status FROM quota_reservations
+      `SELECT id, reserved_amount, status, expires_at FROM quota_reservations
        WHERE org_id = ? AND resource_type = 'AI_NEURONS' AND attempt_id = ?`,
       [orgId, attemptId]
     );
     if (existing) {
-      if (existing.status === "RESERVED" || existing.status === "COMMITTED") {
+      if (existing.status === "COMMITTED") {
+        throw new AuthorizationError(
+          "This dictation attempt has already been processed. Start a new recording.",
+          "ATTEMPT_ALREADY_USED"
+        );
+      }
+      if (existing.status === "RESERVED" && existing.expires_at >= now) {
         const policy = await this.getQuotaPolicy(db, orgId);
         const daily = await queryFirst<any>(
           db,
@@ -414,6 +426,10 @@ export class QuotaService {
           remainingNeurons: Math.max(0, policy.maxAiNeuronsDaily - usedTotal),
         };
       }
+      throw new AuthorizationError(
+        "This dictation attempt expired. Start a new recording.",
+        "ATTEMPT_EXPIRED"
+      );
     }
 
     const policy = await this.getQuotaPolicy(db, orgId);

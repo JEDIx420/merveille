@@ -9,6 +9,7 @@ import {
   addTaskChecklistItem,
   addTaskCollaborator,
   getMyTasksUnified,
+  getTeamMemberProjectTasks,
 } from "@/server/domain/tasks/personal-service";
 import { listProjectTasks } from "@/server/domain/tasks/service";
 import { FinanceService } from "@/server/domain/finance/service";
@@ -301,5 +302,36 @@ describe("Stage N01: Simple Workspace, Personal Tasks, and External-Commercial C
       changeRequestId: cr.id,
     });
     expect(authCr.status).toBe("AUTHORIZED");
+  });
+
+  it("NAC-003: Revoked project membership hides project tasks in My Tasks and team view never leaks personal tasks", async () => {
+    const now = Date.now();
+    await createPersonalTask(staffUser, { title: "Staff secret personal note" }, db);
+    await db
+      .prepare(
+        `INSERT INTO tasks (id, org_id, project_id, title, status, priority, assignee_user_id, creator_user_id, created_at)
+         VALUES ('tsk_shared_1', ?, ?, 'Shared project elevation', 'TODO', 'MEDIUM', ?, ?, ?)`
+      )
+      .bind(orgId, projectId, staffUser.id, managerUser.id, now)
+      .run();
+
+    // Manager can view staff's shared project task but NEVER staff's personal task
+    const teamView = await getTeamMemberProjectTasks(managerUser, staffUser.id, db);
+    expect(teamView.items.some((t) => t.id === "tsk_shared_1")).toBe(true);
+    expect(teamView.items.some((t) => t.title === "Staff secret personal note")).toBe(false);
+
+    // Staff initially sees shared project task in My Tasks
+    const beforeRevoke = await getMyTasksUnified(staffUser, db);
+    expect(beforeRevoke.items.some((t) => t.scope === "PROJECT" && t.id === "tsk_shared_1")).toBe(true);
+
+    // Revoke staff membership -> shared project task disappears from My Tasks
+    await db
+      .prepare(`UPDATE project_memberships SET is_active = 0 WHERE project_id = ? AND user_id = ?`)
+      .bind(projectId, staffUser.id)
+      .run();
+
+    const afterRevoke = await getMyTasksUnified(staffUser, db);
+    expect(afterRevoke.items.some((t) => t.scope === "PROJECT" && t.id === "tsk_shared_1")).toBe(false);
+    expect(afterRevoke.items.some((t) => t.scope === "PERSONAL" && t.title === "Staff secret personal note")).toBe(true);
   });
 });
