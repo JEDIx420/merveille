@@ -492,7 +492,7 @@ export function LeadsWorkspace() {
       ) : leads.length === 0 ? (
         <EmptyState
           title="No leads match this view"
-          description="Add a quick lead, use voice dictation, or import an Excel/CSV sheet."
+          description="Add a lead or import an Excel/CSV sheet."
         />
       ) : view === "LIST" ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
