@@ -1,0 +1,66 @@
+{
+  "sourceCommit": "7eb60e5",
+  "deployment": "d68884a2-d2d3-4839-9411-55cdf11a4980",
+  "alias": "https://studio-merveille-web-staging.rhelo-bible.workers.dev",
+  "unique": "https://d68884a2-merveille-web-staging.rhelo-bible.workers.dev",
+  "originalStagingUnchanged": true,
+  "originalStagingVersion": "364b339c-36d3-4b6f-8362-1516e9cd2d19",
+  "accessChecks": [
+    {
+      "origin": "https://studio-merveille-web-staging.rhelo-bible.workers.dev",
+      "path": "/projects",
+      "status": 302,
+      "redirectHost": "plain-dream-04be.cloudflareaccess.com"
+    },
+    {
+      "origin": "https://studio-merveille-web-staging.rhelo-bible.workers.dev",
+      "path": "/automations",
+      "status": 302,
+      "redirectHost": "plain-dream-04be.cloudflareaccess.com"
+    },
+    {
+      "origin": "https://studio-merveille-web-staging.rhelo-bible.workers.dev",
+      "path": "/waiting",
+      "status": 302,
+      "redirectHost": "plain-dream-04be.cloudflareaccess.com"
+    },
+    {
+      "origin": "https://studio-merveille-web-staging.rhelo-bible.workers.dev",
+      "path": "/api/automations",
+      "status": 302,
+      "redirectHost": "plain-dream-04be.cloudflareaccess.com"
+    },
+    {
+      "origin": "https://d68884a2-merveille-web-staging.rhelo-bible.workers.dev",
+      "path": "/projects",
+      "status": 302,
+      "redirectHost": "plain-dream-04be.cloudflareaccess.com"
+    },
+    {
+      "origin": "https://d68884a2-merveille-web-staging.rhelo-bible.workers.dev",
+      "path": "/automations",
+      "status": 302,
+      "redirectHost": "plain-dream-04be.cloudflareaccess.com"
+    },
+    {
+      "origin": "https://d68884a2-merveille-web-staging.rhelo-bible.workers.dev",
+      "path": "/waiting",
+      "status": 302,
+      "redirectHost": "plain-dream-04be.cloudflareaccess.com"
+    },
+    {
+      "origin": "https://d68884a2-merveille-web-staging.rhelo-bible.workers.dev",
+      "path": "/api/automations",
+      "status": 302,
+      "redirectHost": "plain-dream-04be.cloudflareaccess.com"
+    }
+  ],
+  "signedInBrowserReview": [
+    "Projects architectural stage board and current project placement",
+    "Project Filters popover and checkbox",
+    "Automation hub and authorized project/private scope links",
+    "My Tasks Group/Sort/Filters/View options/Saved views"
+  ],
+  "recordsCreatedForDemonstration": false,
+  "teamAcceptance": "not-started"
+}

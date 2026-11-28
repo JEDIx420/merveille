@@ -223,15 +223,18 @@
     "branch": "codex/studio-workspace",
     "implementation": "passed",
     "localVerification": "passed: 170 unit tests, 16 workerd groups, 278 focused browser checks, 264 broader records, Workers build/typecheck",
-    "hostedVerification": "pending Preview update",
+    "hostedVerification": "passed: existing signed-in Projects/Filters, Automations hub and My Tasks controls; eight anonymous Access redirects; original UAT unchanged; not team acceptance",
     "teamAcceptance": "not-started",
     "preview": "https://studio-merveille-web-staging.rhelo-bible.workers.dev",
     "sharedStagingData": true,
     "evidence": [
       "docs/next-phase/evidence/studio-polish.md",
-      "docs/next-phase/evidence/studio-polish/results.json"
+      "docs/next-phase/evidence/studio-polish/results.json",
+      "docs/next-phase/evidence/studio-polish/hosted-verification.json"
     ],
     "liveExecutionEnabled": false,
-    "geminiEnabled": false
+    "geminiEnabled": false,
+    "sourceCommit": "7eb60e5",
+    "previewDeployment": "d68884a2-d2d3-4839-9411-55cdf11a4980"
   }
 }
