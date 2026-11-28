@@ -36,7 +36,7 @@
     "staging": {
       "name": "merveille-web-staging",
       "workers_dev": true,
-      "preview_urls": false,
+      "preview_urls": true,
       "vars": {
         "APP_ENV": "staging",
         "APP_ORIGIN": "https://merveille-web-staging.rhelo-bible.workers.dev",

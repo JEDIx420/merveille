@@ -252,7 +252,7 @@ export function Automations({ projectId }: { projectId?: string }) {
             </div>
             {mode === "TEMPLATE" && (
               <div className={styles.templateGrid}>
-                {ruleTemplates.map((t) => (
+                {ruleTemplates.filter(t=>projectId || t.definition.trigger!=="DRAWING_RELEASED").map((t) => (
                   <button
                     key={t.name}
                     className={styles.templateCard}
@@ -301,7 +301,7 @@ export function Automations({ projectId }: { projectId?: string }) {
                   Generate draft
                 </Button>
               </>
-            ) : (
+            ) : mode==="BUILD" ? (
               <>
                 <Field label="Rule name">
                   <input
@@ -602,7 +602,7 @@ export function Automations({ projectId }: { projectId?: string }) {
                   Schedules are checked every 15 minutes.
                 </p>
               </>
-            )}
+            ) : null}
             {error && (
               <p role="alert" className={styles.error}>
                 {error}

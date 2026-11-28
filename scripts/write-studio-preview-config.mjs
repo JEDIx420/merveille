@@ -11,7 +11,7 @@ const config={
  name:stage.name,account_id:stage.vars.ACCESS_ACCOUNT_ID,main:path.resolve(source.main),
  compatibility_date:source.compatibility_date,compatibility_flags:source.compatibility_flags,
  assets:{...source.assets,directory:path.resolve(source.assets.directory)},
- workers_dev:true,preview_urls:false,observability:{enabled:true,traces:{enabled:true}},
+ workers_dev:true,preview_urls:true,observability:{enabled:true,traces:{enabled:true}},
  previews:{vars:{...stage.vars,APP_ORIGIN:origin,AUTOMATIONS_ENABLED:"false",GEMINI_FREE_VERIFIED:"false"},
  d1_databases:stage.d1_databases.map(d=>({...d,migrations_dir:path.resolve(d.migrations_dir)})),r2_buckets:stage.r2_buckets},
 };
