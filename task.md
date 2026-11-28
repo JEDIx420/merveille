@@ -1,5 +1,16 @@
 # Merveille Designs — current task state
 
+## Studio workspace — 28 November 2026
+
+Implemented on `codex/studio-workspace`, source `8f257a5`, under the [accepted studio plan](docs/design/studio-workspace.md). Premium task/board interaction, templates/labels/private saved views, drawing cards, scoped navigation and bounded project/personal rules are implemented. Rule simulation/drafts are available; live execution and Gemini remain gated.
+
+Protected studio Preview: https://studio-merveille-web-staging.rhelo-bible.workers.dev. It uses the existing staging data; it is not a disposable data sandbox. The original team UAT deployment remains `364b339c-36d3-4b6f-8362-1516e9cd2d19`. Migration 0029 applied after a private export, with no business-record rewrites. Jobs, policy recipients and paid plans unchanged. Actual signed-in Jay simulation succeeded without saving a rule or creating work.
+
+Current checks: 170 tests/34 files, 16 workerd verification groups through 29 migrations, 168 dedicated built-Worker browser checks, 264 broader rendered records, typecheck/build and private HTTP/Access ingress checks. Detailed [evidence](docs/next-phase/evidence/studio-workspace.md) and [rollout/testing handoff](docs/operations/studio-automation-rollout.md) separate local, hosted and team status.
+
+**Next exact action:** Team reviews the protected studio Preview using fictional work and existing invited identities. Before activating rules or promoting over the UAT baseline, complete actual Free CPU/account-headroom checks for representative rule effects and the UAT checkpoint. Gemini additionally needs a privately supplied key and verified project free-model quota; no key or paid fallback is installed. Carry forward existing recovery/backup/company-installation gates.
+
+
 ## Active simplification checkpoint — 27 November 2026
 
 The user approved the [simple project workspace amendment](docs/design/simple-workspace.md). Home/Inbox/My Tasks/Projects replace the daily administrative interface; Leads and specialist tools stay secondary. Shared interactive task List/Board/month-week Calendar and side panel, private view/favorites persistence, progress charts and drawing side panel implemented. Voice is disabled before inference and the web AI binding removed. Manual WhatsApp, history and permission boundaries remain.

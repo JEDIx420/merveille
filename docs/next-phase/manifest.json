@@ -12,7 +12,7 @@
     "docs/remediation/manifest.json",
     "docs/implementation/manifest.json"
   ],
-  "status": "Accepted simple workspace implemented and locally verified: 144 tests, 13 workerd checks, 150 new browser checks and 264 broader records. Targeted signed-in staging review passed; multi-person UAT and remaining Free runtime/recovery/company gates remain open. Voice retired.",
+  "status": "Studio workspace and bounded automation drafts implemented and locally verified; protected studio Preview deployed beside unchanged team UAT staging. Live automation execution, actual Gemini verification and existing multi-person UAT/Free CPU/recovery gates remain open. Voice retired.",
   "constraints": {
     "cloudflarePlan": "free",
     "paidFallback": false,
@@ -193,5 +193,29 @@
       "docs/next-phase/evidence/simple-ui/results.json"
     ],
     "webVersion": "364b339c-36d3-4b6f-8362-1516e9cd2d19"
+  },
+  "studioAmendment": {
+    "acceptedDate": "2026-11-28",
+    "file": "docs/design/studio-workspace.md",
+    "branch": "codex/studio-workspace",
+    "sourceCommit": "8f257a5",
+    "implementation": "passed",
+    "localVerification": "passed",
+    "hostedVerification": "in-progress",
+    "teamAcceptance": "not-started",
+    "preview": "https://studio-merveille-web-staging.rhelo-bible.workers.dev",
+    "sharedStagingData": true,
+    "evidence": [
+      "docs/next-phase/evidence/studio-workspace.md",
+      "docs/next-phase/evidence/studio-ui/results.json"
+    ],
+    "liveExecutionEnabled": false,
+    "geminiEnabled": false,
+    "blockers": [
+      "Representative hosted Free CPU/quota profiling before rule execution activation.",
+      "Privately supplied Gemini key and actual free-project/model quota verification.",
+      "Current team UAT checkpoint and multi-person usability/permission acceptance."
+    ],
+    "previewDeployment": "f0d9bdb9-af6b-446a-92fa-01b36f6884de"
   }
 }

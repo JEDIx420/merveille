@@ -1,5 +1,7 @@
 # Merveille Designs repository instructions
 
+Latest accepted addition: [expressive studio workspace and bounded automation drafts](docs/design/studio-workspace.md). Keep its live-execution/provider gates separate from implementation and the existing team UAT deployment.
+
 Latest accepted amendment: [simple project workspace](docs/design/simple-workspace.md). It supersedes voice entry and conflicting daily navigation requirements below. Voice is retired, not a pending activation gate. Preserve the specialist/history workflows behind secondary navigation.
 
 ## Purpose and current precedence

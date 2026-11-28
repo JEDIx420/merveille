@@ -1,3 +1,13 @@
+# Studio workspace checkpoint — 28 November 2026
+
+Source `8f257a5` on `codex/studio-workspace`: expressive dark/light studio task UI, accessible board interaction, templates/labels/private saved views, scoped search/drawing cards and bounded rule drafting/simulation. Protected Preview: https://studio-merveille-web-staging.rhelo-bible.workers.dev. Existing team UAT staging remains unchanged. The Preview shares staging records and private files; use fictional work.
+
+170 tests, 16 workerd/D1 groups and 168 dedicated built-Worker browser checks passed; broader 264 screen records had no overflow/JS/contrast failures. Worker build/typecheck passed. Real-account preview login and side-effect-free simulation passed. Live automation effects, actual Gemini provider and team UAT remain separate open gates. No new real task, rule, approval, invitation or message was created for hosted demonstrations.
+
+See [current evidence](docs/next-phase/evidence/studio-workspace.md) and [rollout handoff](docs/operations/studio-automation-rollout.md). Historical walkthrough below is preserved.
+
+---
+
 # Latest delivery — simple project workspace
 
 27 November 2026, source `1461c4d`. Home/Inbox/My Tasks/Projects, shared task panel and List/Board/Calendar, personal favorites/preferences, project progress and drawing side panel implemented. Voice retired and AI binding removed. [Scope](docs/design/simple-workspace.md) and [actual verification](docs/next-phase/evidence/simple-workspace.md) supersede earlier voice-pilot steps. Team acceptance, measured Free workload and applicable recovery/company gates remain open.

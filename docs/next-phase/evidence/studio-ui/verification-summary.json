@@ -1,0 +1,46 @@
+{
+  "sourceCommit": "8f257a5",
+  "date": "2026-11-28",
+  "unitTests": 170,
+  "testFiles": 34,
+  "workerd": {
+    "passed": true,
+    "groups": 16,
+    "migrations": 29
+  },
+  "browser": {
+    "checks": 168,
+    "failed": 0,
+    "broad": {
+      "dark": {
+        "records": 132,
+        "errors": 0,
+        "overflow": 0,
+        "contrastFailures": 0
+      },
+      "light": {
+        "records": 132,
+        "errors": 0,
+        "overflow": 0,
+        "contrastFailures": 0
+      }
+    }
+  },
+  "build": "passed",
+  "typecheck": "passed",
+  "localAnonymousNewApiChecks": 5,
+  "hostedAnonymousIngressChecks": 8,
+  "preview": {
+    "deploymentId": "f0d9bdb9-af6b-446a-92fa-01b36f6884de",
+    "urls": [
+      "https://studio-merveille-web-staging.rhelo-bible.workers.dev",
+      "https://f0d9bdb9-merveille-web-staging.rhelo-bible.workers.dev"
+    ],
+    "startupMs": 138
+  },
+  "originalStagingVersion": "364b339c-36d3-4b6f-8362-1516e9cd2d19",
+  "originalStagingDeploymentUnchanged": true,
+  "liveAutomationEnabled": false,
+  "geminiVerified": false,
+  "teamUAT": "pending"
+}
