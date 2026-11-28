@@ -12,12 +12,13 @@ import {
 } from "@/components/ui";
 import { formatBusinessTimestamp } from "@/shared/config";
 import styles from "./workspace.module.css";
+import { StudioTaskControls } from "./studio-controls";
 export type TaskRef = {
   id: string;
   scope: "PROJECT" | "PERSONAL";
   target?: string;
 };
-const PanelContext = createContext({ open: (_t: TaskRef) => {} });
+const PanelContext = createContext<{open:(t:TaskRef)=>void;selectedId:string|null}>({ open: (_t: TaskRef) => {},selectedId:null });
 export const useTaskPanel = () => useContext(PanelContext);
 export function taskReference(href: string): TaskRef | null {
   try {
@@ -63,7 +64,7 @@ export function TaskLink({
 export function TaskPanelProvider({ children }: { children: React.ReactNode }) {
   const [selected, setSelected] = useState<TaskRef | null>(null);
   return (
-    <PanelContext.Provider value={{ open: setSelected }}>
+    <PanelContext.Provider value={{ open: setSelected,selectedId:selected?.id || null }}>
       {children}
       {selected && (
         <TaskPanel
@@ -152,7 +153,9 @@ function TaskPanel({
   }
   useEffect(() => {
     load();
+    window.addEventListener("workspace:changed", load);
     return () => {
+      window.removeEventListener("workspace:changed", load);
       requestId.current++;
     };
   }, []);
@@ -263,6 +266,7 @@ function TaskPanel({
         )
       ) : (
         <div className={styles.detail}>
+          <StudioTaskControls id={selected.id} scope={selected.scope} editable={personal || !!allowed.assign || !!allowed.reopen}/>
           <div className={styles.muted}>
             {personal
               ? "Only you can see this task"

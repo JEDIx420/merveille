@@ -65,3 +65,19 @@
 
 :root { --ui-info-border:#b8cdf4; }
 :root[data-theme="dark"] { --ui-info-border:#456589; }
+/* Expressive studio palette: identity accents are separate from semantic statuses. */
+:root,:root[data-theme="light"] {
+ --ui-canvas:#f7f8fa; --studio-accent:#6550b9; --studio-selection:#f0edfa;
+ --studio-lavender:#6547a5; --studio-lavender-bg:#eee8fa;
+ --studio-sky:#226080; --studio-sky-bg:#e1f1fa;
+ --studio-teal:#1a6b5b; --studio-teal-bg:#def3ed;
+ --studio-coral:#9b453c; --studio-coral-bg:#fbe9e5;
+}
+:root[data-theme="dark"] {
+ --ui-canvas:#111317; --ui-surface:#181b20; --ui-surface-raised:#20242b; --ui-surface-subtle:#20242b;
+ --ui-divider:#303640; --studio-accent:#baa7f0; --studio-selection:#282336;
+ --studio-lavender:#d4c1ff; --studio-lavender-bg:#372c4c;
+ --studio-sky:#a5d8f4; --studio-sky-bg:#223b4a;
+ --studio-teal:#a1dfcd; --studio-teal-bg:#233e37;
+ --studio-coral:#f5b7ab; --studio-coral-bg:#472f2d;
+}

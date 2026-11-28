@@ -391,6 +391,7 @@ export async function restoreRecoveryCheckpoint(
         if ("token_digest" in row) row.token_digest = null;
       }
       if (name === "notifications") row.status = "SUPPRESSED";
+      if (name === "automation_rules") row.state = "PAUSED";
       if (name === "outbox_events") row.status = "SUPPRESSED";
       if (name === "notification_preferences") row.whatsapp_enabled = 0;
       const columns = Object.keys(row);

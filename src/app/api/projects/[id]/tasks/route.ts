@@ -53,6 +53,7 @@ export async function POST(
       auth.principal,
       {
         projectId,
+        template: body.template,
         stageId: body.stageId,
         title: body.title,
         description: body.description,

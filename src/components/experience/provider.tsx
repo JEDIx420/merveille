@@ -9,6 +9,7 @@ function valid(v: any): v is Appearance { return !!v && ['dark', 'light', 'syste
 function apply(v: Appearance) {
     const theme = v.theme === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : v.theme;
     document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.motion = v.celebrations;
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#101216' : '#f6f7f9');
     try { localStorage.setItem(CACHE, JSON.stringify(v)); } catch { }
 }
@@ -54,6 +55,7 @@ export function ExperienceProvider({ children }: {
                 if (valid(v)) {
                     prefs.current = v;
                     setAppearance(v);
+                    document.documentElement.dataset.motion = v.celebrations;
                     document.documentElement.dataset.theme = v.theme === 'system' ? (media.matches ? 'dark' : 'light') : v.theme;
                 }
             }

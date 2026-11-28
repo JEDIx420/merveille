@@ -1,3 +1,4 @@
+import {taskTemplates} from "@/shared/studio/definitions";
 import { taskActions } from './actions';
 import { ArchiveService } from '../archive/service';
 import { isBusinessDate } from '@/shared/validation';
@@ -19,6 +20,7 @@ import { createTask, computeIsOverdue } from "./service";
 import { recordAuditEvent } from "@/server/domain/identity/service";
 
 export interface CreatePersonalTaskInput {
+  template?:string;
   title: string;
   description?: string;
   priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
@@ -34,7 +36,7 @@ export async function listPersonalTasks(
 ) {
   return query<any>(
     db,
-    `SELECT * FROM personal_tasks
+    `SELECT *, (SELECT labels_json FROM studio_task_labels l WHERE l.task_id=personal_tasks.id AND l.org_id=personal_tasks.org_id AND l.task_scope='PERSONAL') AS studio_labels FROM personal_tasks
      WHERE owner_user_id = ? AND org_id = ? AND status != 'PROMOTED'
      ORDER BY CASE WHEN due_date IS NULL THEN 1 ELSE 0 END, due_date ASC, created_at DESC`,
     [actor.id, actor.orgId]
@@ -46,7 +48,7 @@ export async function createPersonalTask(
   input: CreatePersonalTaskInput,
   db: D1Database
 ) {
-  if (!input.title?.trim()) {
+  if (!input.title?.trim() || input.title.length>300) {
     throw new AuthorizationError("Task title is required.", "INVALID_INPUT");
   }
 
@@ -70,12 +72,9 @@ export async function createPersonalTask(
 
   const id = `ptsk_${crypto.randomUUID()}`;
   const now = Date.now();
-  await execute(
-    db,
-    `INSERT INTO personal_tasks (
+  const statements:D1PreparedStatement[]=[db.prepare(`INSERT INTO personal_tasks (
       id, org_id, owner_user_id, title, description, priority, status, due_date, section_label, parent_task_id, source_external_id, revision, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, 'TODO', ?, ?, ?, ?, 1, ?)`,
-    [
+    ) VALUES (?, ?, ?, ?, ?, ?, 'TODO', ?, ?, ?, ?, 1, ?)`).bind(...[
       id,
       actor.orgId,
       actor.id,
@@ -87,8 +86,13 @@ export async function createPersonalTask(
       input.parentTaskId || null,
       input.sourceExternalId || null,
       now,
-    ]
-  );
+    ])];
+  if(input.template){
+    const template=taskTemplates.find(t=>t.name===input.template);
+    if(!template)throw new AuthorizationError("Choose a supported task template.","INVALID_INPUT");
+    for(const [i,label] of template.checklist.entries())statements.push(db.prepare("INSERT INTO personal_task_checklist_items(id,personal_task_id,label,is_completed,item_order,created_at) VALUES(?,?,?,0,?,?)").bind(`tpl:${id}:${template.name}:${i}`,id,label,i,now));
+  }
+  await db.batch(statements);
 
   return queryFirst<any>(db, `SELECT * FROM personal_tasks WHERE id = ?`, [id]);
 }
@@ -130,6 +134,7 @@ export async function updatePersonalTask(
   db: D1Database
 ) {
   const existing = await getPersonalTask(actor, personalTaskId, db);
+  if(patch.title!==undefined && (typeof patch.title!=="string" || !patch.title.trim() || patch.title.length>300)) throw new AuthorizationError("Choose a task title up to 300 characters.","INVALID_INPUT");
   if (
     patch.expectedRevision !== undefined &&
     existing.revision !== patch.expectedRevision
@@ -350,7 +355,7 @@ export async function getMyTasksUnified(
 ) {
   const projectTasks = await query<any>(
     db,
-    `SELECT DISTINCT t.*, p.name as project_name, p.code as project_code, u.display_name as assignee_name
+    `SELECT DISTINCT t.*, (SELECT labels_json FROM studio_task_labels l WHERE l.task_id=t.id AND l.org_id=t.org_id AND l.task_scope='PROJECT') AS studio_labels, p.name as project_name, p.code as project_code, u.display_name as assignee_name
      FROM tasks t
      JOIN projects p ON p.id = t.project_id
      JOIN project_memberships pm ON pm.project_id = t.project_id AND pm.user_id = ? AND pm.is_active = 1
@@ -377,7 +382,9 @@ export async function getMyTasksUnified(
       dueDate: t.effective_due_date,
       isOverdue: computeIsOverdue(t),
       sectionLabel: t.section_label || null,
+      labels: JSON.parse(t.studio_labels || "[]"),
       assigneeName: t.assignee_name || actor.name,
+      assigneeId: t.assignee_user_id,
       revision: t.revision,
       allowedActions: taskActions(actor,t),
       link: `/projects/${t.project_id}/tasks?taskId=${t.id}`,
@@ -395,6 +402,7 @@ export async function getMyTasksUnified(
       isOverdue: computeIsOverdue({ status: pt.status, effective_due_date: pt.due_date }),
       sectionLabel: pt.section_label || null,
       assigneeName: actor.name,
+      labels: JSON.parse(pt.studio_labels || "[]"),
       revision: pt.revision,
       link: `/waiting?personalTaskId=${pt.id}`,
     })),
@@ -430,7 +438,7 @@ export async function getTeamMemberProjectTasks(
 
   const rows = await query<any>(
     db,
-    `SELECT DISTINCT t.*, p.name as project_name, p.code as project_code, u.display_name as assignee_name
+    `SELECT DISTINCT t.*, (SELECT labels_json FROM studio_task_labels l WHERE l.task_id=t.id AND l.org_id=t.org_id AND l.task_scope='PROJECT') AS studio_labels, p.name as project_name, p.code as project_code, u.display_name as assignee_name
      FROM tasks t
      JOIN projects p ON p.id = t.project_id
      JOIN project_memberships target_pm ON target_pm.project_id = t.project_id AND target_pm.user_id = ? AND target_pm.is_active = 1
@@ -456,7 +464,9 @@ export async function getTeamMemberProjectTasks(
       priority: t.priority,
       dueDate: t.effective_due_date,
       isOverdue: computeIsOverdue(t),
+      labels: JSON.parse(t.studio_labels || "[]"),
       assigneeName: t.assignee_name || "Unassigned",
+      assigneeId: t.assignee_user_id,
       revision: t.revision,
       allowedActions: taskActions(actor,t),
       link: `/projects/${t.project_id}/tasks?taskId=${t.id}`,

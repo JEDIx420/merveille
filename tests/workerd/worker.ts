@@ -1,3 +1,4 @@
+import {studioDrill} from "./studio-drill";
 import {preferences,savePreferences,projectProgress,personalDetail} from '../../src/server/workspace/service';
 import {createPersonalTask,updatePersonalTask} from '../../src/server/domain/tasks/personal-service';
 /** Isolated local verification entry, never deployed or linked from the product. */
@@ -120,6 +121,7 @@ export default {
       check(staleDenied,'Stale personal task update succeeded');
       check((await projectProgress(env.DB,staff,project)).total===0,'Private task leaked into project progress');
       passed.push('workspace preferences, private details, revision guards and scoped progress in actual D1');
+      await studioDrill(env.DB,manager,staff,project,passed);
       const existingInput = {requestKey: "workerd-onboard", code: "WORKERD-EX", name: "Fictional ongoing project", siteLocation: "Fictional site", stage: "Site Execution & Supervision", managerUserId:manager.id, teamUserIds:[staff.id], handoverNotes:"Existing site work; approvals to reconcile", commercialNotes:"Original agreement and advances require reconciliation"};
       const onboarded = await onboardExistingProject(admin,existingInput,env.DB);
       check((await onboardExistingProject(admin,existingInput,env.DB)).projectId === onboarded.projectId,"Onboarding replay duplicated project");

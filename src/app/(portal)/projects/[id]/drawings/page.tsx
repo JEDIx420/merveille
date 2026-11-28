@@ -1,4 +1,6 @@
 "use client";
+import studio from "@/components/workspace/workspace.module.css";
+import { FileText, LayoutGrid, List } from "lucide-react";
 import { cx } from "@/components/utilities";
 import { use, useState, useEffect } from "react";
 import { useProject } from "@/components/project-context";
@@ -38,6 +40,7 @@ export default function Drawings({
   const project = useProject();
   const readOnly = project?.is_archived === 1 || project?.status === "ARCHIVED";
   const feedback = useFeedback();
+  const [registerView, setRegisterView] = useState("CARDS");
   const [drawings, setDrawings] = useState<any[]>([]);
   const [detail, setDetail] = useState<any>(null);
   const [versionId, setVersionId] = useState("");
@@ -182,8 +185,71 @@ export default function Drawings({
           ))}
         </select>
       </Field>
+      <div className={studio.tabs} aria-label="Drawing view">
+        <button
+          aria-pressed={registerView === "CARDS"}
+          onClick={() => setRegisterView("CARDS")}
+        >
+          <LayoutGrid size={15} />
+          Cards
+        </button>
+        <button
+          aria-pressed={registerView === "LIST"}
+          onClick={() => setRegisterView("LIST")}
+        >
+          <List size={15} />
+          List
+        </button>
+      </div>
       {loading ? (
         <LoadingState label="Loading drawing register…" />
+      ) : drawings.length && registerView === "CARDS" ? (
+        <div className={studio.drawingGrid}>
+          {drawings.map((d) => (
+            <button
+              key={d.id}
+              aria-label={`Open drawing ${d.title}`}
+              className={studio.drawingCard}
+              onClick={() => openDrawing(d.id)}
+            >
+              <div className={studio.drawingThumbnail}>
+                {d.current_file_id &&
+                d.mime_type?.startsWith("image/") &&
+                !d.is_withdrawn ? (
+                  <img
+                    alt={`Current release: ${d.title}`}
+                    src={`/api/files/${encodeURIComponent(d.current_file_id)}/download?preview=true`}
+                    loading="lazy"
+                  />
+                ) : (
+                  <>
+                    <FileText size={38} strokeWidth={1} />
+                    <span>
+                      {d.current_version_label
+                        ? `Revision ${d.current_version_label}`
+                        : "Awaiting first release"}
+                    </span>
+                  </>
+                )}
+              </div>
+              <div className={studio.drawingCaption}>
+                <small>
+                  {d.drawing_number} · {d.discipline.toLowerCase()}
+                </small>
+                <strong>{d.title}</strong>
+                <span>
+                  {d.is_withdrawn ? (
+                    <Badge>WITHDRAWN</Badge>
+                  ) : d.current_version_label ? (
+                    <Badge>RELEASED</Badge>
+                  ) : (
+                    <span className={studio.muted}>Not released</span>
+                  )}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
       ) : drawings.length ? (
         <div className={ui.tableWrap}>
           <table className={ui.table}>
@@ -241,7 +307,11 @@ export default function Drawings({
         )
       )}
       {selected && (
-        <Dialog title={drawing?.title || "Drawing details"} onClose={()=>setSelected("")} side>
+        <Dialog
+          title={drawing?.title || "Drawing details"}
+          onClose={() => setSelected("")}
+          side
+        >
           <PageHeader
             section
             title={drawing?.title || "Drawing details"}
@@ -387,7 +457,8 @@ export default function Drawings({
                         input={{
                           kind: "DRAWING_RELEASE",
                           projectName: project?.name || "Project",
-                          title: `${drawing?.drawing_number || ""} ${drawing?.title || ""}`.trim(),
+                          title:
+                            `${drawing?.drawing_number || ""} ${drawing?.title || ""}`.trim(),
                           revisionLabel: version.version_label,
                           releasedAt: version.released_at || Date.now(),
                           approvedSummary: version.submission_note,

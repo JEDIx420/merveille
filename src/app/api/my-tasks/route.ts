@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
       auth.principal,
       {
         title: body.title,
+        template: body.template,
         description: body.description,
         priority: body.priority,
         dueDate: body.dueDate,

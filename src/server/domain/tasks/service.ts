@@ -1,3 +1,4 @@
+import {taskTemplates} from "@/shared/studio/definitions";
 import { taskActions } from './actions';
 import { businessDateISO } from "@/shared/config";
 import { isBusinessDate } from "@/shared/validation";
@@ -28,6 +29,7 @@ export type TaskStatus =
   | "CANCELLED";
 
 export interface CreateTaskInput {
+  template?: string;
   projectId: string;
   stageId?: string;
   changeRequestId?: string;
@@ -201,6 +203,11 @@ export async function createTask(
       .bind(...[createEventId(), taskId, actor.id, initialStatus, now]),
   );
 
+  if(input.template){
+    const template=taskTemplates.find(t=>t.name===input.template);
+    if(!template)throw new AuthorizationError("Choose a supported task template.","INVALID_INPUT");
+    for(const [i,label] of template.checklist.entries())plan.push(db.prepare("INSERT INTO task_checklist_items(id,task_id,label,is_completed,item_order,created_at) VALUES(?,?,?,0,?,?)").bind(`tpl:${taskId}:${template.name}:${i}`,taskId,label,i,now));
+  }
   await db.batch(plan);
   return { id: taskId, status: initialStatus };
 }
@@ -1000,7 +1007,7 @@ export async function getTask(
 
   const subtasks = await query(
     db,
-    `SELECT t.*, a.display_name as assignee_name
+    `SELECT t.*, (SELECT labels_json FROM studio_task_labels l WHERE l.task_id=t.id AND l.org_id=t.org_id AND l.task_scope='PROJECT') AS studio_labels, a.display_name as assignee_name
      FROM tasks t
      LEFT JOIN users a ON a.id = t.assignee_user_id
      WHERE t.parent_task_id = ?

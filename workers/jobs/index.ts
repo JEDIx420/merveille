@@ -1,3 +1,4 @@
+import { runAutomations } from "../../src/server/automations/runner";
 import { reconcileAccessAdmission } from "../../src/server/auth/admission";
 import { NotificationService } from "../../src/server/notifications/service";
 import { QuotaService } from "../../src/server/quota/service";
@@ -18,9 +19,11 @@ interface Env
       | "ACCESS_GOOGLE_IDP_ID"
     > {
   DB: D1Database;
+  AUTOMATIONS_ENABLED?: string;
   JOB_QUEUE: Queue<{ notificationId: string; outboxId: string }>;
 }
 export async function publishPending(env: Env) {
+  if (env.AUTOMATIONS_ENABLED === "true") await runAutomations(env.DB);
   // Scans atomically persist notification/outbox pairs. Failure before marking dispatched safely republishes.
   const orgs = await env.DB.prepare(
     "SELECT id FROM organizations WHERE status='ACTIVE'",

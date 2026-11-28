@@ -711,7 +711,7 @@ export async function listProjectDrawings(
            v.status as current_version_status,
            v.released_at,
            f.file_name,
-           f.size_bytes
+           f.size_bytes, f.mime_type, v.file_id AS current_file_id
     FROM drawings d
     LEFT JOIN drawing_versions v ON v.id = d.current_released_version_id
     LEFT JOIN files f ON f.id = v.file_id

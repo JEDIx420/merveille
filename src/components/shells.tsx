@@ -28,6 +28,8 @@ import {
   readResponse,
 } from "./ui";
 import styles from "./shell.module.css";
+import {ProjectMark} from "./workspace/studio-controls";
+import {QuickNavigation} from "./workspace/quick-navigation";
 import { AppearanceControl } from "./experience/controls";
 import { TaskPanelProvider } from "./workspace/task-panel";
 import { FavoriteProjects } from "./workspace/favorites";
@@ -225,7 +227,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <header className={styles.topbar}>
             <p>Your project workspace</p>
-            <div className={styles.desktopActions}><AppearanceControl />
+            <div className={styles.desktopActions}><QuickNavigation/><AppearanceControl />
             <Link href="/notifications">
               <Inbox size={18} aria-hidden="true" />
               Inbox
@@ -298,19 +300,20 @@ export function ProjectShell({
   ];
   if (internal) sections.splice(1, 0, ["tasks", "Tasks"]);
   if (internal) sections.splice(2, 0, ["progress", "Progress"]);
+  if (internal) sections.push(["automations", "Automations"]);
   if (finance) sections.splice(5, 0, ["finance", "Finance"]);
   return (
     <ProjectContext.Provider value={project}>
       <section className={styles.project}>
         <div className={styles.projectIdentity}>
-          <div>
+          <div style={{display:"flex",alignItems:"center",gap:14}}><ProjectMark name={projectId}/><div>
             <span className={styles.projectCode}>{project.code}</span>
             <h2>{project.name}</h2>
             <div className="project-meta">
               <span>{project.stage?.replaceAll("_", " ")}</span>
               <Badge>{project.status}</Badge>
             </div>
-          </div>
+          </div></div>
           {projects.length > 1 && (
             <label className={styles.projectSelect}>
               <span className="sr-only">Switch project</span>

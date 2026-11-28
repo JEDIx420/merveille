@@ -1,3 +1,4 @@
+import {businessDateISO} from "@/shared/config";
 import type { UserPrincipal } from "@/server/auth/principal";
 import { hasCapability } from "@/server/auth/principal";
 import { AuthorizationError } from "@/server/auth/policy";
@@ -322,6 +323,24 @@ export class NotificationService {
       [n.user_id, n.org_id],
     );
     if (!user) return false;
+    if (n.source_entity_type === "AUTOMATION") {
+      const s=await queryFirst<any>(db,"SELECT s.*,r.project_id,r.org_id FROM automation_notification_sources s JOIN automation_rules r ON r.id=s.rule_id WHERE s.notification_id=? AND r.org_id=?",[n.id,n.org_id]);
+      if(!s)return false;
+      if(s.project_id){
+        const member=await queryFirst<any>(db,"SELECT m.id FROM project_memberships m JOIN projects p ON p.id=m.project_id WHERE m.project_id=? AND m.org_id=? AND m.user_id=? AND m.is_active=1 AND m.project_role IN ('MANAGER','TEAM_MEMBER','STAFF') AND p.is_archived=0",[s.project_id,n.org_id,n.user_id]);
+        if(!member)return false;
+      }else if(s.owner_id!==n.user_id)return false;
+      if(s.task_id){
+        const t=await queryFirst<any>(db,s.project_id?"SELECT status,effective_due_date AS due_date FROM tasks WHERE id=? AND org_id=? AND project_id=?":"SELECT status,due_date FROM personal_tasks WHERE id=? AND org_id=? AND owner_user_id=?",[s.task_id,n.org_id,s.project_id||n.user_id]);
+        if(!t)return false;
+        if(s.trigger_type==='TASK_COMPLETED')return t.status==='COMPLETED';
+        if(['COMPLETED','CANCELLED','PROMOTED'].includes(t.status))return false;
+        if(s.trigger_type==='OVERDUE')return !!t.due_date && t.due_date<businessDateISO();
+        if(s.trigger_type==='DUE_SOON'){const d=new Date();d.setUTCDate(d.getUTCDate()+2);return t.due_date===businessDateISO(d);}
+      }
+      if(s.drawing_version_id){const v=await queryFirst<any>(db,"SELECT v.id FROM drawing_versions v JOIN drawings d ON d.id=v.drawing_id WHERE v.id=? AND d.project_id=? AND v.status='RELEASED'",[s.drawing_version_id,s.project_id]);return !!v;}
+      return true;
+    }
     if (n.source_entity_type === "LEAD_FOLLOWUP") {
       const f = await queryFirst<any>(
         db,

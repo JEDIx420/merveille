@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import {ProjectMark} from "@/components/workspace/studio-controls";
 import { Star } from "lucide-react";
 import { useSession } from "@/components/session";
 import { hasCapability } from "@/server/auth/principal";
@@ -175,11 +176,11 @@ export default function Projects() {
               }
             >
               <div className={styles.toolbar}>
-                <Link
+                <Link className={styles.projectLink}
                   href={`/projects/${p.id}/${internal(p) ? "tasks" : "overview"}`}
-                >
+                ><ProjectMark name={p.id}/><div>
                   <span className={styles.muted}>{p.code}</span>
-                  <h2>{p.name}</h2>
+                  <h2>{p.name}</h2></div>
                 </Link>
                 <button
                   disabled={saving}

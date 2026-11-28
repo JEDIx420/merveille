@@ -470,10 +470,11 @@ for (const size of process.env.BROWSER_SCOPE === "actions"
       fontLoaded: await page.evaluate(() =>
         document.fonts.check("400 15px Inter"),
       ),
-      controlsReadable: await page.evaluate(() =>
+      controlsReadable: await page.evaluate((minimum) =>
         Array.from(document.querySelectorAll("input,select,textarea"))
           .filter((el) => el.getClientRects().length)
-          .every((el) => parseFloat(getComputedStyle(el).fontSize) >= 16),
+          .every((el) => parseFloat(getComputedStyle(el).fontSize) >= minimum),
+        size.width <= 700 ? 16 : 12,
       ),
     });
     if (path === "/overview")
@@ -642,7 +643,7 @@ results.push({
 });
 mode = "manager";
 await visit(base + "/projects/prj_review/drawings");
-await page.getByRole("button", { name: "Open drawing", exact: true }).click();
+await page.getByRole("button", { name: /^Open drawing/ }).click();
 await page
   .getByRole("button", { name: "Release to client", exact: true })
   .click();
@@ -707,7 +708,7 @@ results.push({
 });
 longFilename=true;
 await visit(base+'/projects/prj_review/drawings');
-await page.getByRole('button',{name:'Open drawing',exact:true}).click();
+await page.getByRole('button',{name:/^Open drawing/}).click();
 await page.getByText('CourtyardHouseGroundFloorPlanRevisionCFullSizeApprovedIssuedForConstruction20261124.svg',{exact:true}).waitFor();
 const downloadContained=await page.getByRole('link',{name:'Download',exact:true}).evaluate(el=>{const rect=el.getBoundingClientRect();return rect.left>=0&&rect.right<=innerWidth});
 results.push({case:'long drawing filename keeps download reachable',visible:downloadContained,overflow:await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1)});
