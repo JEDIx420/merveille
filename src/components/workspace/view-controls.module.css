@@ -1,0 +1,115 @@
+.select {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+}
+.select select {
+  appearance: none !important;
+  min-height: 36px !important;
+  width: 100%;
+  padding: 7px 34px 7px 12px !important;
+  border: 1px solid var(--ui-divider) !important;
+  border-radius: 8px;
+  background: var(--ui-surface) !important;
+  color: var(--ui-text);
+  font: inherit;
+  font-size: 13px;
+  line-height: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.select svg {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  color: var(--ui-text-muted);
+}
+.trigger {
+  display: inline-flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid var(--ui-divider);
+  border-radius: 8px;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.trigger:hover,
+.trigger[data-state="open"] {
+  background: var(--ui-surface-subtle);
+  border-color: var(--ui-text-muted);
+}
+.popover {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 288px;
+  max-width: calc(100vw - 32px);
+  max-height: var(--radix-popover-content-available-height);
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid var(--ui-divider);
+  border-radius: 12px;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  box-shadow: 0 12px 40px #0003;
+  z-index: 100;
+  animation: reveal 140ms ease-out;
+}
+.popover label {
+  font-size: 13px;
+}
+.popover label > .select {
+  display: flex;
+  margin-top: 6px;
+}
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.heading button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+.heading button:hover {
+  background: var(--ui-surface-subtle);
+}
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .popover {
+    animation: none;
+  }
+}
+@media (max-width: 600px) {
+  .trigger,
+  .select select {
+    min-height: 44px !important;
+  }
+  .select select {
+    font-size: 16px;
+  }
+  .heading button {
+    width: 44px;
+    height: 44px;
+  }
+}

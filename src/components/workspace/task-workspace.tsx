@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useId } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Button,
   LoadingState,
@@ -13,8 +13,8 @@ import { businessDateISO, formatBusinessDate } from "@/shared/config";
 import styles from "./workspace.module.css";
 import { motion, MotionConfig, useReducedMotion } from "motion/react";
 import { List, Columns3, CalendarDays, SlidersHorizontal } from "lucide-react";
-import Link from "next/link";
 import { StudioBoard } from "./studio-board";
+import { StudioSelect, ToolPopover } from "./view-controls";
 import { Avatar } from "./studio-controls";
 import { InlineTask } from "./inline-task";
 import { useAppearance } from "@/components/experience/provider";
@@ -72,8 +72,6 @@ export function TaskWorkspace({
     ),
     [span, setSpan] = useState("MONTH");
   const requestSeq = useRef(0);
-  const viewOptionsId = useId();
-  const [optionsOpen, setOptionsOpen] = useState(false);
   const osReduce = useReducedMotion();
   const { appearance } = useAppearance();
   const reduce = osReduce || appearance.celebrations !== "full";
@@ -426,20 +424,6 @@ export function TaskWorkspace({
           </div>
           {!compact && (
             <div className={styles.inline}>
-              {members.length > 0 && !projectId && (
-                <select
-                  aria-label="Tasks for"
-                  value={team}
-                  onChange={(e) => setTeam(e.target.value)}
-                >
-                  <option value="">My tasks</option>
-                  {members.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name}
-                    </option>
-                  ))}
-                </select>
-              )}
               <input
                 type="search"
                 aria-label="Search tasks"
@@ -447,109 +431,156 @@ export function TaskWorkspace({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              {projectId && (
-                <select
-                  aria-label="Filter by assignee"
-                  value={assigneeFilter}
-                  onChange={(e) => setAssigneeFilter(e.target.value)}
+              <ToolPopover
+                label={`Filters${[team, projectFilter, assigneeFilter, labelFilter].filter(Boolean).length ? ` (${[team, projectFilter, assigneeFilter, labelFilter].filter(Boolean).length})` : ""}`}
+              >
+                {members.length > 0 && !projectId && (
+                  <StudioSelect
+                    aria-label="Tasks for"
+                    value={team}
+                    onChange={(e) => setTeam(e.target.value)}
+                  >
+                    <option value="">My tasks</option>
+                    {members.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </StudioSelect>
+                )}
+                {projectId && (
+                  <StudioSelect
+                    aria-label="Filter by assignee"
+                    value={assigneeFilter}
+                    onChange={(e) => setAssigneeFilter(e.target.value)}
+                  >
+                    <option value="">Everyone</option>
+                    {Array.from(
+                      new Set(items.map((t) => t.assigneeName || "Unassigned")),
+                    ).map((name) => (
+                      <option value={name} key={name}>
+                        {name}
+                      </option>
+                    ))}
+                  </StudioSelect>
+                )}
+                {!projectId && (
+                  <StudioSelect
+                    aria-label="Filter by project"
+                    value={projectFilter}
+                    onChange={(e) => setProjectFilter(e.target.value)}
+                  >
+                    <option value="">All projects</option>
+                    {Array.from(
+                      new Map(
+                        items
+                          .filter((t) => t.projectId)
+                          .map((t) => [t.projectId, t]),
+                      ).values(),
+                    ).map((t) => (
+                      <option key={t.projectId} value={t.projectId}>
+                        {t.projectName}
+                      </option>
+                    ))}
+                  </StudioSelect>
+                )}
+                <StudioSelect
+                  aria-label="Filter task labels"
+                  value={labelFilter}
+                  onChange={(e) => setLabelFilter(e.target.value)}
                 >
-                  <option value="">Everyone</option>
-                  {Array.from(
-                    new Set(items.map((t) => t.assigneeName || "Unassigned")),
-                  ).map((name) => (
-                    <option value={name} key={name}>
-                      {name}
-                    </option>
+                  <option value="">All labels</option>
+                  {labels.map((l) => (
+                    <option key={l}>{l}</option>
                   ))}
-                </select>
-              )}
-              {!projectId && (
-                <select
-                  aria-label="Filter by project"
-                  value={projectFilter}
-                  onChange={(e) => setProjectFilter(e.target.value)}
+                </StudioSelect>
+                <button
+                  className={styles.chip}
+                  onClick={() => {
+                    setTeam("");
+                    setProjectFilter("");
+                    setAssigneeFilter("");
+                    setLabelFilter("");
+                  }}
                 >
-                  <option value="">All projects</option>
-                  {Array.from(
-                    new Map(
-                      items
-                        .filter((t) => t.projectId)
-                        .map((t) => [t.projectId, t]),
-                    ).values(),
-                  ).map((t) => (
-                    <option key={t.projectId} value={t.projectId}>
-                      {t.projectName}
-                    </option>
-                  ))}
-                </select>
-              )}
+                  Clear filters
+                </button>
+              </ToolPopover>
             </div>
           )}
         </div>
         {!compact && (
           <>
-            <button
-              type="button"
-              className={styles.optionsToggle}
-              aria-expanded={optionsOpen}
-              aria-controls={viewOptionsId}
-              onClick={() => setOptionsOpen((v) => !v)}
-            >
-              <SlidersHorizontal size={15} />
-              View options
-            </button>
-            <div
-              id={viewOptionsId}
-              className={styles.viewTools}
-              data-expanded={optionsOpen}
-            >
-              <select
+            {[team, projectFilter, assigneeFilter, labelFilter].some(
+              Boolean,
+            ) && (
+              <div className={styles.activeFilters}>
+                <span>
+                  {[
+                    team &&
+                      (members.find((m) => m.id === team)?.name ||
+                        "Team tasks"),
+                    projectFilter &&
+                      (items.find((t) => t.projectId === projectFilter)
+                        ?.projectName ||
+                        "Selected project"),
+                    assigneeFilter,
+                    labelFilter,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+                <button
+                  onClick={() => {
+                    setTeam("");
+                    setProjectFilter("");
+                    setAssigneeFilter("");
+                    setLabelFilter("");
+                  }}
+                >
+                  Clear filters
+                </button>
+              </div>
+            )}
+            <div className={styles.viewTools} data-expanded="true">
+              <StudioSelect
                 aria-label="Group tasks"
                 value={group}
                 onChange={(e) => setGroup(e.target.value)}
               >
                 {[
-                  ["NONE", "No grouping"],
-                  ["STATUS", "By status"],
-                  ["ASSIGNEE", "By assignee"],
-                  ["DUE", "By due date"],
+                  ["NONE", "Group: None"],
+                  ["STATUS", "Group: Status"],
+                  ["ASSIGNEE", "Group: Assignee"],
+                  ["DUE", "Group: Due date"],
                 ].map(([v, l]) => (
                   <option key={v} value={v}>
                     {l}
                   </option>
                 ))}
-              </select>
-              <select
-                aria-label="Task density"
-                value={density}
-                onChange={(e) => setDensity(e.target.value)}
-              >
-                <option value="COMFORTABLE">Comfortable</option>
-                <option value="COMPACT">Compact</option>
-              </select>
-              <select
+              </StudioSelect>
+              <StudioSelect
                 aria-label="Sort tasks"
                 value={sort}
                 onChange={(e) => setSort(e.target.value)}
               >
-                <option value="DUE">Due date</option>
-                <option value="TITLE">Task name</option>
-              </select>
-              <select
-                aria-label="Filter task labels"
-                value={labelFilter}
-                onChange={(e) => setLabelFilter(e.target.value)}
-              >
-                <option value="">All labels</option>
-                {labels.map((l) => (
-                  <option key={l}>{l}</option>
-                ))}
-              </select>
-              <details>
-                <summary className={styles.chip}>
-                  <SlidersHorizontal size={14} />
-                  Saved views
-                </summary>
+                <option value="DUE">Sort: Due date</option>
+                <option value="TITLE">Sort: Task name</option>
+              </StudioSelect>
+              <ToolPopover label="View options">
+                <label>
+                  Row density
+                  <StudioSelect
+                    aria-label="Task density"
+                    value={density}
+                    onChange={(e) => setDensity(e.target.value)}
+                  >
+                    <option value="COMFORTABLE">Comfortable</option>
+                    <option value="COMPACT">Compact</option>
+                  </StudioSelect>
+                </label>
+              </ToolPopover>
+              <ToolPopover label="Saved views">
                 <div className={styles.stack}>
                   {savedViews.map((v) => (
                     <button
@@ -587,12 +618,7 @@ export function TaskWorkspace({
                     </Button>
                   </div>
                 </div>
-              </details>
-              {!projectId && (
-                <Link className={styles.chip} href="/waiting/automations">
-                  Automations
-                </Link>
-              )}
+              </ToolPopover>
             </div>
           </>
         )}
@@ -621,7 +647,7 @@ export function TaskWorkspace({
                   />
                 )}
                 {manager && participants.length > 0 && (
-                  <select
+                  <StudioSelect
                     aria-label="New task assignee"
                     value={assignee}
                     onChange={(e) => setAssignee(e.target.value)}
@@ -632,10 +658,10 @@ export function TaskWorkspace({
                         {p.name}
                       </option>
                     ))}
-                  </select>
+                  </StudioSelect>
                 )}
                 {(!projectId || manager) && (
-                  <select
+                  <StudioSelect
                     aria-label="Task template"
                     value={template}
                     onChange={(e) => {
@@ -651,7 +677,7 @@ export function TaskWorkspace({
                     {taskTemplates.map((t) => (
                       <option key={t.name}>{t.name}</option>
                     ))}
-                  </select>
+                  </StudioSelect>
                 )}
               </div>
             </details>
@@ -699,7 +725,7 @@ export function TaskWorkspace({
                   Today
                 </Button>
               </div>
-              <select
+              <StudioSelect
                 aria-label="Calendar range"
                 value={span}
                 onChange={(e) => {
@@ -709,7 +735,7 @@ export function TaskWorkspace({
               >
                 <option value="MONTH">Month</option>
                 <option value="WEEK">Week</option>
-              </select>
+              </StudioSelect>
             </div>
             <div className={styles.calendar}>
               <div className={styles.calendarGrid}>

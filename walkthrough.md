@@ -1,3 +1,9 @@
+# Portfolio/control polish — 28 November 2026
+
+Projects now has a stage Board, compact List and structured Cards. Task filters, grouping, density and saved views use consistent controls; mobile task entry has room for its full label. Automations is visible in primary internal navigation, project tabs and a scoped `/automations` hub. Existing permissions, stage authority, Dark/Light/System and reduced/off motion remain.
+
+See [current polish evidence](docs/next-phase/evidence/studio-polish.md). The protected studio Preview shares staging data; original UAT and live execution/Gemini gates remain unchanged. Historical checkpoints follow.
+
 # Studio workspace checkpoint — 28 November 2026
 
 Source `8f257a5` on `codex/studio-workspace`: expressive dark/light studio task UI, accessible board interaction, templates/labels/private saved views, scoped search/drawing cards and bounded rule drafting/simulation. Protected Preview: https://studio-merveille-web-staging.rhelo-bible.workers.dev. Existing team UAT staging remains unchanged. The Preview shares staging records and private files; use fictional work.

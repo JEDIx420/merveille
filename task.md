@@ -1,3 +1,7 @@
+# Portfolio/control polish — 28 November 2026
+
+Implemented shared select/filter/view controls, an architectural-stage Projects board with compact List/Cards, visible Automations navigation and a scoped hub on `codex/studio-workspace`. Review stage opens the existing guarded manager timeline. No migration or automation activation. Final browser/hosted checkpoint is recorded in [polish evidence](docs/next-phase/evidence/studio-polish.md); prior checkpoints remain below.
+
 # Merveille Designs — current task state
 
 ## Studio workspace — 28 November 2026

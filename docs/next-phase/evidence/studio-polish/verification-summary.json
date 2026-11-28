@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-28",
+  "environment": "local built OpenNext Worker; fictional browser API fixtures",
+  "unit": {
+    "passed": 170,
+    "files": 34
+  },
+  "workerdGroups": 16,
+  "focusedBrowserChecks": 278,
+  "broaderScreens": {
+    "dark": {
+      "records": 132,
+      "javascriptErrors": 0,
+      "overflow": 0,
+      "buttonContrastFailures": 0
+    },
+    "light": {
+      "records": 132,
+      "javascriptErrors": 0,
+      "overflow": 0,
+      "buttonContrastFailures": 0
+    }
+  },
+  "teamAcceptance": "not-started",
+  "liveExecutionEnabled": false,
+  "geminiEnabled": false
+}

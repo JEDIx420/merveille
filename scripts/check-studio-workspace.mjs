@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 const base = process.env.BASE_URL || "http://localhost:3021";
 if (!/^http:\/\/(localhost|127\.0\.0\.1):/.test(base))
   throw new Error("Fixture identity harness requires localhost");
-const out = "docs/next-phase/evidence/studio-ui";
+const out = process.env.BROWSER_OUTPUT || "docs/next-phase/evidence/studio-ui";
 await fs.mkdir(out, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const results = [];
@@ -64,6 +64,7 @@ try {
       task_count: 2,
       completed_count: 1,
     };
+    let portfolio = [p];
     const principal = {
       id: "simple_person",
       name: "Fictional designer",
@@ -137,7 +138,7 @@ try {
       else if (path === "/api/preferences/appearance")
         d = { theme, celebrations: "off" };
       else if (path === "/api/celebrations") d = { events: [] };
-      else if (path === "/api/projects") d = { projects: [p] };
+      else if (path === "/api/projects") d = { projects: portfolio };
       else if (path === `/api/projects/${p.id}`) d = { project: p, stages: [] };
       else if (path === "/api/studio") {
         if (b.settings) studioViews = b.settings.views;
@@ -375,6 +376,7 @@ try {
           await page.getByRole("tab", { name: "List", exact: true }).click();
         }
         if (
+          path === "/waiting" ||
           path === "/overview" ||
           path === "/projects" ||
           path === "/notifications" ||
@@ -525,6 +527,148 @@ try {
         .getByRole("tab", { name: "Board", exact: true })
         .getAttribute("aria-selected")) === "true",
     );
+    const stages = [
+      "Schematic Design",
+      "Design Development",
+      "Statutory & Permit Drawings",
+      "Tender Documentation & GFC",
+      "Site Execution & Supervision",
+      "Handover & Project Closeout",
+    ];
+    portfolio = stages.map((stage, i) => ({
+      ...p,
+      id: i === 1 ? p.id : `portfolio_${i}`,
+      name:
+        i === 1
+          ? p.name
+          : `Fictional ${stage} residence with a long project title`,
+      stage,
+      status: i === 0 ? "DRAFT" : "ACTIVE",
+    }));
+    for (const width of [1440, 1024, 768, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(base + "/projects");
+      await page
+        .getByRole("region", { name: "Projects by architectural stage" })
+        .waitFor();
+      for (const stage of stages)
+        await check(
+          `portfolio stage ${stage} at ${width}`,
+          (await page
+            .getByRole("region", { name: stage, exact: true })
+            .count()) === 1,
+        );
+      await check(
+        `portfolio board stays inside page at ${width}`,
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth + 1,
+        ),
+      );
+      await page.screenshot({
+        path: `${out}/${theme}-portfolio-board-${width}.png`,
+        fullPage: true,
+        animations: "disabled",
+      });
+      await page.getByRole("button", { name: "Cards", exact: true }).click();
+      await check(
+        `six structured project cards at ${width}`,
+        (await page.locator("article").count()) === 6,
+      );
+      await check(
+        `cards have no page overflow at ${width}`,
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth + 1,
+        ),
+      );
+      await page.screenshot({
+        path: `${out}/${theme}-portfolio-cards-${width}.png`,
+        fullPage: true,
+        animations: "disabled",
+      });
+      await page.getByRole("button", { name: "List", exact: true }).click();
+      await page.reload();
+      await page
+        .getByRole("button", { name: "List", exact: true, pressed: true })
+        .waitFor();
+      await check(
+        `project view persists at ${width}`,
+        (await page
+          .getByRole("button", { name: "List", exact: true })
+          .getAttribute("aria-pressed")) === "true",
+      );
+      await page.getByRole("button", { name: /^Filters/ }).click();
+      await page.getByLabel("Include archived", { exact: true }).waitFor();
+      const box = await page
+        .getByLabel("Include archived", { exact: true })
+        .boundingBox();
+      await check(`archive checkbox is bounded at ${width}`, box.width <= 20);
+      await page.keyboard.press("Escape");
+      await page.waitForFunction(
+        () => document.activeElement?.getAttribute("data-state") === "closed",
+      );
+      await check(
+        `filter popover closes and restores focus at ${width}`,
+        await page
+          .getByRole("button", { name: /^Filters/ })
+          .evaluate((e) => document.activeElement === e),
+      );
+      await page.getByRole("button", { name: "Board", exact: true }).click();
+    }
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(base + "/waiting");
+    await page
+      .getByRole("heading", { name: "My Tasks", exact: true })
+      .waitFor();
+    await page.evaluate(() => (document.body.style.zoom = "2"));
+    await check(
+      "task layout fits at 200 percent CSS zoom",
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth + 1,
+      ),
+    );
+    await page.screenshot({
+      path: `${out}/${theme}-tasks-zoom200.png`,
+      fullPage: true,
+      animations: "disabled",
+    });
+    await page.evaluate(() => (document.body.style.zoom = ""));
+    await page.goto(base + "/projects");
+    await page.getByRole("link",{name:"Review stage",exact:true}).click();
+    await page.getByRole("heading",{name:"Architectural Practice Stages",exact:true}).waitFor();
+    await check("manager stage review opens the existing guarded overview", new URL(page.url()).hash === "#project-stages");
+    portfolio = [];
+    await page.goto(base + "/projects");
+    await page
+      .getByRole("region", { name: "Projects by architectural stage" })
+      .waitFor();
+    await check(
+      "empty portfolio retains six stage lanes",
+      (await page
+        .getByText("No projects at this stage", { exact: true })
+        .count()) === 6,
+    );
+    portfolio = [p];
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(base + "/automations");
+    await page
+      .getByRole("heading", { name: "Automations", exact: true })
+      .waitFor();
+    await page.getByRole("link", { name: /My routines/ }).waitFor();
+    await page.getByRole("link", { name: /MD-TEST/ }).waitFor();
+    await check("automation hub exposes personal and permitted project scopes");
+    await check(
+      "automations is a visible primary navigation link",
+      await page
+        .locator("aside nav")
+        .first()
+        .getByRole("link", { name: "Automations", exact: true })
+        .isVisible(),
+    );
+    await page.screenshot({
+      path: `${out}/${theme}-automation-hub.png`,
+      fullPage: true,
+      animations: "disabled",
+    });
     await page.goto(base + "/projects");
     await page
       .getByRole("button", { name: "Favorite Courtyard House", exact: true })
@@ -551,8 +695,12 @@ try {
       .getByLabel("Group tasks", { exact: true })
       .selectOption("STATUS");
     await page
+      .getByRole("button", { name: "View options", exact: true })
+      .click();
+    await page
       .getByLabel("Task density", { exact: true })
       .selectOption("COMPACT");
+    await page.keyboard.press("Escape");
     await page.getByText("Saved views", { exact: true }).click();
     await page
       .getByLabel("Save view as", { exact: true })
@@ -586,9 +734,15 @@ try {
       fullPage: true,
       animations: "disabled",
     });
-    await page.getByRole("button",{name:"Edit",exact:true}).click();
-    await check("editing a saved rule opens its builder",await page.getByLabel("Rule name",{exact:true}).inputValue()==="Weekly site review");
-    await page.getByRole("button",{name:"Close dialog",exact:true}).click();
+    await page.getByRole("button", { name: "Edit", exact: true }).click();
+    await check(
+      "editing a saved rule opens its builder",
+      (await page.getByLabel("Rule name", { exact: true }).inputValue()) ===
+        "Weekly site review",
+    );
+    await page
+      .getByRole("button", { name: "Close dialog", exact: true })
+      .click();
     await page
       .getByRole("button", { name: "Create rule", exact: true })
       .click();
@@ -683,6 +837,24 @@ try {
           .locator("a")
           .getAttribute("href")
       ).endsWith("/overview"),
+    );
+    await check(
+      "external navigation hides automation entry",
+      (await page
+        .locator("aside nav")
+        .first()
+        .getByRole("link", { name: "Automations", exact: true })
+        .count()) === 0,
+    );
+    await page.goto(base + "/automations");
+    await page
+      .getByText("Automations are available to internal workspace members.", {
+        exact: true,
+      })
+      .waitFor();
+    await check(
+      "external automation hub does not expose project scope links",
+      (await page.getByRole("link", { name: /My routines/ }).count()) === 0,
     );
     await check("no page JavaScript errors", errors.length === 0);
     await context.close();

@@ -217,5 +217,21 @@
       "Current team UAT checkpoint and multi-person usability/permission acceptance."
     ],
     "previewDeployment": "f0d9bdb9-af6b-446a-92fa-01b36f6884de"
+  },
+  "studioPolish": {
+    "acceptedDate": "2026-11-28",
+    "branch": "codex/studio-workspace",
+    "implementation": "passed",
+    "localVerification": "passed: 170 unit tests, 16 workerd groups, 278 focused browser checks, 264 broader records, Workers build/typecheck",
+    "hostedVerification": "pending Preview update",
+    "teamAcceptance": "not-started",
+    "preview": "https://studio-merveille-web-staging.rhelo-bible.workers.dev",
+    "sharedStagingData": true,
+    "evidence": [
+      "docs/next-phase/evidence/studio-polish.md",
+      "docs/next-phase/evidence/studio-polish/results.json"
+    ],
+    "liveExecutionEnabled": false,
+    "geminiEnabled": false
   }
 }

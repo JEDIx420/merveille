@@ -63,6 +63,12 @@ export default function ProjectOverviewPage({
     loadProject();
   }, [projectId]);
 
+  useEffect(() => {
+    if (!loading && data && window.location.hash === "#project-stages") {
+      document.getElementById("project-stages")?.scrollIntoView({block: "start"});
+    }
+  }, [loading, data]);
+
   async function loadProject() {
     setLoading(true);
     setError("");
@@ -427,7 +433,7 @@ export default function ProjectOverviewPage({
       </div>
 
       {/* Stage Progression Timeline */}
-      <div className={cx("card")}>
+      <div id="project-stages" className={cx("card")}>
         <div className={cx(layout.block36)}>
           <div>
             <h2 className={cx(layout.block37)}>

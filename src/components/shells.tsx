@@ -15,6 +15,8 @@ import {
   X,
   Building2,
   MessageSquare,
+  Zap,
+  ChevronDown,
 } from "lucide-react";
 import { BRAND_CONFIG } from "@/shared/config";
 import { hasCapability } from "@/server/auth/principal";
@@ -28,8 +30,8 @@ import {
   readResponse,
 } from "./ui";
 import styles from "./shell.module.css";
-import {ProjectMark} from "./workspace/studio-controls";
-import {QuickNavigation} from "./workspace/quick-navigation";
+import { ProjectMark } from "./workspace/studio-controls";
+import { QuickNavigation } from "./workspace/quick-navigation";
 import { AppearanceControl } from "./experience/controls";
 import { TaskPanelProvider } from "./workspace/task-panel";
 import { FavoriteProjects } from "./workspace/favorites";
@@ -152,7 +154,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       hasCapability(principal, "ADMIN") ||
       hasCapability(principal, "OWNER"))
   )
-    links.push( ["/enquiries", "Leads", Building2]);
+    links.push(["/enquiries", "Leads", Building2]);
   if (internal) links.push(["/archive", "Archive", Archive]);
   if (hasCapability(principal, "ADMIN"))
     links.push(["/people", "People & access", Users]);
@@ -161,84 +163,126 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (hasCapability(principal, "ADMIN") || hasCapability(principal, "OWNER"))
     links.push(["/finance", "Commercial History", Wallet]);
   return (
-    <FeedbackProvider><TaskPanelProvider>
-      <div className={styles.workspace}>
-        <a href="#main-content" className={styles.skip}>
-          Skip to content
-        </a>
-        {open && (
-          <button
-            className={styles.scrim}
-            onClick={() => setOpen(false)}
-            aria-label="Close navigation"
-          />
-        )}
-        <aside
-          ref={drawer}
-          className={[styles.sidebar, open ? styles.open : ""].join(" ")}
-          aria-label="Workspace navigation"
-        >
-          <Link href="/overview" className={styles.identity}>
-            <Brand />
-          </Link>
-          <nav className={styles.nav}>
-            {links.slice(0,4).map(([href, label, Icon]) => (
-              <Link
-                key={href}
-                href={href}
-                aria-current={
-                  path === href || path.startsWith(href + "/")
-                    ? "page"
-                    : undefined
-                }
-              >
-                <Icon aria-hidden="true" />
-                {label}
-              </Link>
-            ))}
-          </nav>
-          {links.length>4&&<details style={{padding:'8px 24px'}}><summary style={{cursor:'pointer',color:'var(--ui-text-muted)'}}>Workspace tools</summary><nav className={styles.nav}>{links.slice(4).map(([href,label,Icon])=><Link href={href} key={href}><Icon aria-hidden="true"/>{label}</Link>)}</nav></details>}
-          <FavoriteProjects/>
-          <div className={styles.account}>
-            <strong>{principal.name}</strong>
-            <span>{principal.email}</span>
-            <a href="/api/auth/logout">Sign out</a>
-          </div>
-        </aside>
-        <div className={styles.body}>
-          <div className={styles.mobileBar}>
-            <Link className={styles.mobileBrand} href="/overview">
-              <img src={BRAND_CONFIG.logoPath} alt="" />
-              Merveille Designs
-            </Link>
-            <div className={styles.mobileActions}>
-            <AppearanceControl />
-            <Link href="/notifications" className="btn-secondary" aria-label="Notifications"><Inbox size={20} aria-hidden="true" /></Link>
+    <FeedbackProvider>
+      <TaskPanelProvider>
+        <div className={styles.workspace}>
+          <a href="#main-content" className={styles.skip}>
+            Skip to content
+          </a>
+          {open && (
             <button
-              ref={menu}
-              className="btn-secondary"
-              onClick={() => setOpen(!open)}
-              aria-expanded={open}
-              aria-label={open ? "Close navigation" : "Open navigation"}
-            >
-              {open ? <X size={20} /> : <Menu size={20} />}
-            </button>
+              className={styles.scrim}
+              onClick={() => setOpen(false)}
+              aria-label="Close navigation"
+            />
+          )}
+          <aside
+            ref={drawer}
+            className={[styles.sidebar, open ? styles.open : ""].join(" ")}
+            aria-label="Workspace navigation"
+          >
+            <Link href="/overview" className={styles.identity}>
+              <Brand />
+            </Link>
+            <nav className={styles.nav}>
+              {links.slice(0, 4).map(([href, label, Icon]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  aria-current={
+                    (path === href || path.startsWith(href + "/")) &&
+                    !(href === "/waiting" && path === "/waiting/automations")
+                      ? "page"
+                      : undefined
+                  }
+                >
+                  <Icon aria-hidden="true" />
+                  {label}
+                </Link>
+              ))}
+              {internal && (
+                <Link
+                  href="/automations"
+                  aria-current={
+                    path === "/automations" || path === "/waiting/automations"
+                      ? "page"
+                      : undefined
+                  }
+                >
+                  <Zap aria-hidden="true" />
+                  Automations
+                </Link>
+              )}
+            </nav>
+            {links.length > 4 && (
+              <details className={styles.workspaceTools}>
+                <summary>
+                  <ChevronDown size={14} aria-hidden="true" />
+                  Workspace tools
+                </summary>
+                <nav className={styles.nav}>
+                  {links.slice(4).map(([href, label, Icon]) => (
+                    <Link href={href} key={href}>
+                      <Icon aria-hidden="true" />
+                      {label}
+                    </Link>
+                  ))}
+                </nav>
+              </details>
+            )}
+            <FavoriteProjects />
+            <div className={styles.account}>
+              <strong>{principal.name}</strong>
+              <span>{principal.email}</span>
+              <a href="/api/auth/logout">Sign out</a>
             </div>
+          </aside>
+          <div className={styles.body}>
+            <div className={styles.mobileBar}>
+              <Link className={styles.mobileBrand} href="/overview">
+                <img src={BRAND_CONFIG.logoPath} alt="" />
+                Merveille Designs
+              </Link>
+              <div className={styles.mobileActions}>
+                <AppearanceControl />
+                <Link
+                  href="/notifications"
+                  className="btn-secondary"
+                  aria-label="Notifications"
+                >
+                  <Inbox size={20} aria-hidden="true" />
+                </Link>
+                <button
+                  ref={menu}
+                  className="btn-secondary"
+                  onClick={() => setOpen(!open)}
+                  aria-expanded={open}
+                  aria-label={open ? "Close navigation" : "Open navigation"}
+                >
+                  {open ? <X size={20} /> : <Menu size={20} />}
+                </button>
+              </div>
+            </div>
+            <header className={styles.topbar}>
+              <p>Your project workspace</p>
+              <div className={styles.desktopActions}>
+                <QuickNavigation />
+                <AppearanceControl />
+                <Link href="/notifications">
+                  <Inbox size={18} aria-hidden="true" />
+                  Inbox
+                </Link>
+              </div>
+            </header>
+            <main className={styles.content} id="main-content">
+              <div key={path} className={styles.route}>
+                {children}
+              </div>
+            </main>
           </div>
-          <header className={styles.topbar}>
-            <p>Your project workspace</p>
-            <div className={styles.desktopActions}><QuickNavigation/><AppearanceControl />
-            <Link href="/notifications">
-              <Inbox size={18} aria-hidden="true" />
-              Inbox
-            </Link></div>
-          </header>
-          <main className={styles.content} id="main-content">
-            <div key={path} className={styles.route}>{children}</div>
-          </main>
         </div>
-      </div>
-    </TaskPanelProvider></FeedbackProvider>
+      </TaskPanelProvider>
+    </FeedbackProvider>
   );
 }
 export function ProjectShell({
@@ -306,14 +350,17 @@ export function ProjectShell({
     <ProjectContext.Provider value={project}>
       <section className={styles.project}>
         <div className={styles.projectIdentity}>
-          <div style={{display:"flex",alignItems:"center",gap:14}}><ProjectMark name={projectId}/><div>
-            <span className={styles.projectCode}>{project.code}</span>
-            <h2>{project.name}</h2>
-            <div className="project-meta">
-              <span>{project.stage?.replaceAll("_", " ")}</span>
-              <Badge>{project.status}</Badge>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <ProjectMark name={projectId} />
+            <div>
+              <span className={styles.projectCode}>{project.code}</span>
+              <h2>{project.name}</h2>
+              <div className="project-meta">
+                <span>{project.stage?.replaceAll("_", " ")}</span>
+                <Badge>{project.status}</Badge>
+              </div>
             </div>
-          </div></div>
+          </div>
           {projects.length > 1 && (
             <label className={styles.projectSelect}>
               <span className="sr-only">Switch project</span>
@@ -339,16 +386,56 @@ export function ProjectShell({
           </div>
         )}
         <nav className={styles.projectNav} aria-label="Project sections">
-          {sections.filter(([slug])=>["overview","tasks","drawings","updates","progress"].includes(slug)).map(([slug, label]) => (
-            <Link
-              href={`/projects/${projectId}/${slug}`}
-              key={slug}
-              aria-current={path.endsWith("/" + slug) ? "page" : undefined}
-            >
-              {label}
-            </Link>
-          ))}
-          <details className={styles.more}><summary>More</summary><div>{sections.filter(([slug])=>!["overview","tasks","drawings","updates","progress"].includes(slug)).map(([slug,label])=><Link key={slug} aria-current={path.endsWith("/"+slug)?"page":undefined} href={`/projects/${projectId}/${slug}`}>{slug==="finance"?"Commercial history":label}</Link>)}</div></details>
+          {sections
+            .filter(([slug]) =>
+              [
+                "overview",
+                "tasks",
+                "drawings",
+                "updates",
+                "progress",
+                "automations",
+              ].includes(slug),
+            )
+            .map(([slug, label]) => (
+              <Link
+                href={`/projects/${projectId}/${slug}`}
+                key={slug}
+                aria-current={path.endsWith("/" + slug) ? "page" : undefined}
+              >
+                {label}
+              </Link>
+            ))}
+          <details className={styles.more}>
+            <summary>
+              More <ChevronDown size={14} aria-hidden="true" />
+            </summary>
+            <div>
+              {sections
+                .filter(
+                  ([slug]) =>
+                    ![
+                      "overview",
+                      "tasks",
+                      "drawings",
+                      "updates",
+                      "progress",
+                      "automations",
+                    ].includes(slug),
+                )
+                .map(([slug, label]) => (
+                  <Link
+                    key={slug}
+                    aria-current={
+                      path.endsWith("/" + slug) ? "page" : undefined
+                    }
+                    href={`/projects/${projectId}/${slug}`}
+                  >
+                    {slug === "finance" ? "Commercial history" : label}
+                  </Link>
+                ))}
+            </div>
+          </details>
         </nav>
       </section>
       {children}
