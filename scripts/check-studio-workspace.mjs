@@ -586,6 +586,9 @@ try {
       fullPage: true,
       animations: "disabled",
     });
+    await page.getByRole("button",{name:"Edit",exact:true}).click();
+    await check("editing a saved rule opens its builder",await page.getByLabel("Rule name",{exact:true}).inputValue()==="Weekly site review");
+    await page.getByRole("button",{name:"Close dialog",exact:true}).click();
     await page
       .getByRole("button", { name: "Create rule", exact: true })
       .click();

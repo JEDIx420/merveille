@@ -101,6 +101,7 @@ export function Automations({ projectId }: { projectId?: string }) {
     }
   }
   function edit(row?: any) {
+    setMode(row ? "BUILD" : "TEMPLATE");
     setEditing(row || null);
     setName(row?.name || "");
     setDefinition(
@@ -142,7 +143,7 @@ export function Automations({ projectId }: { projectId?: string }) {
         </div>
         <Button onClick={() => edit()}>Create rule</Button>
       </div>
-      {error && (
+      {error && !open && (
         <p role="alert" className={styles.error}>
           {error}
         </p>

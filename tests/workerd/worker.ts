@@ -336,6 +336,7 @@ export default {
         "Drawing replay created duplicate audit",
       );
       passed.push("Drawing release and replay commit one release audit");
+      await env.DB.prepare("UPDATE automation_rules SET state='ACTIVE'").run();
       const backup = await ArchiveService.exportProjectBackup(
         env.DB,
         env.FILES,
@@ -402,6 +403,9 @@ export default {
       passed.push(
         "Independent R2 bytes, complete financial history and quarantined memberships restored in workerd",
       );
+      check((await env.RESTORE_DB.prepare("SELECT COUNT(*) n FROM automation_rules").first<any>())?.n>0,"Automation records were lost during recovery");
+      check((await env.RESTORE_DB.prepare("SELECT COUNT(*) n FROM automation_rules WHERE state='ACTIVE'").first<any>())?.n===0,"Restored automation resumed without review");
+      passed.push("Restored automation publications/history retained while active rules are paused before object copying");
       return Response.json({ ok: true, runtime: "workerd", passed });
     } catch (error) {
       return Response.json(

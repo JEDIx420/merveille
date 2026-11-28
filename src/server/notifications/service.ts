@@ -324,15 +324,17 @@ export class NotificationService {
     );
     if (!user) return false;
     if (n.source_entity_type === "AUTOMATION") {
-      const s=await queryFirst<any>(db,"SELECT s.*,r.project_id,r.org_id FROM automation_notification_sources s JOIN automation_rules r ON r.id=s.rule_id WHERE s.notification_id=? AND r.org_id=?",[n.id,n.org_id]);
+      const s=await queryFirst<any>(db,"SELECT s.*,r.project_id,r.org_id,e.action_index,p.definition_json FROM automation_notification_sources s JOIN automation_rules r ON r.id=s.rule_id JOIN automation_effects e ON e.entity_id=s.notification_id JOIN automation_runs ar ON ar.id=e.run_id JOIN automation_publications p ON p.rule_id=ar.rule_id AND p.revision=ar.revision WHERE s.notification_id=? AND r.org_id=?",[n.id,n.org_id]);
       if(!s)return false;
       if(s.project_id){
         const member=await queryFirst<any>(db,"SELECT m.id FROM project_memberships m JOIN projects p ON p.id=m.project_id WHERE m.project_id=? AND m.org_id=? AND m.user_id=? AND m.is_active=1 AND m.project_role IN ('MANAGER','TEAM_MEMBER','STAFF') AND p.is_archived=0",[s.project_id,n.org_id,n.user_id]);
         if(!member)return false;
       }else if(s.owner_id!==n.user_id)return false;
       if(s.task_id){
-        const t=await queryFirst<any>(db,s.project_id?"SELECT status,effective_due_date AS due_date FROM tasks WHERE id=? AND org_id=? AND project_id=?":"SELECT status,due_date FROM personal_tasks WHERE id=? AND org_id=? AND owner_user_id=?",[s.task_id,n.org_id,s.project_id||n.user_id]);
+        const t=await queryFirst<any>(db,s.project_id?"SELECT status,effective_due_date AS due_date,assignee_user_id FROM tasks WHERE id=? AND org_id=? AND project_id=?":"SELECT status,due_date FROM personal_tasks WHERE id=? AND org_id=? AND owner_user_id=?",[s.task_id,n.org_id,s.project_id||n.user_id]);
         if(!t)return false;
+        const action=JSON.parse(s.definition_json).actions[s.action_index];
+        if(s.project_id && !action?.assigneeId && (t.assignee_user_id || s.owner_id)!==n.user_id)return false;
         if(s.trigger_type==='TASK_COMPLETED')return t.status==='COMPLETED';
         if(['COMPLETED','CANCELLED','PROMOTED'].includes(t.status))return false;
         if(s.trigger_type==='OVERDUE')return !!t.due_date && t.due_date<businessDateISO();

@@ -383,3 +383,16 @@ describe("automation retries and resumable actions", () => {
     ).toBe("OK");
   });
 });
+describe("automation reminder assignment freshness",()=>{
+ it("suppresses a default assignee reminder after reassignment",async()=>{
+  await publish({...structuredClone(ruleTemplates[1].definition),actions:[{type:"REMIND",title:"Your task is due soon",dueDays:0}]});
+  const date=new Date();date.setUTCDate(date.getUTCDate()+2);
+  const dueDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(date);
+  const task=await createTask(manager,{projectId:project,title:"Fictional reminder task",proposedAssigneeId:staff.id,proposedDueDate:dueDate},db);
+  await runAutomations(db);
+  const n=await db.prepare("SELECT * FROM notifications WHERE source_entity_type='AUTOMATION'").first<any>();
+  expect(n.user_id).toBe(staff.id);expect(await NotificationService.eligible(db,n)).toBe(true);
+  await db.prepare("UPDATE tasks SET assignee_user_id=?,revision=revision+1 WHERE id=?").bind(manager.id,task.id).run();
+  expect(await NotificationService.eligible(db,n)).toBe(false);
+ });
+});

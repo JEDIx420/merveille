@@ -371,6 +371,11 @@
   },
   {
     "theme": "dark",
+    "case": "editing a saved rule opens its builder",
+    "passed": true
+  },
+  {
+    "theme": "dark",
     "case": "AI waits for generic-only confirmation",
     "passed": true
   },
@@ -782,6 +787,11 @@
   {
     "theme": "light",
     "case": "reviewed rule publication",
+    "passed": true
+  },
+  {
+    "theme": "light",
+    "case": "editing a saved rule opens its builder",
     "passed": true
   },
   {

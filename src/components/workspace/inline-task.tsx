@@ -27,7 +27,7 @@ export function InlineTask({
       : field === "due"
         ? !!task.allowedActions?.deadline
         : !!task.allowedActions?.assign;
-  if (!permitted) return <>{children}</>;
+  if (!permitted) return field === "title" ? null : <>{children}</>;
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
